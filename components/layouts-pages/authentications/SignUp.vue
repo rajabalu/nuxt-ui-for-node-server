@@ -1,6 +1,8 @@
 <script setup>
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
   useValidators();
+const api = useApi();
+const router = useRouter();
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
@@ -36,34 +38,18 @@ const onSubmit = async () => {
   if (isValid) {
     try {
       isLoading.value = true;
-      const config = useRuntimeConfig();
-      const serverUrl = config.public.SERVER_URL;
       
-      const response = await fetch(`${serverUrl}auth/email/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          firstName: firstName.value,
-          lastName: lastName.value,
-          email: email.value,
-          password: password.value
-        })
+      const response = await api.post('auth/email/register', {
+        firstName: firstName.value,
+        lastName: lastName.value,
+        email: email.value,
+        password: password.value
       });
       
-      if (response.status === 204) {
-        showNotification('success', 'Your account has been created successfully');
-        // Clear form
-        firstName.value = "";
-        lastName.value = "";
-        email.value = "";
-        password.value = "";
-        confirmPassword.value = "";
-        policyCheck.value = false;
+      if (response.success) {
+        router.push('/registration-success');
       } else {
-        const errorData = await response.json();
-        showNotification('error', errorData.message || 'Registration failed');
+        showNotification('error', response.error || 'Registration failed');
       }
     } catch (error) {
       showNotification('error', 'Registration failed. Please try again later.');
@@ -89,7 +75,6 @@ const onSubmit = async () => {
       </v-alert>
 
       <v-form ref="refVForm" @submit.prevent="onSubmit">
-        <div class="d-flex gap-3 mb-3">
           <GlobalsTextField
             v-model="firstName"
             label="First Name"
@@ -105,7 +90,6 @@ const onSubmit = async () => {
             :rules="[requiredValidator, alphaValidator]"
             :error-messages="errors.lastName"
           />
-        </div>
 
         <GlobalsTextField
           v-model="email"
