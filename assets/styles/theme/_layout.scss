@@ -1,0 +1,57 @@
+// Top Bar =================
+.app-header {
+  box-shadow: $dash-ui-header-box-shadow !important;
+  padding: 0 24px !important;
+}
+
+.app-header-horizontal {
+  padding: 0 24px !important;
+}
+
+// Sidebar =================
+.sidebar-visibile {
+  top: 0 !important;
+  z-index: 1022 !important;
+  height: 100% !important;
+}
+
+// Content Area =================
+.app-content-area {
+  padding: $dash-ui-app-content-area;
+}
+
+
+
+.wrapper-code-highlight {
+  margin-top: 0px;
+  > .header-code-highlight {
+    justify-content: end;
+
+    > .wrapper-section-code-highlight {
+      display: none;
+    }
+    > .wrapper-copy-code-highlight {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgb(var(--v-theme-grey-600));
+      height: 100%;
+
+      &:hover {
+        background: rgb(var(--v-theme-primary));
+      }
+    }
+  }
+}
+
+.app-design-window-item {
+  > * {
+    margin: 4px;
+  }
+
+  &.extra-margin {
+    > * {
+      margin: 12px !important;
+    }
+  }
+}
