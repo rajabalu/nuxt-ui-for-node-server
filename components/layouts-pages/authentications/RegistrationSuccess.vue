@@ -20,7 +20,7 @@
         <h2 class="text-h6 mb-2">Next Steps:</h2>
         <ol class="text-body-1 ml-4 mb-4">
           <li class="mb-2">Check your email for a verification link</li>
-          <li class="mb-2">Click on the "Verify Email" button in the email</li>
+          <li class="mb-2">Click on the verification link in the email to confirm your email address</li>
           <li class="mb-2">If you don't see the email, please check your spam/junk folder</li>
           <li>If you still can't find the email, you can use the "Forgot Password" option to reset your account</li>
         </ol>
