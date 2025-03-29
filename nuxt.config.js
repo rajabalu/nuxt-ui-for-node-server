@@ -11,6 +11,11 @@ const url = "";
 const themeColor = "#f1f5f9";
 
 export default defineNuxtConfig({
+  runtimeConfig: {
+    public: {
+      SERVER_URL: process.env.SERVER_URL || 'http://localhost:8000/api/v1/'
+    }
+  },
   routeRules: {
     "/": { redirect: "/index.html" }
   },

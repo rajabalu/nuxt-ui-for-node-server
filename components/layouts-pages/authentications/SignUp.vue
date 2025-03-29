@@ -4,24 +4,74 @@ const { alphaValidator, emailValidator, requiredValidator, passwordValidator, co
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
-const userName = ref("");
+const firstName = ref("");
+const lastName = ref("");
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const policyCheck = ref(false);
+const isLoading = ref(false);
+const showAlert = ref(false);
+const alertType = ref("success");
+const alertMessage = ref("");
 
 const errors = ref({
-  userName: undefined,
+  firstName: undefined,
+  lastName: undefined,
   email: undefined,
   password: undefined,
   confirmPassword: undefined,
   policyCheck: undefined,
 });
 
-const onSubmit = () => {
-  refVForm.value?.validate().then(({ valid: isValid }) => {
-    if (isValid) alert("Your account has been credited successfully");
-  });
+const showNotification = (type, message) => {
+  alertType.value = type;
+  alertMessage.value = message;
+  showAlert.value = true;
+};
+
+const onSubmit = async () => {
+  const { valid: isValid } = await refVForm.value?.validate();
+  
+  if (isValid) {
+    try {
+      isLoading.value = true;
+      const config = useRuntimeConfig();
+      const serverUrl = config.public.SERVER_URL;
+      
+      const response = await fetch(`${serverUrl}auth/email/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          firstName: firstName.value,
+          lastName: lastName.value,
+          email: email.value,
+          password: password.value
+        })
+      });
+      
+      if (response.status === 204) {
+        showNotification('success', 'Your account has been created successfully');
+        // Clear form
+        firstName.value = "";
+        lastName.value = "";
+        email.value = "";
+        password.value = "";
+        confirmPassword.value = "";
+        policyCheck.value = false;
+      } else {
+        const errorData = await response.json();
+        showNotification('error', errorData.message || 'Registration failed');
+      }
+    } catch (error) {
+      showNotification('error', 'Registration failed. Please try again later.');
+      console.error(error);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 };
 </script>
 <template>
@@ -34,13 +84,33 @@ const onSubmit = () => {
         <p class="text-body-1">Please enter your user information.</p>
       </div>
 
+      <v-alert v-if="showAlert" :type="alertType" closable @click:close="showAlert = false" class="mb-4">
+        {{ alertMessage }}
+      </v-alert>
+
       <v-form ref="refVForm" @submit.prevent="onSubmit">
+        <div class="d-flex gap-3 mb-3">
+          <GlobalsTextField
+            v-model="firstName"
+            label="First Name"
+            placeholder="Enter your first name"
+            :rules="[requiredValidator, alphaValidator]"
+            :error-messages="errors.firstName"
+          />
+
+          <GlobalsTextField
+            v-model="lastName"
+            label="Last Name"
+            placeholder="Enter your last name"
+            :rules="[requiredValidator, alphaValidator]"
+            :error-messages="errors.lastName"
+          />
+        </div>
 
         <GlobalsTextField
           v-model="email"
           label="Email"
           type="email"
-          autofocus
           placeholder="Email address here"
           :rules="[requiredValidator, emailValidator]"
           :error-messages="errors.email"
@@ -86,7 +156,7 @@ const onSubmit = () => {
           </template>
         </v-checkbox>
 
-        <v-btn type="submit" block> Create Free Account </v-btn>
+        <v-btn type="submit" block :loading="isLoading"> Create Free Account </v-btn>
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
           <NuxtLink to="sign-in" class="font-weight-5 text-primary">
             Already member? Login
