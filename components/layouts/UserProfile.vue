@@ -29,6 +29,7 @@ const itemList = [
     name: "Settings",
     icon: "tabler-settings",
     value: "settings",
+    action: () => navigateTo('/settings')
   },
   {
     name: "Sign Out",

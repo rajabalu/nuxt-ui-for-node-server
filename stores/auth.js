@@ -79,11 +79,25 @@ export const useAuthStore = defineStore('auth', {
           return { success: true };
         } else {
           // If refresh failed, force logout
-          this.logout();
+          this.clearAuthData();
+          this.isAuthenticated = false;
+          
+          // Redirect to sign-in page if we're on the client side
+          if (process.client) {
+            navigateTo('/sign-in');
+          }
+          
           return { success: false, error: 'Session expired' };
         }
       } catch (error) {
-        this.logout();
+        this.clearAuthData();
+        this.isAuthenticated = false;
+        
+        // Redirect to sign-in page if we're on the client side
+        if (process.client) {
+          navigateTo('/sign-in');
+        }
+        
         return { success: false, error: 'Failed to refresh session' };
       }
     },
@@ -94,19 +108,28 @@ export const useAuthStore = defineStore('auth', {
         const api = nuxtApp.$api;
         
         if (api) {
-          // Try to logout on server but proceed with local logout regardless
-          await api.post('auth/logout', {}, {
-            headers: {
-              'Authorization': `Bearer ${this.token}`
-            }
-          });
+          try {
+            // Try to logout on server but proceed with local logout regardless
+            await api.post('auth/logout', {}, {
+              headers: {
+                'Authorization': `Bearer ${this.token}`
+              }
+            });
+          } catch (error) {
+            console.error('Error during logout:', error);
+            // Continue with local logout even if server logout fails
+          }
         }
       }
       
       // Clear auth data
       this.clearAuthData();
-      // Update to use sign-in page directly instead of redirecting to login
-      navigateTo('/sign-in');
+      this.isAuthenticated = false;
+      
+      // Redirect to sign-in page if we're on the client side
+      if (process.client) {
+        navigateTo('/sign-in');
+      }
     },
 
     async fetchCurrentUser() {

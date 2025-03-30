@@ -39,6 +39,10 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Wait until api plugin has registered the API
   const api = nuxtApp.$api;
   
+  // Track refresh token attempts to prevent infinite loop
+  let refreshAttempts = 0;
+  const MAX_REFRESH_ATTEMPTS = 2;
+  
   if (api) {
     // Add middleware to inject token into API requests
     const originalGet = api.get;
@@ -53,8 +57,20 @@ export default defineNuxtPlugin((nuxtApp) => {
         const options = args[args.length - 1] || {};
         
         // If already authenticated and token is about to expire, refresh it
-        if (authStore.isAuthenticated && authStore.isTokenExpired && !endpoint.includes('auth/refresh')) {
-          await authStore.refreshTokens();
+        // Skip refresh if we're on a public route or already trying to refresh
+        if (authStore.isAuthenticated && 
+            authStore.isTokenExpired && 
+            !endpoint.includes('auth/refresh') && 
+            refreshAttempts < MAX_REFRESH_ATTEMPTS) {
+          try {
+            refreshAttempts++;
+            await authStore.refreshTokens();
+          } catch (error) {
+            console.error('Token refresh failed:', error);
+            refreshAttempts = MAX_REFRESH_ATTEMPTS; // Prevent further attempts
+            authStore.logout();
+            return { success: false, error: 'Session expired' };
+          }
         }
         
         // Add auth header if authenticated and header not already set
@@ -66,27 +82,57 @@ export default defineNuxtPlugin((nuxtApp) => {
           args[args.length - 1] = options;
         }
         
-        const response = await method(endpoint, ...args);
-        
-        // If unauthorized and we have a refresh token, try refreshing
-        if (!response.success && response.status === 401 && authStore.refreshToken) {
-          const refreshResult = await authStore.refreshTokens();
+        try {
+          const response = await method(endpoint, ...args);
           
-          // If refresh successful, retry the original request
-          if (refreshResult.success) {
-            options.headers = {
-              ...options.headers,
-              'Authorization': `Bearer ${authStore.token}`
-            };
-            args[args.length - 1] = options;
-            return method(endpoint, ...args);
-          } else {
-            // If refresh failed, logout and redirect
+          // If unauthorized and we have a refresh token, try refreshing
+          if (!response.success && response.status === 401 && 
+              authStore.refreshToken && refreshAttempts < MAX_REFRESH_ATTEMPTS && 
+              !endpoint.includes('auth/refresh')) {
+            
+            try {
+              refreshAttempts++;
+              const refreshResult = await authStore.refreshTokens();
+              
+              // If refresh successful, retry the original request
+              if (refreshResult.success) {
+                refreshAttempts = 0; // Reset counter after successful refresh
+                options.headers = {
+                  ...options.headers,
+                  'Authorization': `Bearer ${authStore.token}`
+                };
+                args[args.length - 1] = options;
+                return method(endpoint, ...args);
+              } else {
+                // If refresh failed, logout and redirect
+                refreshAttempts = MAX_REFRESH_ATTEMPTS; // Prevent further attempts
+                authStore.logout();
+                return { success: false, error: 'Session expired' };
+              }
+            } catch (error) {
+              console.error('Error during token refresh:', error);
+              refreshAttempts = MAX_REFRESH_ATTEMPTS; // Prevent further attempts
+              authStore.logout();
+              return { success: false, error: 'Session expired' };
+            }
+          } else if (response.status === 401) {
+            // If we've already tried refreshing or have no refresh token, logout
             authStore.logout();
           }
+          
+          return response;
+        } catch (error) {
+          console.error('API request error:', error);
+          
+          // If the error is network-related, don't automatically logout
+          // This prevents logout on temporary connection problems
+          if (error.name !== 'TypeError' && error.message !== 'Failed to fetch') {
+            refreshAttempts = MAX_REFRESH_ATTEMPTS; // Prevent further attempts
+            authStore.logout();
+          }
+          
+          return { success: false, error: 'Request failed' };
         }
-        
-        return response;
       };
     };
     

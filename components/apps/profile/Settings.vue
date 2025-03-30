@@ -1,5 +1,6 @@
 <script setup>
 import avatar11 from "/images/avatar/avatar-11.jpg";
+import { useAuthStore } from '~/stores/auth';
 
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
   useValidators();
@@ -8,17 +9,21 @@ const refBassicForm = ref();
 const refEmailVForm = ref();
 const refPasswordVForm = ref();
 
-const profileImage = ref(avatar11);
+// Get user data from auth store
+const authStore = useAuthStore();
+
+const profileImage = ref(authStore.user?.photo ? authStore.user.photo : avatar11);
+const isUploading = ref(false);
 
 const basicForm = reactive({
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  location: "India",
-  address1: "",
-  address2: "",
-  zipCode: "",
+  firstName: authStore.user?.firstName || "",
+  lastName: authStore.user?.lastName || "",
+  email: authStore.user?.email || "",
+  phone: authStore.user?.phone || "",
+  location: authStore.user?.location || "India",
+  address1: authStore.user?.address1 || "",
+  address2: authStore.user?.address2 || "",
+  zipCode: authStore.user?.zipCode || "",
 });
 
 const email = ref("");
@@ -35,13 +40,6 @@ const preferencesForm = reactive({
   dateFormat: "No Preference",
 });
 
-const notificationAlert = ref(true);
-const notificationForm = reactive({
-  send: "Always",
-  digest: "Everyday",
-  time: "2PM",
-});
-
 const errors = ref({
   firstName: undefined,
   lastName: undefined,
@@ -56,14 +54,61 @@ const errors = ref({
   confirmPassword: undefined,
 });
 
-const onProfileChange = (event) => {
-  const file = event.target.files[0];
-  profileImage.value = URL.createObjectURL(file);
+const onProfileChange = async (event) => {
+  try {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    isUploading.value = true;
+    
+    // Show local preview
+    profileImage.value = URL.createObjectURL(file);
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Upload the file
+    const response = await fetch('/api/v1/files/upload', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload file');
+    }
+    
+    const data = await response.json();
+    const fileId = data.id;
+    
+    // Update user profile with the new photo
+    const updateResponse = await fetch('/api/v1/auth/me', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        photo: {
+          id: fileId
+        }
+      })
+    });
+    
+    if (!updateResponse.ok) {
+      throw new Error('Failed to update profile');
+    }
+    
+  } catch (error) {
+    console.error('Error uploading photo:', error);
+    // Show error message to user
+  } finally {
+    isUploading.value = false;
+  }
 };
 
 const onBasic = () => {
   refBassicForm.value?.validate().then(({ valid: isValid }) => {
-    if (isValid) alert("Your password change successfully");
+    if (isValid) alert("Your information updated successfully");
   });
 };
 
@@ -98,10 +143,10 @@ const onEmail = () => {
             </v-col>
             <v-col cols="12" sm="8" class="d-flex align-center ga-4">
               <v-avatar size="56" :image="profileImage" />
-              <input type="file" ref="file" style="display: none" @change="onProfileChange" />
-              <v-btn variant="outlined" color="secondary" @click="$refs.file.click()"
-                >Upload Photo</v-btn
-              >
+              <input type="file" ref="file" style="display: none" @change="onProfileChange" accept="image/*" />
+              <v-btn variant="outlined" color="secondary" @click="$refs.file.click()" :loading="isUploading">
+                Upload Photo
+              </v-btn>
             </v-col>
           </v-row>
 
@@ -130,6 +175,7 @@ const onEmail = () => {
                       :rules="[requiredValidator, alphaValidator]"
                       :error-messages="errors.firstName"
                       placeholder="First Name"
+                      readonly
                     />
                   </v-col>
                   <v-col cols="12" sm="6">
@@ -138,6 +184,7 @@ const onEmail = () => {
                       :rules="[requiredValidator, alphaValidator]"
                       :error-messages="errors.lastName"
                       placeholder="Last Name"
+                      readonly
                     />
                   </v-col>
                 </v-row>
@@ -155,6 +202,7 @@ const onEmail = () => {
                   :rules="[requiredValidator, emailValidator]"
                   :error-messages="errors.email"
                   placeholder="Enter your email address"
+                  readonly
                 />
               </v-col>
             </v-row>
@@ -415,260 +463,6 @@ const onEmail = () => {
               <v-btn type="submit"> Save Changes </v-btn>
             </v-col>
           </v-row>
-        </v-card-item>
-      </v-card>
-    </v-col>
-  </v-row>
-
-  <!-- Notifications -->
-  <v-row>
-    <v-col cols="12" md="4" lg="3">
-      <div>
-        <h4 class="text-h4">Notifications</h4>
-        <p class="text-body-1">Change notification settings</p>
-      </div>
-    </v-col>
-    <v-col cols="12" md="8" lg="9">
-      <v-card>
-        <v-card-item>
-          <h4 class="text-h4 mb-4">Notification for email, mobile & Slack</h4>
-
-          <v-alert
-            class="mb-4"
-            v-model="notificationAlert"
-            closable
-            color="warning"
-            variant="tonal"
-          >
-            To start using Slack for personal notifications, you should first connect Slack.
-          </v-alert>
-
-          <v-table class="mb-4">
-            <thead>
-              <tr>
-                <th class="width-100">Activity & Conversation</th>
-                <th>
-                  <v-icon icon="tabler-device-mobile" size="28" />
-                </th>
-                <th>
-                  <v-icon icon="tabler-brand-slack" size="28" />
-                </th>
-                <th>
-                  <v-icon icon="tabler-mail" size="28" />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td></td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-              <tr>
-                <td>When a Files is shared with a team</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-icon icon="tabler-minus" size="28" />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-              <tr>
-                <td>When someone requests access to my design</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-              <tr>
-                <td>When someone comments in threads I’m following</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-              <tr>
-                <td>When someone @mentions me in any comments</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-icon icon="tabler-minus" size="28" />
-                </td>
-                <td>
-                  <v-icon icon="tabler-minus" size="28" />
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-
-          <v-table class="mb-4">
-            <thead>
-              <tr>
-                <th class="width-100">Project activity activity</th>
-                <th>
-                  <v-icon icon="tabler-device-mobile" size="28" />
-                </th>
-                <th>
-                  <v-icon icon="tabler-brand-slack" size="28" />
-                </th>
-                <th>
-                  <v-icon icon="tabler-mail" size="28" />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>When someone adds me to a project</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-icon icon="tabler-minus" size="28" />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-
-          <v-table>
-            <thead>
-              <tr>
-                <th class="width-100">Team activity</th>
-                <th>
-                  <v-icon icon="tabler-device-mobile" size="28" />
-                </th>
-                <th>
-                  <v-icon icon="tabler-brand-slack" size="28" />
-                </th>
-                <th>
-                  <v-icon icon="tabler-mail" size="28" />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>When my invitees sign up</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-              <tr>
-                <td>When someone requests access to my team</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-icon icon="tabler-minus" size="28" />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-              <tr>
-                <td>When someone invites me to a team</td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-                <td>
-                  <v-checkbox />
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-
-          <v-divider class="my-6" />
-          <v-row no-gutters class="mb-3">
-            <v-col cols="12" lg="6">
-              <GlobalsSelect
-                v-model="notificationForm.send"
-                label="When should we send you notifications?"
-                :items="['Always', 'One', 'Two', 'Three']"
-                class="ma-1"
-              />
-            </v-col>
-            <v-col cols="12" sm="6" lg="3">
-              <GlobalsSelect
-                v-model="notificationForm.digest"
-                label="Daily Digest"
-                :items="['Everyday', 'One', 'Two', 'Three']"
-                class="ma-1"
-              />
-            </v-col>
-            <v-col cols="12" sm="6" lg="3">
-              <GlobalsSelect
-                v-model="notificationForm.time"
-                label="Time"
-                :items="['2PM', 'One', 'Two', 'Three']"
-                class="ma-1"
-              />
-            </v-col>
-          </v-row>
-          <v-row no-gutters>
-            <v-col>
-              <v-btn type="submit"> Save Changes </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-item>
-      </v-card>
-    </v-col>
-  </v-row>
-
-  <!-- Delete Account -->
-  <v-row>
-    <v-col cols="12" md="4" lg="3">
-      <div>
-        <h4 class="text-h4">Delete Account</h4>
-        <p class="text-body-1">Easily set up social media accounts</p>
-      </div>
-    </v-col>
-    <v-col cols="12" md="8" lg="9">
-      <v-card>
-        <v-card-item>
-          <h4 class="text-h4 mb-4">Danger Zone</h4>
-          <p class="text-body-1 mb-4">
-            Delete any and all content you have, such as articles, comments, your reading list or
-            chat messages. Allow your username to become available to anyone.
-          </p>
-          <v-btn color="error"> Delete Account </v-btn>
-          <p class="text-body-2 mt-3">
-            Feel free to contact with any
-            <a class="text-primary text-body-2" href="mailto:dashui@example.com"
-              >dashui@example.com
-            </a>
-            questions.
-          </p>
         </v-card-item>
       </v-card>
     </v-col>
