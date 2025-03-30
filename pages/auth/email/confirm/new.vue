@@ -3,6 +3,7 @@ console.log('Email change confirmation page loaded - initial script execution');
 
 const api = useApi();
 const route = useRoute();
+const authStore = useAuthStore();
 const isLoading = ref(true);
 const isSuccess = ref(false);
 const errorMessage = ref('');
@@ -59,6 +60,14 @@ onMounted(async () => {
       } else {
         console.log('No email returned in response');
       }
+      
+      // Clear current session data to force re-login with new email
+      if (authStore.isAuthenticated) {
+        console.log('Clearing auth session data after email change');
+        // Use clearAuthData instead of logout to avoid automatic redirect
+        authStore.clearAuthData();
+        authStore.isAuthenticated = false;
+      }
     } else {
       console.log('Verification failed:', response.error);
       errorMessage.value = response.error || 'Email change verification failed. Please try again.';
@@ -71,6 +80,22 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+// Button click handler to ensure user is properly logged out before redirecting
+const handleLoginClick = () => {
+  console.log('Login button clicked, ensuring user is logged out');
+  // Clear auth data again to be extra safe
+  if (authStore.isAuthenticated) {
+    authStore.clearAuthData();
+    authStore.isAuthenticated = false;
+  }
+  // Clear any lingering session data in localStorage
+  if (process.client) {
+    localStorage.removeItem('auth');
+  }
+  // Navigate to sign-in page
+  navigateTo('/sign-in');
+};
 </script>
 
 <template>
@@ -104,7 +129,7 @@ onMounted(async () => {
                   Please use your new email address for all future logins and communications.
                 </p>
                 
-                <v-btn to="/sign-in" color="primary" class="mt-4" block>
+                <v-btn @click="handleLoginClick" color="primary" class="mt-4" block>
                   Login with New Email
                 </v-btn>
               </div>
