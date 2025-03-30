@@ -18,6 +18,7 @@ const profileImage = computed(() => {
 });
 
 const isUploading = ref(false);
+const isEmailSubmitting = ref(false);
 const showSuccessAlert = ref(false);
 const successMessage = ref('');
 const showErrorAlert = ref(false);
@@ -162,11 +163,54 @@ const onPassword = () => {
   });
 };
 
-const onEmail = () => {
-  refEmailVForm.value?.validate().then(({ valid: isValid }) => {
+const onEmail = async () => {
+  refEmailVForm.value?.validate().then(async ({ valid: isValid }) => {
     if (isValid) {
-      showSuccessAlert.value = true;
-      successMessage.value = "Your email updated successfully";
+      try {
+        isEmailSubmitting.value = true;
+        
+        // Get API and base URL from composables
+        const nuxtApp = useNuxtApp();
+        const api = nuxtApp.$api;
+        
+        if (!api) {
+          throw new Error('API not available');
+        }
+        
+        // Get the configured base URL
+        const baseUrl = api.getBaseUrl ? api.getBaseUrl() : 'http://localhost:8000/api/v1/';
+        
+        // Update email
+        const updateUrl = `${baseUrl}auth/me`;
+        const response = await fetch(updateUrl, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${authStore.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: email.value
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Email update failed with status: ${response.status}`);
+        }
+        
+        // Show success message instead of redirecting
+        showSuccessAlert.value = true;
+        successMessage.value = "A verification email has been sent to your new address. Please continue using your current email until you complete the verification process.";
+        
+        // Clear the email field and reset validation
+        email.value = "";
+        refEmailVForm.value?.reset();
+      } catch (error) {
+        console.error('Error updating email:', error);
+        showErrorAlert.value = true;
+        errorMessage.value = `Failed to update email: ${error.message}`;
+      } finally {
+        isEmailSubmitting.value = false;
+      }
     }
   });
 };
@@ -334,7 +378,7 @@ const onEmail = () => {
               </v-row>
               <v-row no-gutters class="pb-3">
                 <v-col offset-sm="4">
-                  <v-btn type="submit"> Save Changes </v-btn>
+                  <v-btn type="submit" :loading="isEmailSubmitting"> Save Changes </v-btn>
                 </v-col>
               </v-row>
             </v-form>
