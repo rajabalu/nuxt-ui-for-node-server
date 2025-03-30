@@ -18,6 +18,10 @@ const profileImage = computed(() => {
 });
 
 const isUploading = ref(false);
+const showSuccessAlert = ref(false);
+const successMessage = ref('');
+const showErrorAlert = ref(false);
+const errorMessage = ref('');
 
 const basicForm = reactive({
   firstName: authStore.user?.firstName || "",
@@ -127,11 +131,13 @@ const onProfileChange = async (event) => {
     await authStore.fetchCurrentUser();
     
     // Show success message
-    alert("Profile photo updated successfully!");
+    showSuccessAlert.value = true;
+    successMessage.value = "Profile photo updated successfully!";
     
   } catch (error) {
     console.error('Error uploading photo:', error);
-    alert(`Failed to upload photo: ${error.message}`);
+    showErrorAlert.value = true;
+    errorMessage.value = `Failed to upload photo: ${error.message}`;
   } finally {
     isUploading.value = false;
   }
@@ -139,23 +145,64 @@ const onProfileChange = async (event) => {
 
 const onBasic = () => {
   refBassicForm.value?.validate().then(({ valid: isValid }) => {
-    if (isValid) alert("Your information updated successfully");
+    if (isValid) {
+      showSuccessAlert.value = true;
+      successMessage.value = "Your information updated successfully";
+    }
   });
 };
 
 const onPassword = () => {
   refEmailVForm.value?.validate().then(({ valid: isValid }) => {
-    if (isValid) alert("Your password change successfully");
+    if (isValid) {
+      showSuccessAlert.value = true;
+      successMessage.value = "Your password changed successfully";
+    }
   });
 };
 
 const onEmail = () => {
   refPasswordVForm.value?.validate().then(({ valid: isValid }) => {
-    if (isValid) alert("Your update successfully");
+    if (isValid) {
+      showSuccessAlert.value = true;
+      successMessage.value = "Your email updated successfully";
+    }
   });
 };
 </script>
 <template>
+  <!-- Success Alert -->
+  <v-alert
+    v-model="showSuccessAlert"
+    color="success"
+    variant="tonal"
+    closable
+    class="mb-4"
+    border="start"
+    title="Success"
+  >
+    <template v-slot:prepend>
+      <v-icon icon="tabler-check" />
+    </template>
+    {{ successMessage }}
+  </v-alert>
+
+  <!-- Error Alert -->
+  <v-alert
+    v-model="showErrorAlert"
+    color="error"
+    variant="tonal"
+    closable
+    class="mb-4"
+    border="start"
+    title="Error"
+  >
+    <template v-slot:prepend>
+      <v-icon icon="tabler-alert-circle" />
+    </template>
+    {{ errorMessage }}
+  </v-alert>
+
   <!-- General Setting -->
   <v-row>
     <v-col cols="12" md="4" lg="3">
@@ -167,32 +214,6 @@ const onEmail = () => {
     <v-col cols="12" md="8" lg="9">
       <v-card>
         <v-card-item>
-          <h4 class="text-h4 mb-4">General Settings</h4>
-          <v-row align="center">
-            <v-col cols="12" sm="4">
-              <v-label class="form-label"> Avatar </v-label>
-            </v-col>
-            <v-col cols="12" sm="8" class="d-flex align-center gap-4">
-              <v-avatar size="56">
-                <VImg :src="profileImage" :key="authStore.user?.photo?.path || 'default'" />
-              </v-avatar>
-              <input type="file" ref="file" style="display: none" @change="onProfileChange" accept="image/*" />
-              <v-btn variant="outlined" color="secondary" @click="$refs.file.click()" :loading="isUploading">
-                Upload Photo
-              </v-btn>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col cols="12" sm="4">
-              <v-label class="form-label"> Cover photo </v-label>
-            </v-col>
-            <v-col cols="12" sm="8">
-              <GlobalsFileUpload />
-              <v-btn class="mt-3" variant="outlined" color="secondary"> Change </v-btn>
-            </v-col>
-          </v-row>
-
           <h4 class="text-h4 my-4">Basic information</h4>
 
           <v-form ref="refBassicForm" @submit.prevent="onBasic">
@@ -240,81 +261,30 @@ const onEmail = () => {
               </v-col>
             </v-row>
 
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Phone (Optional) </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsTextField
-                  v-model="basicForm.phone"
-                  :error-messages="errors.phone"
-                  placeholder="Enter your phone number"
-                />
-              </v-col>
-            </v-row>
+          <v-row align="center">
+            <v-col cols="12" sm="4">
+              <v-label class="form-label"> Avatar </v-label>
+            </v-col>
+            <v-col cols="12" sm="8" class="d-flex align-center gap-4">
+              <v-avatar size="56">
+                <VImg :src="profileImage" :key="authStore.user?.photo?.path || 'default'" />
+              </v-avatar>
+              <input type="file" ref="file" style="display: none" @change="onProfileChange" accept="image/*" />
+            </v-col>
+          </v-row>
 
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Location </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsSelect
-                  v-model="basicForm.location"
-                  :items="['India', 'UK', 'USA']"
-                  :rules="[requiredValidator]"
-                  :error-messages="errors.location"
-                />
-              </v-col>
-            </v-row>
+          <v-row align="center">
+            <v-col cols="12" sm="4">
 
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Address line 1 </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsTextField
-                  v-model="basicForm.address1"
-                  :rules="[requiredValidator]"
-                  :error-messages="errors.address1"
-                  placeholder="Address line 1"
-                />
-              </v-col>
-            </v-row>
+            </v-col>
+            <v-col cols="12" sm="8" class="d-flex align-center gap-4">
+              <v-btn variant="outlined" color="secondary" @click="$refs.file.click()" :loading="isUploading">
+                Upload Photo
+              </v-btn>
+            </v-col>
+          </v-row>
 
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Address line 2 </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsTextField
-                  v-model="basicForm.address2"
-                  :rules="[requiredValidator]"
-                  :error-messages="errors.address2"
-                  placeholder="Address line 2"
-                />
-              </v-col>
-            </v-row>
 
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Zip Code </v-label>
-                <v-icon icon="tabler-alert-circle" size="16" class="ml-2" />
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsTextField
-                  v-model="basicForm.zipCode"
-                  :rules="[requiredValidator]"
-                  :error-messages="errors.zipCode"
-                  placeholder="Zip Code"
-                />
-              </v-col>
-            </v-row>
-
-            <v-row no-gutters>
-              <v-col offset-sm="4">
-                <v-btn type="submit"> Save Changes </v-btn>
-              </v-col>
-            </v-row>
           </v-form>
         </v-card-item>
       </v-card>
