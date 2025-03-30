@@ -15,10 +15,7 @@ export default defineNuxtConfig({
     public: {
       SERVER_URL: process.env.SERVER_URL || 'http://localhost:8000/api/v1/'
     }
-  },
-  routeRules: {
-    "/": { redirect: "/index.html" }
-  },
+  },  
   devServer: {
     port: Number(process.env.NUXT_PORT) || 3001
   },

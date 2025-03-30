@@ -34,7 +34,7 @@ const onSubmit = async () => {
     
     if (result.success) {
       // Redirect to dashboard instead of the root path
-      navigateTo('/dashboards/analytics');
+      navigateTo('/');
     } else {
       // Handle specific errors based on the API response
       errorMessage.value = result.error;
