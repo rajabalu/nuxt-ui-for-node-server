@@ -116,6 +116,11 @@ export default defineNuxtConfig({
 
   devtools: { enabled: false },
 
+  // Apply auth middleware globally to all routes
+  router: {
+    middleware: ['auth']
+  },
+
   modules: [
     "@pinia/nuxt",
     "@vueuse/nuxt",

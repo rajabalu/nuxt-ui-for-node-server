@@ -8,4 +8,6 @@ alwaysApply: true
 
 - Do not use new compoenets or libraries. Always use existing pattern and components
 - Do not change the existing styling or introduce new styling or theme. Always use existing style and theme
-- Always, re-use existing components. Introduce new components or pages only if it is neccessary. 
+- Always re-use existing components. Introduce new components or pages only if it is neccessary. 
+- Always understand the existing project structure and implementation standards before making any changes.
+- Don't give multiple options. Choose the best and robust and working option and implement that.

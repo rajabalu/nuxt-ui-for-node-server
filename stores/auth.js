@@ -150,7 +150,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = data.token;
       this.refreshToken = data.refreshToken;
       this.tokenExpires = data.tokenExpires;
-      this.user = data.user;
+      this.user = data.user || null;
       this.isAuthenticated = true;
       
       // Store auth data in localStorage for persistence
@@ -160,6 +160,11 @@ export const useAuthStore = defineStore('auth', {
           refreshToken: this.refreshToken,
           tokenExpires: this.tokenExpires
         }));
+      }
+      
+      // If user data wasn't provided in the login response, fetch it
+      if (!data.user) {
+        this.fetchCurrentUser();
       }
     },
 

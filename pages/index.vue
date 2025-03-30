@@ -7,6 +7,11 @@ import Teams from "@/components/dashboard/project/Teams.vue";
 const route = useRoute();
 
 const layoutClassic = route.path.includes("horizontal");
+
+// Add authentication middleware to protect this page
+definePageMeta({
+  middleware: ['auth']
+});
 </script>
 <template>
   <div class="project-dashboard ma-n1">

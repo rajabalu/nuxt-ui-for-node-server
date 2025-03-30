@@ -1,5 +1,18 @@
 <script setup>
-import avatar1 from "/images/avatar/avatar-1.jpg";
+import { useAuthStore } from '~/stores/auth';
+import { computed } from 'vue';
+
+// Get user data from auth store
+const authStore = useAuthStore();
+
+// Compute user properties
+const userPhoto = computed(() => authStore.user?.photo || '/images/avatar/avatar-fallback.jpg');
+const userName = computed(() => {
+  if (authStore.user) {
+    return `${authStore.user.firstName} ${authStore.user.lastName}`;
+  }
+  return 'Guest User';
+});
 
 const itemList = [
   {
@@ -21,8 +34,16 @@ const itemList = [
     name: "Sign Out",
     icon: "tabler-power",
     value: "sign-out",
+    action: () => authStore.logout()
   },
 ];
+
+// Handle item click
+const handleItemClick = (item) => {
+  if (item.action) {
+    item.action();
+  }
+};
 </script>
 
 <template>
@@ -38,17 +59,22 @@ const itemList = [
         v-bind="props"
       >
         <v-avatar class="cursor-pointer">
-          <VImg :src="avatar1" />
+          <VImg :src="userPhoto" />
         </v-avatar>
       </v-badge>
     </template>
     <v-list>
       <div class="px-4 pt-2">
-        <h5 class="text-h5">John E. Grainger</h5>
-        <NuxtLink class="text-body-2" to="/">View my profile</NuxtLink>
+        <h5 class="text-h5">{{ userName }}</h5>
+        <NuxtLink class="text-body-2" to="/profile">View my profile</NuxtLink>
         <v-divider class="my-2" />
       </div>
-      <v-list-item v-for="item in itemList" :key="item.value" :value="item.value">
+      <v-list-item 
+        v-for="item in itemList" 
+        :key="item.value" 
+        :value="item.value"
+        @click="handleItemClick(item)"
+      >
         <template #prepend>
           <v-icon :icon="item.icon" size="small" />
         </template>

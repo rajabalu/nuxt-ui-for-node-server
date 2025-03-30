@@ -10,6 +10,28 @@ export default defineNuxtPlugin((nuxtApp) => {
       // Initialize auth state once DOM is ready
       setTimeout(() => {
         authStore.initAuth();
+        
+        // Check current route and redirect if necessary
+        const route = useRoute();
+        
+        // Define public routes that don't need authentication
+        const publicRoutes = [
+          '/sign-in', 
+          '/sign-up', 
+          '/forget-password', 
+          '/reset-password',
+          '/registration-success',
+          '/unauthorized'
+        ];
+        
+        // Check if current route is protected and user is not authenticated
+        const isPublicRoute = publicRoutes.some(path => 
+          route.path === path || route.path.startsWith(`${path}/`)
+        );
+        
+        if (!isPublicRoute && !authStore.isAuthenticated) {
+          navigateTo('/sign-in');
+        }
       }, 0);
     }
   });

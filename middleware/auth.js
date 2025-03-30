@@ -1,9 +1,23 @@
 import { useAuthStore } from '~/stores/auth';
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Skip middleware if it's a public route
-  const publicRoutes = ['/sign-in', '/sign-up', '/forget-password', '/reset-password'];
-  if (publicRoutes.includes(to.path)) {
+  // Define all public routes that don't require authentication
+  const publicRoutes = [
+    '/sign-in', 
+    '/sign-up', 
+    '/forget-password', 
+    '/reset-password',
+    '/registration-success',
+    '/unauthorized'
+    // Add any other public routes here
+  ];
+  
+  // Check if the current path is a public route
+  const isPublicRoute = publicRoutes.some(route => 
+    to.path === route || to.path.startsWith(`${route}/`)
+  );
+  
+  if (isPublicRoute) {
     return;
   }
   
@@ -21,8 +35,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
         return navigateTo('/sign-in');
       }
     } else {
-      // Can't check auth on server side, will redirect in client
-      return;
+      // Server-side - redirect to sign-in
+      return navigateTo('/sign-in');
     }
   }
   
