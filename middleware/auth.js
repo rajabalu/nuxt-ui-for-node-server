@@ -8,7 +8,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
     '/forget-password', 
     '/reset-password',
     '/registration-success',
-    '/unauthorized'
+    '/unauthorized',
+    '/auth/email/confirm',
+    '/auth/email/confirm/new',
     // Add any other public routes here
   ];
   

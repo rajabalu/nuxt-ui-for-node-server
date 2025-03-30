@@ -17,7 +17,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await api.post('auth/email/confirm', { hash: hash.value });
+    const response = await api.post('auth/email/confirm/new', { hash: hash.value });
     
     if (response.success) {
       isSuccess.value = true;
