@@ -19,6 +19,7 @@ const profileImage = computed(() => {
 
 const isUploading = ref(false);
 const isEmailSubmitting = ref(false);
+const isPasswordSubmitting = ref(false);
 const showSuccessAlert = ref(false);
 const successMessage = ref('');
 const showErrorAlert = ref(false);
@@ -154,11 +155,75 @@ const onBasic = () => {
   });
 };
 
-const onPassword = () => {
-  refPasswordVForm.value?.validate().then(({ valid: isValid }) => {
+const onPassword = async () => {
+  refPasswordVForm.value?.validate().then(async ({ valid: isValid }) => {
     if (isValid) {
-      showSuccessAlert.value = true;
-      successMessage.value = "Your password changed successfully";
+      try {
+        // Show loading indication
+        isPasswordSubmitting.value = true;
+        
+        // Get API and base URL from composables
+        const nuxtApp = useNuxtApp();
+        const api = nuxtApp.$api;
+        
+        if (!api) {
+          throw new Error('API not available');
+        }
+        
+        // Get the configured base URL
+        const baseUrl = api.getBaseUrl ? api.getBaseUrl() : 'http://localhost:8000/api/v1/';
+        
+        // Update password
+        const updateUrl = `${baseUrl}auth/me`;
+        const response = await fetch(updateUrl, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${authStore.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            password: passwordForm.newPassword,
+            oldPassword: passwordForm.currentPassword
+          })
+        });
+        
+        // Parse response
+        const data = await response.json();
+        
+        if (!response.ok) {
+          // Handle various error types
+          if (response.status === 401) {
+            throw new Error('Authentication failed. Please log in again.');
+          } else if (response.status === 422) {
+            throw new Error(data.message || 'Current password is incorrect or new password does not meet requirements.');
+          } else {
+            throw new Error(`Password update failed with status: ${response.status}`);
+          }
+        }
+        
+        // Show success message
+        showSuccessAlert.value = true;
+        successMessage.value = "Your password has been changed successfully. For security reasons, you will be logged out.";
+        
+        // Clear the password fields and reset validation
+        passwordForm.currentPassword = "";
+        passwordForm.newPassword = "";
+        passwordForm.confirmPassword = "";
+        refPasswordVForm.value?.reset();
+        
+        // Log the user out after a short delay to allow them to see the success message
+        setTimeout(() => {
+          authStore.logout();
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Error updating password:', error);
+        showErrorAlert.value = true;
+        errorMessage.value = `Failed to update password: ${error.message}`;
+      } finally {
+        // Reset loading state
+        isPasswordSubmitting.value = false;
+      }
     }
   });
 };
@@ -400,6 +465,7 @@ const onEmail = async () => {
                     :rules="[requiredValidator, passwordValidator]"
                     :error-messages="errors.currentPassword"
                     placeholder="Enter Current password"
+                    type="password"
                   />
                 </v-col>
               </v-row>
@@ -413,6 +479,7 @@ const onEmail = async () => {
                     :rules="[requiredValidator, passwordValidator]"
                     :error-messages="errors.newPassword"
                     placeholder="Enter New password"
+                    type="password"
                   />
                 </v-col>
               </v-row>
@@ -429,6 +496,7 @@ const onEmail = async () => {
                     ]"
                     :error-messages="errors.confirmPassword"
                     placeholder="Enter New password"
+                    type="password"
                   />
 
                   <div class="mt-4">
@@ -447,7 +515,7 @@ const onEmail = async () => {
               </v-row>
               <v-row no-gutters class="pb-3">
                 <v-col offset-sm="4">
-                  <v-btn type="submit"> Save Changes </v-btn>
+                  <v-btn type="submit" :loading="isPasswordSubmitting" color="primary"> Save Changes </v-btn>
                 </v-col>
               </v-row>
             </v-form>
