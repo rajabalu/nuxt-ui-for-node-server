@@ -12,7 +12,11 @@ const refPasswordVForm = ref();
 // Get user data from auth store
 const authStore = useAuthStore();
 
-const profileImage = ref(authStore.user?.photo ? authStore.user.photo : avatar11);
+// Use computed property for profile image to ensure it updates when auth store changes
+const profileImage = computed(() => {
+  return authStore.user?.photo?.path || '/images/avatar/avatar-fallback.jpg';
+});
+
 const isUploading = ref(false);
 
 const basicForm = reactive({
@@ -61,30 +65,51 @@ const onProfileChange = async (event) => {
     
     isUploading.value = true;
     
-    // Show local preview
-    profileImage.value = URL.createObjectURL(file);
+    // Get API and base URL from composables
+    const nuxtApp = useNuxtApp();
+    const api = nuxtApp.$api;
+    
+    if (!api) {
+      throw new Error('API not available');
+    }
+    
+    // Get the configured base URL
+    const baseUrl = api.getBaseUrl ? api.getBaseUrl() : 'http://localhost:8000/api/v1/';
     
     // Create form data
     const formData = new FormData();
     formData.append('file', file);
     
-    // Upload the file
-    const response = await fetch('/api/v1/files/upload', {
+    // Upload file using the working endpoint
+    const uploadUrl = `${baseUrl}files/upload`;
+    const response = await fetch(uploadUrl, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      },
       body: formData
     });
     
     if (!response.ok) {
-      throw new Error('Failed to upload file');
+      throw new Error(`Upload failed with status: ${response.status}`);
     }
     
+    // Parse response JSON
     const data = await response.json();
-    const fileId = data.id;
+    
+    // Extract the file ID
+    const fileId = data.file?.id;
+    
+    if (!fileId) {
+      throw new Error('No file ID returned from server');
+    }
     
     // Update user profile with the new photo
-    const updateResponse = await fetch('/api/v1/auth/me', {
+    const updateUrl = `${baseUrl}auth/me`;
+    const updateResponse = await fetch(updateUrl, {
       method: 'PATCH',
       headers: {
+        'Authorization': `Bearer ${authStore.token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -95,12 +120,18 @@ const onProfileChange = async (event) => {
     });
     
     if (!updateResponse.ok) {
-      throw new Error('Failed to update profile');
+      throw new Error(`Profile update failed with status: ${updateResponse.status}`);
     }
+    
+    // Update the auth store with new user data to refresh all avatars
+    await authStore.fetchCurrentUser();
+    
+    // Show success message
+    alert("Profile photo updated successfully!");
     
   } catch (error) {
     console.error('Error uploading photo:', error);
-    // Show error message to user
+    alert(`Failed to upload photo: ${error.message}`);
   } finally {
     isUploading.value = false;
   }
@@ -141,8 +172,10 @@ const onEmail = () => {
             <v-col cols="12" sm="4">
               <v-label class="form-label"> Avatar </v-label>
             </v-col>
-            <v-col cols="12" sm="8" class="d-flex align-center ga-4">
-              <v-avatar size="56" :image="profileImage" />
+            <v-col cols="12" sm="8" class="d-flex align-center gap-4">
+              <v-avatar size="56">
+                <VImg :src="profileImage" :key="authStore.user?.photo?.path || 'default'" />
+              </v-avatar>
               <input type="file" ref="file" style="display: none" @change="onProfileChange" accept="image/*" />
               <v-btn variant="outlined" color="secondary" @click="$refs.file.click()" :loading="isUploading">
                 Upload Photo

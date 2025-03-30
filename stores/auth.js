@@ -156,8 +156,22 @@ export const useAuthStore = defineStore('auth', {
         });
         
         if (response.success) {
+          // Update user data with server response
           this.user = response.data;
-          return { success: true };
+          
+          // Also update localStorage with the fresh data
+          if (process.client) {
+            const storedAuth = localStorage.getItem('auth');
+            if (storedAuth) {
+              const authData = JSON.parse(storedAuth);
+              localStorage.setItem('auth', JSON.stringify({
+                ...authData,
+                // Don't override token-related data
+              }));
+            }
+          }
+          
+          return { success: true, data: response.data };
         } else {
           if (response.status === 401) {
             this.logout();
@@ -165,6 +179,7 @@ export const useAuthStore = defineStore('auth', {
           return { success: false, error: response.error };
         }
       } catch (error) {
+        console.error('Error fetching user data:', error);
         return { success: false, error: 'Failed to fetch user data' };
       }
     },

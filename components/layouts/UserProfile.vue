@@ -6,7 +6,7 @@ import { computed } from 'vue';
 const authStore = useAuthStore();
 
 // Compute user properties
-const userPhoto = computed(() => authStore.user?.photo || '/images/avatar/avatar-fallback.jpg');
+const userPhoto = computed(() => authStore.user?.photo?.path || '/images/avatar/avatar-fallback.jpg');
 const userName = computed(() => {
   if (authStore.user) {
     return `${authStore.user.firstName} ${authStore.user.lastName}`;
