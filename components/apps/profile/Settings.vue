@@ -65,6 +65,9 @@ const errors = ref({
   confirmPassword: undefined,
 });
 
+// Add dialog state
+const showPasswordConfirmDialog = ref(false);
+
 const onProfileChange = async (event) => {
   try {
     const file = event.target.files[0];
@@ -158,74 +161,81 @@ const onBasic = () => {
 const onPassword = async () => {
   refPasswordVForm.value?.validate().then(async ({ valid: isValid }) => {
     if (isValid) {
-      try {
-        // Show loading indication
-        isPasswordSubmitting.value = true;
-        
-        // Get API and base URL from composables
-        const nuxtApp = useNuxtApp();
-        const api = nuxtApp.$api;
-        
-        if (!api) {
-          throw new Error('API not available');
-        }
-        
-        // Get the configured base URL
-        const baseUrl = api.getBaseUrl ? api.getBaseUrl() : 'http://localhost:8000/api/v1/';
-        
-        // Update password
-        const updateUrl = `${baseUrl}auth/me`;
-        const response = await fetch(updateUrl, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            password: passwordForm.newPassword,
-            oldPassword: passwordForm.currentPassword
-          })
-        });
-        
-        // Parse response
-        const data = await response.json();
-        
-        if (!response.ok) {
-          // Handle various error types
-          if (response.status === 401) {
-            throw new Error('Authentication failed. Please log in again.');
-          } else if (response.status === 422) {
-            throw new Error(data.message || 'Current password is incorrect or new password does not meet requirements.');
-          } else {
-            throw new Error(`Password update failed with status: ${response.status}`);
-          }
-        }
-        
-        // Show success message
-        showSuccessAlert.value = true;
-        successMessage.value = "Your password has been changed successfully. For security reasons, you will be logged out.";
-        
-        // Clear the password fields and reset validation
-        passwordForm.currentPassword = "";
-        passwordForm.newPassword = "";
-        passwordForm.confirmPassword = "";
-        refPasswordVForm.value?.reset();
-        
-        // Log the user out after a short delay to allow them to see the success message
-        setTimeout(() => {
-          authStore.logout();
-        }, 3000);
-        
-      } catch (error) {
-        console.error('Error updating password:', error);
-        showErrorAlert.value = true;
-        errorMessage.value = `Failed to update password: ${error.message}`;
-      } finally {
-        // Reset loading state
-        isPasswordSubmitting.value = false;
-      }
+      // Show confirmation dialog instead of proceeding directly
+      showPasswordConfirmDialog.value = true;
     }
   });
+};
+
+// New method to handle the actual password change after confirmation
+const confirmPasswordChange = async () => {
+  try {
+    // Close the dialog and show loading
+    showPasswordConfirmDialog.value = false;
+    isPasswordSubmitting.value = true;
+    
+    // Get API and base URL from composables
+    const nuxtApp = useNuxtApp();
+    const api = nuxtApp.$api;
+    
+    if (!api) {
+      throw new Error('API not available');
+    }
+    
+    // Get the configured base URL
+    const baseUrl = api.getBaseUrl ? api.getBaseUrl() : 'http://localhost:8000/api/v1/';
+    
+    // Update password
+    const updateUrl = `${baseUrl}auth/me`;
+    const response = await fetch(updateUrl, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        password: passwordForm.newPassword,
+        oldPassword: passwordForm.currentPassword
+      })
+    });
+    
+    // Parse response
+    const data = await response.json();
+    
+    if (!response.ok) {
+      // Handle various error types
+      if (response.status === 401) {
+        throw new Error('Authentication failed. Please log in again.');
+      } else if (response.status === 422) {
+        throw new Error(data.message || 'Current password is incorrect or new password does not meet requirements.');
+      } else {
+        throw new Error(`Password update failed with status: ${response.status}`);
+      }
+    }
+    
+    // Show success message
+    showSuccessAlert.value = true;
+    successMessage.value = "Your password has been changed successfully. For security reasons, you will be logged out.";
+    
+    // Clear the password fields and reset validation
+    passwordForm.currentPassword = "";
+    passwordForm.newPassword = "";
+    passwordForm.confirmPassword = "";
+    refPasswordVForm.value?.reset();
+    
+    // Log the user out after a short delay to allow them to see the success message
+    setTimeout(() => {
+      authStore.logout();
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Error updating password:', error);
+    showErrorAlert.value = true;
+    errorMessage.value = `Failed to update password: ${error.message}`;
+  } finally {
+    // Reset loading state
+    isPasswordSubmitting.value = false;
+  }
 };
 
 const onEmail = async () => {
@@ -312,6 +322,28 @@ const onEmail = async () => {
     </template>
     {{ errorMessage }}
   </v-alert>
+
+  <!-- Password Change Confirmation Dialog -->
+  <v-dialog v-model="showPasswordConfirmDialog" max-width="500">
+    <v-card>
+      <v-card-title class="text-h5 bg-primary text-white pa-4">
+        Confirm Password Change
+      </v-card-title>
+      <v-card-text class="pa-4 pt-6">
+        <p>You will be logged out after successfully changing your password. All your other active sessions will also be terminated.</p>
+        <p class="mt-2">Are you sure you want to continue?</p>
+      </v-card-text>
+      <v-card-actions class="pa-4 pt-0">
+        <v-spacer></v-spacer>
+        <v-btn color="grey-darken-1" variant="text" @click="showPasswordConfirmDialog = false">
+          Cancel
+        </v-btn>
+        <v-btn color="primary" @click="confirmPasswordChange" :loading="isPasswordSubmitting">
+          Yes, Change Password
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
   <!-- Profile Settings with Vertical Tabs -->
   <v-card>
