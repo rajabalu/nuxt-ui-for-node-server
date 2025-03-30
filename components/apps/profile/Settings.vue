@@ -154,7 +154,7 @@ const onBasic = () => {
 };
 
 const onPassword = () => {
-  refEmailVForm.value?.validate().then(({ valid: isValid }) => {
+  refPasswordVForm.value?.validate().then(({ valid: isValid }) => {
     if (isValid) {
       showSuccessAlert.value = true;
       successMessage.value = "Your password changed successfully";
@@ -163,7 +163,7 @@ const onPassword = () => {
 };
 
 const onEmail = () => {
-  refPasswordVForm.value?.validate().then(({ valid: isValid }) => {
+  refEmailVForm.value?.validate().then(({ valid: isValid }) => {
     if (isValid) {
       showSuccessAlert.value = true;
       successMessage.value = "Your email updated successfully";
@@ -319,6 +319,17 @@ const onEmail = () => {
                     :error-messages="errors.email"
                     placeholder="Enter your email address"
                   />
+                  
+                  <div class="mt-4">
+                    <p class="text-body-2 font-weight-8">Email verification process:</p>
+                    <p class="text-body-1 mb-4">Please note the following steps:</p>
+                    <ul>
+                      <li class="text-body-2 py-0">A verification email will be sent to your new email address</li>
+                      <li class="text-body-2 py-0">You must verify this email by clicking the link in the message</li>
+                      <li class="text-body-2 py-0">After verification, you can use the new email to login</li>
+                      <li class="text-body-2 py-0">Your old email will remain active until verification is complete</li>
+                    </ul>
+                  </div>
                 </v-col>
               </v-row>
               <v-row no-gutters class="pb-3">
