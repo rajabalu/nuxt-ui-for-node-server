@@ -3,6 +3,7 @@ import EmailConfirmation from "@/components/layouts-pages/authentications/EmailC
 
 definePageMeta({
   layout: "blank",
+  middleware: "public"
 });
 
 useSeoMeta({

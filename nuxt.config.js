@@ -117,8 +117,10 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
 
   // Apply auth middleware globally to all routes
-  router: {
-    middleware: ['auth']
+  // Using proper Nuxt 3 syntax and allowing route-specific middleware to override
+  routeRules: {
+    // Apply auth middleware globally except where overridden by route-specific middleware
+    '/**': { middleware: ['auth'] }
   },
 
   modules: [

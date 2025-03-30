@@ -11,6 +11,7 @@ const newEmail = ref('');
 // Define page meta for layout
 definePageMeta({
   layout: "blank",
+  middleware: "public"
 });
 
 useSeoMeta({
