@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Project programming standards
+
+- Do not use new compoenets or libraries. Always use existing pattern and components
+- Do not change the existing styling or introduce new styling or theme. Always use existing style and theme
+- Always, re-use existing components. Introduce new components or pages only if it is neccessary. 
