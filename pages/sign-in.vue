@@ -3,6 +3,7 @@ import SignIn from "@/components/layouts-pages/authentications/SignIn.vue";
 
 definePageMeta({
   layout: "blank",
+  middleware: ['guest']
 });
 
 useSeoMeta({
