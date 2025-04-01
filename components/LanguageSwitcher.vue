@@ -3,7 +3,6 @@
     <template v-slot:activator="{ props }">
       <icon-btn v-bind="props">
         <v-icon icon="tabler-language" />
-        <span class="ml-1">{{ (locale || '').toUpperCase() }}</span>
       </icon-btn>
     </template>
     <v-list>
