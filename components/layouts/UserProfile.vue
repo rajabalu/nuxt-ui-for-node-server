@@ -1,6 +1,6 @@
 <script setup>
 import { useAuthStore } from '~/stores/auth';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 // Get user data from auth store
 const authStore = useAuthStore();
@@ -13,6 +13,9 @@ const userName = computed(() => {
   }
   return 'Guest User';
 });
+
+// Menu visibility state
+const menuVisible = ref(false);
 
 const itemList = [
   {
@@ -41,6 +44,10 @@ const itemList = [
 
 // Handle item click
 const handleItemClick = (item) => {
+  // Close the menu first
+  menuVisible.value = false;
+  
+  // Then execute the action
   if (item.action) {
     item.action();
   }
@@ -48,7 +55,7 @@ const handleItemClick = (item) => {
 </script>
 
 <template>
-  <v-menu :close-on-content-click="false">
+  <v-menu v-model="menuVisible" :close-on-content-click="false">
     <template #activator="{ props }">
       <v-badge
         dot
