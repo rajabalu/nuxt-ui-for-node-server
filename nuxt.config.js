@@ -127,6 +127,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "@vueuse/nuxt",
     "@vite-pwa/nuxt",
+    "@nuxtjs/i18n",
     async (options, nuxt) => {
       nuxt.hooks.hook("vite:extendConfig", (config) => {
         config.plugins ||= [];
@@ -140,7 +141,16 @@ export default defineNuxtConfig({
       });
     },
   ],
-
+  i18n: {
+    locales: [
+      { code: 'en', iso: 'en-US', name: 'English', file: 'en.json' },
+      { code: 'fr', iso: 'fr-FR', name: 'Français', file: 'fr.json' }
+    ],
+    defaultLocale: 'en',
+    lazy: true,
+    langDir: 'locales/',
+    strategy: 'prefix_except_default'
+  },
   pwa: {
     registerType: "autoUpdate",
     manifest: {
@@ -185,5 +195,10 @@ export default defineNuxtConfig({
         transformAssetUrls,
       },
     },
+    server: {
+      mimeTypes: {
+        'json': 'application/json'
+      }
+    }
   },
 });

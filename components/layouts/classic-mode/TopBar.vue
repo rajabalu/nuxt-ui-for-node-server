@@ -1,10 +1,18 @@
 <script setup>
 import Notification from "@/components/layouts/Notification.vue";
 import UserProfile from "@/components/layouts/UserProfile.vue";
-
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useGlobal } from "@/stores/global";
+import { useI18n } from "vue-i18n";
+
 const { themeHeaderHeight, themeSidebarWidth, smallDisplay, themeName } = themeConfig();
 const globalStore = useGlobal();
+const { locale } = useI18n();
+
+const languages = [
+  { code: "en", name: "English" },
+  { code: "fr", name: "Français" },
+];
 
 const toggleSidebarPhone = (tempObj) => {
   globalStore.sideBarToggle(tempObj);
@@ -26,7 +34,7 @@ if (smallDisplay.value) {
 <template>
   <v-app-bar :height="themeHeaderHeight" class="app-header" fixed>
     <template #prepend>
-      <div class="d-flex d-md-none aligin-item-center mr-3">
+      <div class="d-flex d-md-none align-item-center mr-3">
         <NuxtLink to="/" class="d-flex">
           <img
             :src="
@@ -50,7 +58,7 @@ if (smallDisplay.value) {
       </icon-btn>
 
       <GlobalsTextField
-        placeholder="Seach"
+        placeholder="Search"
         height="39"
         append-inner-icon="tabler-search"
         class="min-w-57 ml-4 d-none d-sm-flex"
@@ -58,10 +66,7 @@ if (smallDisplay.value) {
     </template>
 
     <template #append>
-      <icon-btn class="d-flex d-sm-none" @click.stop="globalStore.sideBarToggle()">
-        <v-icon size="25" icon="tabler-menu-2" />
-      </icon-btn>
-
+      <LanguageSwitcher />
       <Notification />
       <UserProfile />
     </template>

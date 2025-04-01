@@ -1,6 +1,13 @@
 <script setup>
 import { useAuthStore } from '~/stores/auth';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+// Initialize i18n
+const { t, locale } = useI18n();
+
+// Debug current locale
+console.log("🚀 Current Locale:", locale.value);
 
 // Get user data from auth store
 const authStore = useAuthStore();
@@ -11,36 +18,36 @@ const userName = computed(() => {
   if (authStore.user) {
     return `${authStore.user.firstName} ${authStore.user.lastName}`;
   }
-  return 'Guest User';
+  return t('guestUser'); // Translated "Guest User"
 });
 
 // Menu visibility state
 const menuVisible = ref(false);
 
-const itemList = [
+const itemList = computed(() => [
   {
-    name: "Edit Profile",
+    name: t("editProfile"),
     icon: "tabler-user",
     value: "edit-profile",
   },
   {
-    name: "Activity Log",
+    name: t("activityLog"),
     icon: "tabler-activity",
     value: "activity-log",
   },
   {
-    name: "Settings",
+    name: t("settings"),
     icon: "tabler-settings",
     value: "settings",
     action: () => navigateTo('/settings')
   },
   {
-    name: "Sign Out",
+    name: t("signOut"),
     icon: "tabler-power",
     value: "sign-out",
     action: () => authStore.logout()
   },
-];
+]);
 
 // Handle item click
 const handleItemClick = (item) => {
@@ -53,6 +60,7 @@ const handleItemClick = (item) => {
   }
 };
 </script>
+
 
 <template>
   <v-menu v-model="menuVisible" :close-on-content-click="false">
@@ -74,7 +82,7 @@ const handleItemClick = (item) => {
     <v-list>
       <div class="px-4 pt-2">
         <h5 class="text-h5">{{ userName }}</h5>
-        <NuxtLink class="text-body-2" to="/profile">View my profile</NuxtLink>
+        <NuxtLink class="text-body-2" to="/profile">{{ t('viewProfile') }}</NuxtLink>
         <v-divider class="my-2" />
       </div>
       <v-list-item 
