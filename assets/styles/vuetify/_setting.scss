@@ -36,8 +36,6 @@
       none
     ),
   $list-theme: map_get(variable.$list-item, theme),
-  $list-item-padding: map_get(variable.$list-item, padding),
-  $list-item-one-line-padding: map_get(variable.$list-item, padding),
   $list-item-one-line-min-height: map_get(variable.$list-item, min-height),
   $list-item-icon-margin-start: map_get(variable.$list-item, icon-margin),
   $list-item-icon-margin-end: map_get(variable.$list-item, icon-margin),

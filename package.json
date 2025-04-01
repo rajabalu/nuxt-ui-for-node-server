@@ -30,7 +30,7 @@
     "@pinia/nuxt": "^0.5.4",
     "@vueuse/core": "^11.0.3",
     "@vueuse/nuxt": "^11.0.3",
-    "apexcharts": "^3.53.0",
+    "apexcharts": "^4.0.0",
     "dropzone-vue": "^0.1.11",
     "vite-plugin-vuetify": "^2.0.4",
     "vue-code-highlighter": "^1.1.2",
