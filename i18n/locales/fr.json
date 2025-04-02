@@ -4,5 +4,11 @@
   "settings": "Paramètres",
   "signOut": "Déconnexion",
   "viewProfile": "Voir mon profil",
-  "guestUser": "Utilisateur invité"
+  "guestUser": "Utilisateur invité",
+  "resetPassword": "Réinitialiser le mot de passe",
+  "noAccount": "Vous n'avez pas de compte?",
+  "signUp": "s'inscrire",
+  "passwordResetEmailSent": "Un e-mail a été envoyé à votre adresse e-mail avec les instructions pour réinitialiser votre mot de passe.",
+  "passwordResetFailed": "La demande de réinitialisation du mot de passe a échoué. Veuillez réessayer.",
+  "passwordResetError": "Une erreur s'est produite lors du traitement de votre demande. Veuillez réessayer plus tard."
 }

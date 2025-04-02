@@ -63,13 +63,6 @@ const onSubmit = async () => {
 <template>
   <v-card elevation="4">
     <v-card-item class="pa-6">
-      <div class="mb-6">
-        <NuxtLink to="/" class="d-flex mb-2">
-          <img src="/images/brand/logo/logo-light.svg" height="60px" />
-        </NuxtLink>
-        <p class="text-body-1">Please enter your user information.</p>
-      </div>
-
       <v-alert v-if="showAlert" :type="alertType" closable @click:close="showAlert = false" class="mb-4">
         {{ alertMessage }}
       </v-alert>

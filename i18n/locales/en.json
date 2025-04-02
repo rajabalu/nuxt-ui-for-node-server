@@ -4,5 +4,11 @@
   "settings": "Settings",
   "signOut": "Sign Out",
   "viewProfile": "View my profile",
-  "guestUser": "Guest User"
+  "guestUser": "Guest User",
+  "resetPassword": "Reset Password",
+  "noAccount": "Don't have an account?",
+  "signUp": "sign up",
+  "passwordResetEmailSent": "An email has been sent to your email address with instructions to reset your password.",
+  "passwordResetFailed": "Password reset request failed. Please try again.",
+  "passwordResetError": "An error occurred while processing your request. Please try again later."
 }
