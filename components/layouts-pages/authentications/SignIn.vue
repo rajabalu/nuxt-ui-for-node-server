@@ -65,6 +65,7 @@ const onSubmit = async () => {
         density="compact"
         class="mb-4"
         closable
+        icon="tabler-alert-triangle"
         @click:close="errorMessage = null"
       >
         {{ errorMessage }}

@@ -71,13 +71,14 @@ const onSubmit = async () => {
 <template>
   <v-card elevation="4">
     <v-card-item class="pa-6">
-      <!-- Alert to show success or error messages -->
+      <!-- Alert to show success or error messages with distinct icons -->
       <v-alert 
         v-if="showAlert" 
         :type="alertType" 
         closable 
         @click:close="showAlert = false" 
         class="mb-4"
+        :icon="alertType === 'error' ? 'tabler-alert-triangle' : 'tabler-circle-check'"
       >
         {{ alertMessage }}
       </v-alert>

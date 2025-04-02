@@ -77,6 +77,7 @@ definePageMeta({
           density="compact"
           class="mb-4"
           closable
+          icon="tabler-alert-triangle"
           @click:close="error = null"
         >
           {{ error }}

@@ -109,13 +109,14 @@ const navigateToLogin = () => {
         </p>
       </div>
       
-      <!-- Alert to show success or error messages -->
+      <!-- Alert to show success or error messages with distinct icons -->
       <v-alert 
         v-if="showAlert" 
         :type="alertType" 
         closable 
         @click:close="showAlert = false" 
         class="mb-4"
+        :icon="alertType === 'error' ? 'tabler-alert-triangle' : 'tabler-circle-check'"
       >
         {{ alertMessage }}
       </v-alert>
