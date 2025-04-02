@@ -23,5 +23,23 @@
   "signIn": "Connectez-vous à votre compte",
   "backToLogin": "Retour à la connexion",
   "invalidResetLink": "Lien de réinitialisation invalide ou expiré. Veuillez en demander un nouveau.",
-  "resetTokenExpired": "Votre lien de réinitialisation de mot de passe a expiré. Veuillez en demander un nouveau ci-dessous."
+  "resetTokenExpired": "Votre lien de réinitialisation de mot de passe a expiré. Veuillez en demander un nouveau ci-dessous.",
+  "common": {
+    "refresh": "Rafraîchir",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "retry": "Réessayer",
+    "loadMore": "Charger plus"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "toggleMenu": "Basculer le menu des notifications",
+    "markAsRead": "Marquer comme lu",
+    "markAsUnread": "Marquer comme non lu",
+    "detailsTitle": "Détails de la notification",
+    "defaultTitle": "Notification",
+    "noNotifications": "Aucune notification pour l'instant.",
+    "received": "Reçu",
+    "read": "Lu"
+  }
 }

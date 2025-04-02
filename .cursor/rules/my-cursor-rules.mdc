@@ -63,6 +63,7 @@ public/: Static assets served directly
 stores/: Pinia state management stores
 auth.js: Authentication state and actions
 utils/: Utility functions
+i18n/locales: i18n related language files
 Key files:
 nuxt.config.js: Nuxt configuration including PWA setup, plugins, and modules
 package.json: Dependencies and scripts

@@ -71,45 +71,62 @@ const handleLoadMore = () => {
 </script>
 
 <template>
-  <v-menu :close-on-content-click="false" width="380" max-height="450">
-    <template #activator="{ props }">
-      <icon-btn class="mr-2 ml-1" v-bind="props">
-        <!-- Optional: Add a badge for unread count -->
-        <v-badge 
-          :content="notifications.filter(n => !n.isRead).length" 
-          :model-value="notifications.filter(n => !n.isRead).length > 0"
-          color="error"
-          offset-x="-2"
-          offset-y="-2"
-        >
-          <v-icon size="25" icon="tabler-bell" />
-        </v-badge>
-      </icon-btn>
+  <v-menu 
+    :close-on-content-click="false" 
+    width="380" 
+    max-height="450" 
+    location="bottom end" 
+    offset="12px"
+    transition="scale-transition"
+    origin="top right"
+  >
+    <template #activator="{ props: menuProps }">
+      <v-tooltip location="bottom" :text="t('notifications.toggleMenu')">
+        <template #activator="{ props: tooltipProps }">
+          <icon-btn 
+            class="mr-2 ml-1" 
+            v-bind="{ ...menuProps, ...tooltipProps }" 
+            :aria-label="t('notifications.toggleMenu')"
+           >
+            <v-badge 
+              :content="notifications.filter(n => !n.isRead).length" 
+              :model-value="notifications.filter(n => !n.isRead).length > 0"
+              color="error"
+              offset-x="-2"
+              offset-y="-2"
+            >
+              <v-icon size="25" icon="tabler-bell" />
+            </v-badge>
+          </icon-btn>
+        </template>
+      </v-tooltip>
     </template>
+    
     <v-card 
       color="notification-card" 
       rounded="lg" 
       class="d-flex flex-column"
       style="height: 450px;" 
     >
-      <!-- Card Header -->
       <div class="notification-card__header bg-surface rounded-t px-4 py-3 flex-shrink-0">
         <div class="d-flex align-center justify-space-between">
             <h4 class="text-h4">{{ t('notifications.title') }}</h4>
-            <!-- Optional: Add Refresh button? -->
-             <icon-btn 
-                size="small" 
-                icon="tabler-refresh" 
-                :loading="loading && notifications.length > 0"
-                @click="fetchNotifications()"
-                aria-label="Refresh notifications"
-                :tooltip-text="t('common.refresh')"
-              />
+            <v-tooltip location="bottom" :text="t('common.refresh')">
+              <template #activator="{ props }">
+                 <icon-btn 
+                    size="small" 
+                    icon="tabler-refresh" 
+                    :loading="loading && notifications.length > 0"
+                    @click="fetchNotifications()"
+                    :aria-label="t('common.refresh')"
+                    v-bind="props"
+                  />
+              </template>
+            </v-tooltip>
         </div>
         <v-divider class="mt-2"/>
       </div>
 
-      <!-- Card Body (Scrollable List) -->
       <v-card-text class="pa-0 ma-0 flex-grow-1 overflow-y-auto">
         <v-list density="compact">
           <template v-if="loading && notifications.length === 0">
@@ -139,38 +156,47 @@ const handleLoadMore = () => {
                 
                  <template v-slot:append>
                    <div class="d-flex ga-1 align-center">
-                      <icon-btn 
-                        v-if="!item.isRead"
-                        size="x-small" 
-                        icon="tabler-mail-opened" 
-                        @click.stop="handleMarkAsRead(item.id)"
-                        aria-label="Mark as read"
-                        :tooltip-text="t('notifications.markAsRead')"
-                      />
-                       <icon-btn 
-                        v-if="item.isRead"
-                        size="x-small" 
-                        icon="tabler-mail" 
-                        @click.stop="handleMarkAsUnread(item.id)"
-                        aria-label="Mark as unread"
-                        :tooltip-text="t('notifications.markAsUnread')"
-                      />
-                      <icon-btn 
-                        size="x-small" 
-                        icon="tabler-trash" 
-                        color="error"
-                        @click.stop="handleDelete(item.id)"
-                        aria-label="Delete notification"
-                        :tooltip-text="t('common.delete')"
-                      />
+                      <v-tooltip v-if="!item.isRead" location="top" :text="t('notifications.markAsRead')">
+                        <template #activator="{ props }">
+                          <icon-btn 
+                            size="x-small" 
+                            icon="tabler-mail-opened" 
+                            @click.stop="handleMarkAsRead(item.id)"
+                            :aria-label="t('notifications.markAsRead')"
+                            v-bind="props"
+                          />
+                        </template>
+                      </v-tooltip>
+                       <v-tooltip v-if="item.isRead" location="top" :text="t('notifications.markAsUnread')">
+                          <template #activator="{ props }">
+                             <icon-btn 
+                               size="x-small" 
+                               icon="tabler-mail" 
+                               @click.stop="handleMarkAsUnread(item.id)"
+                               :aria-label="t('notifications.markAsUnread')"
+                               v-bind="props"
+                             />
+                          </template>
+                        </v-tooltip>
+                        <v-tooltip location="top" :text="t('common.delete')">
+                           <template #activator="{ props }">
+                              <icon-btn 
+                                size="x-small" 
+                                icon="tabler-trash" 
+                                color="error"
+                                @click.stop="handleDelete(item.id)"
+                                :aria-label="t('common.delete')"
+                                v-bind="props"
+                              />
+                           </template>
+                        </v-tooltip>
                    </div>
                   </template>
               </v-list-item>
               <v-divider v-if="index < notifications.length - 1" />
             </template>
             
-             <!-- Load More Button -->
-            <v-list-item v-if="hasNextPage" class="text-center">
+             <v-list-item v-if="hasNextPage" class="text-center">
               <v-btn 
                 variant="text" 
                 color="primary" 
@@ -185,29 +211,24 @@ const handleLoadMore = () => {
        
       </v-card-text>
 
-      <div class="notification-card__footer bg-surface rounded-b px-4 py-2 flex-shrink-0">
-        <v-divider class="mb-2"/>
-        <div class="text-center">
-          <NuxtLink to="/notifications" class="text-primary text-body-2">
-             {{ t('notifications.viewAll') }}
-          </NuxtLink>
-        </div>
-      </div>
     </v-card>
   </v-menu>
 
-  <!-- Notification Detail Dialog -->
   <v-dialog v-model="dialogVisible" max-width="600" scrollable>
     <v-card v-if="selectedNotification" rounded="lg">
       <v-card-title class="d-flex justify-space-between align-center text-h6 pa-4">
         <span>{{ selectedNotification.notificationType || t('notifications.detailsTitle') }}</span>
-         <icon-btn 
-            icon="tabler-x" 
-            size="small" 
-            @click="dialogVisible = false"
-            aria-label="Close dialog"
-            :tooltip-text="t('common.close')"
-          />
+         <v-tooltip location="bottom" :text="t('common.close')">
+          <template #activator="{ props }">
+             <icon-btn 
+                icon="tabler-x" 
+                size="small" 
+                @click="dialogVisible = false"
+                :aria-label="t('common.close')"
+                v-bind="props"
+              />
+          </template>
+        </v-tooltip>
       </v-card-title>
       <v-divider/>
       <v-card-text class="py-4" style="max-height: 400px; overflow-y: auto;">
@@ -248,32 +269,7 @@ const handleLoadMore = () => {
 </template>
 
 <style scoped lang="scss">
-// Remove fixed positioning styles as the menu content handles scrolling
-// .headerFooter {
-//   position: fixed;
-//   width: 100%;
-// }
-
 .notification-card {
-//   &__header {
-//     //@extend .headerFooter;
-//     //top: 0;
-//     //z-index: 2;
-//     flex-shrink: 0; // Prevent header from shrinking
-//   }
-
-//   &__footer {
-//    // @extend .headerFooter;
-//    // bottom: 0px;
-//    // z-index: 2;
-//     flex-shrink: 0; // Prevent footer from shrinking
-//   }
-
-  // &__body {
-  //   position: absolute; // Remove absolute positioning
-  //   top: 55px; // Remove top offset
-  //   padding-bottom: 52px !important; // Remove padding offset
-  // }
 }
 
 .notification-item:hover {

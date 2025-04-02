@@ -23,5 +23,23 @@
   "signIn": "Login to Your Account",
   "backToLogin": "Back to Login",
   "invalidResetLink": "Invalid or expired reset link. Please request a new one.",
-  "resetTokenExpired": "Your password reset link has expired. Please request a new one below."
+  "resetTokenExpired": "Your password reset link has expired. Please request a new one below.",
+  "common": {
+    "refresh": "Refresh",
+    "delete": "Delete",
+    "close": "Close",
+    "retry": "Retry",
+    "loadMore": "Load More"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "toggleMenu": "Toggle Notifications Menu",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "detailsTitle": "Notification Details",
+    "defaultTitle": "Notification",
+    "noNotifications": "No notifications yet.",
+    "received": "Received",
+    "read": "Read"
+  }
 }
