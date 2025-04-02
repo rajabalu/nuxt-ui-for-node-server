@@ -5,6 +5,7 @@ export const useGlobal = defineStore({
   state: () => ({
     appVersion: "1.0.0",
     sideNavBar: true,
+    datkMode: false,
   }),
 
   actions: {
@@ -14,6 +15,9 @@ export const useGlobal = defineStore({
       } else {
         this.sideNavBar = !this.sideNavBar;
       }
+    },
+    darkModeToggle() {
+      this.datkMode = !this.datkMode;
     },
   },
 });

@@ -1,9 +1,23 @@
 <script setup>
 import Navigation from "@/components/layouts/navigation/Index.vue";
-
+import { computed, watch } from 'vue';
 import { useGlobal } from "@/stores/global";
-const { themeSidebarWidth, smallDisplay, themeName } = themeConfig();
+import { themeConfig } from '@/composables/theme';
+
+const theme = themeConfig();
+const { themeSidebarWidth, smallDisplay } = theme;
 const globalStore = useGlobal();
+
+const themeName = computed(() => {
+  const currentTheme = globalStore.datkMode ? 'dark' : 'light';
+  console.log('NavBar - Current theme:', currentTheme);
+  return currentTheme;
+});
+
+watch(() => globalStore.datkMode, (newVal) => {
+  console.log('NavBar - Dark mode changed:', newVal);
+  console.log('NavBar - Current theme:', themeName.value);
+}, { immediate: true });
 </script>
 
 <template>
