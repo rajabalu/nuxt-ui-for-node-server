@@ -10,5 +10,21 @@
   "signUp": "sign up",
   "passwordResetEmailSent": "An email has been sent to your email address with instructions to reset your password.",
   "passwordResetFailed": "Password reset request failed. Please try again.",
-  "passwordResetError": "An error occurred while processing your request. Please try again later."
+  "passwordResetError": "An error occurred while processing your request. Please try again later.",
+  "resetYourPassword": "Reset Your Password",
+  "createNewPassword": "Create a new secure password for your account.",
+  "newPassword": "New Password",
+  "confirmPassword": "Confirm Password",
+  "passwordRequirements": "Password requirements:",
+  "requirementsMustBeMet": "Ensure that these requirements are met:",
+  "minimumLength": "Minimum 8 characters long - the more, the better",
+  "lowercase": "At least one lowercase character",
+  "uppercase": "At least one uppercase character",
+  "special": "At least one number, symbol, or whitespace character",
+  "passwordResetSuccessful": "Your password has been reset successfully. You can now login with your new password.",
+  "passwordResetComplete": "Password Reset Complete",
+  "signIn": "Login to Your Account",
+  "backToLogin": "Back to Login",
+  "invalidResetLink": "Invalid or expired reset link. Please request a new one.",
+  "resetTokenExpired": "Your password reset link has expired. Please request a new one below."
 }

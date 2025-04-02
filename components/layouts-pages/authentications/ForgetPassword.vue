@@ -1,5 +1,9 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 const { t } = useI18n();
 const { requiredValidator, emailValidator } = useValidators();
 const api = useApi();
@@ -21,6 +25,13 @@ const showNotification = (type, message) => {
   alertMessage.value = message;
   showAlert.value = true;
 };
+
+// Check for expired token query param
+onMounted(() => {
+  if (route.query.expired === 'true') {
+    showNotification('error', t('resetTokenExpired', 'Your password reset link has expired. Please request a new one below.'));
+  }
+});
 
 const onSubmit = async () => {
   const { valid: isValid } = await refVForm.value?.validate();

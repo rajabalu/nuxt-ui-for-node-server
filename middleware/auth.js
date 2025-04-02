@@ -19,6 +19,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     '/unauthorized',
     '/auth/email/confirm',
     '/auth/email/confirm/new',
+    '/password-change',
     // Add any other public routes here
   ];
   

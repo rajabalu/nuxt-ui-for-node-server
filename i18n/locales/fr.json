@@ -10,5 +10,21 @@
   "signUp": "s'inscrire",
   "passwordResetEmailSent": "Un e-mail a été envoyé à votre adresse e-mail avec les instructions pour réinitialiser votre mot de passe.",
   "passwordResetFailed": "La demande de réinitialisation du mot de passe a échoué. Veuillez réessayer.",
-  "passwordResetError": "Une erreur s'est produite lors du traitement de votre demande. Veuillez réessayer plus tard."
+  "passwordResetError": "Une erreur s'est produite lors du traitement de votre demande. Veuillez réessayer plus tard.",
+  "resetYourPassword": "Réinitialisez votre mot de passe",
+  "createNewPassword": "Créez un nouveau mot de passe sécurisé pour votre compte.",
+  "newPassword": "Nouveau mot de passe",
+  "confirmPassword": "Confirmer le mot de passe",
+  "passwordRequirements": "Exigences de mot de passe:",
+  "requirementsMustBeMet": "Assurez-vous que ces exigences sont satisfaites:",
+  "minimumLength": "Minimum 8 caractères - plus c'est long, mieux c'est",
+  "lowercase": "Au moins un caractère minuscule",
+  "uppercase": "Au moins un caractère majuscule",
+  "special": "Au moins un chiffre, symbole ou espace",
+  "passwordResetSuccessful": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+  "passwordResetComplete": "Réinitialisation du mot de passe terminée",
+  "signIn": "Connectez-vous à votre compte",
+  "backToLogin": "Retour à la connexion",
+  "invalidResetLink": "Lien de réinitialisation invalide ou expiré. Veuillez en demander un nouveau.",
+  "resetTokenExpired": "Votre lien de réinitialisation de mot de passe a expiré. Veuillez en demander un nouveau ci-dessous."
 }
