@@ -4,10 +4,12 @@ import UserProfile from "@/components/layouts/UserProfile.vue";
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useGlobal } from "@/stores/global";
 import { useI18n } from "vue-i18n";
+import { useAuthStore } from '@/stores/auth';
 
 const { themeHeaderHeight, themeSidebarWidth, smallDisplay, themeName } = themeConfig();
 const globalStore = useGlobal();
 const { locale } = useI18n();
+const authStore = useAuthStore();
 
 const languages = [
   { code: "en", name: "English" },
@@ -47,7 +49,7 @@ if (smallDisplay.value) {
         </NuxtLink>
       </div>
 
-      <icon-btn
+      <icon-btn v-if="authStore.isAuthenticated"
         class="d-none d-sm-flex"
         @click.stop="globalStore.sideBarToggle()"
         :style="`margin-left:${
@@ -56,19 +58,12 @@ if (smallDisplay.value) {
       >
         <v-icon size="25" icon="tabler-menu-2" />
       </icon-btn>
-
-      <GlobalsTextField
-        placeholder="Search"
-        height="39"
-        append-inner-icon="tabler-search"
-        class="min-w-57 ml-4 d-none d-sm-flex"
-      />
     </template>
 
     <template #append>
       <LanguageSwitcher />
-      <Notification />
-      <UserProfile />
+      <Notification v-if="authStore.isAuthenticated" />
+      <UserProfile v-if="authStore.isAuthenticated" />
     </template>
   </v-app-bar>
 </template>
