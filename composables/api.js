@@ -1,7 +1,10 @@
+import { useAuthStore } from '~/stores/auth'; // Import the auth store
+
 export const useApi = () => {
   // Get the server URL from the runtime config
   const config = useRuntimeConfig();
   const nuxtApp = useNuxtApp();
+  const authStore = useAuthStore(); // Get the auth store instance
   
   // Try multiple sources for the server URL in order of preference:
   // 1. Runtime config (from nuxt.config.js)
@@ -14,17 +17,36 @@ export const useApi = () => {
   const apiRequest = async (endpoint, options = {}) => {
     const url = `${BASE_URL}${endpoint}`;
     
+    // Prepare headers
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+
+    // Add Authorization header if token exists
+    if (authStore.token) {
+        headers['Authorization'] = `Bearer ${authStore.token}`;
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        }
+        headers: headers // Use the prepared headers
       });
       
       if (response.status === 204) {
         return { success: true };
+      }
+      
+      if (response.status === 401) { // Handle unauthorized specifically
+          // Optionally trigger logout or token refresh here
+          console.error('API request unauthorized (401)');
+          authStore.logout(); // Example: logout user on 401
+          return { 
+              success: false, 
+              error: 'Unauthorized',
+              status: response.status
+          };
       }
       
       if (!response.ok) {
@@ -57,6 +79,11 @@ export const useApi = () => {
     put: (endpoint, data, options = {}) => apiRequest(endpoint, { 
       ...options, 
       method: 'PUT',
+      body: JSON.stringify(data)
+    }),
+    patch: (endpoint, data, options = {}) => apiRequest(endpoint, {
+      ...options,
+      method: 'PATCH',
       body: JSON.stringify(data)
     }),
     delete: (endpoint, options = {}) => apiRequest(endpoint, { ...options, method: 'DELETE' }),
