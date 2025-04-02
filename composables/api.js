@@ -58,6 +58,12 @@ export const useApi = () => {
         };
       }
       
+      // Handle successful DELETE requests that might return 200 OK with no body
+      if (options.method === 'DELETE') {
+        return { success: true };
+      }
+      
+      // For other successful requests, parse the JSON body
       const data = await response.json();
       return { success: true, data };
     } catch (error) {

@@ -158,9 +158,9 @@ const handleLoadMore = () => {
                    <div class="d-flex ga-1 align-center">
                       <v-tooltip v-if="!item.isRead" location="top" :text="t('notifications.markAsRead')">
                         <template #activator="{ props }">
-                          <icon-btn 
-                            size="x-small" 
-                            icon="tabler-mail-opened" 
+                          <icon-btn
+                            size="x-small"
+                            icon="tabler-mail"
                             @click.stop="handleMarkAsRead(item.id)"
                             :aria-label="t('notifications.markAsRead')"
                             v-bind="props"
@@ -169,9 +169,9 @@ const handleLoadMore = () => {
                       </v-tooltip>
                        <v-tooltip v-if="item.isRead" location="top" :text="t('notifications.markAsUnread')">
                           <template #activator="{ props }">
-                             <icon-btn 
-                               size="x-small" 
-                               icon="tabler-mail" 
+                             <icon-btn
+                               size="x-small"
+                               icon="tabler-mail-opened"
                                @click.stop="handleMarkAsUnread(item.id)"
                                :aria-label="t('notifications.markAsUnread')"
                                v-bind="props"
@@ -237,30 +237,26 @@ const handleLoadMore = () => {
       </v-card-text>
        <v-divider/>
       <v-card-actions class="pa-3 justify-end ga-2">
-        <v-btn 
-            v-if="selectedNotification.isRead" 
+         <!-- Mark as Unread Button (Only shown if already read) -->
+         <v-btn
+            v-if="selectedNotification.isRead"
             @click="handleMarkAsUnread(selectedNotification!.id); dialogVisible = false;"
-            variant="outlined" 
+            variant="outlined"
             size="small"
             prepend-icon="tabler-mail"
          >{{ t('notifications.markAsUnread') }}</v-btn>
-        <v-btn 
-            v-else 
-            @click="handleMarkAsRead(selectedNotification!.id); dialogVisible = false;" 
-            variant="outlined" 
-            size="small"
-            prepend-icon="tabler-mail-opened"
-        >{{ t('notifications.markAsRead') }}</v-btn>
-        <v-btn 
-          color="error" 
-          @click="handleDelete(selectedNotification!.id)" 
-          variant="flat" 
+         <!-- Delete Button -->
+        <v-btn
+          color="error"
+          @click="handleDelete(selectedNotification!.id)"
+          variant="flat"
           size="small"
           prepend-icon="tabler-trash"
         >{{ t('common.delete') }}</v-btn>
-        <v-btn 
+        <!-- Close Button -->
+        <v-btn
           @click="dialogVisible = false"
-          variant="text" 
+          variant="text"
           size="small"
         >{{ t('common.close') }}</v-btn>
       </v-card-actions>
