@@ -17,23 +17,15 @@ export const useAuth = () => {
       const result = await authStore.login(email, password);
       
       if (!result.success) {
-        error.value = result.error || 'Login failed';
+        // Preserve the original error structure and status from the store
+        error.value = result.error?.message || result.error || 'Login failed'; // Set local error message for potential display
         
-        // Handle specific error responses from the API
-        if (result.status === 422 && result.error?.errors) {
-          const errors = result.error.errors;
-          
-          if (errors.email === 'notFound') {
-            error.value = 'Email not found';
-          } else if (errors.email?.startsWith('needLoginViaProvider:')) {
-            const provider = errors.email.split(':')[1];
-            error.value = `Please login using ${provider}`;
-          } else if (errors.password === 'incorrectPassword') {
-            error.value = 'Incorrect password';
-          }
-        }
-        
-        return { success: false, error: error.value };
+        // Return the full result object from the store call
+        return { 
+          success: false, 
+          error: result.error, // Keep original error object/string
+          status: result.status // Keep status
+        };
       }
       
       return { success: true };

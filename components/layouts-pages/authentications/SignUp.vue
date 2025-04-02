@@ -1,8 +1,11 @@
 <script setup>
+import { useI18n } from 'vue-i18n';
+
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
   useValidators();
 const api = useApi();
 const router = useRouter();
+const { t } = useI18n();
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
@@ -49,10 +52,10 @@ const onSubmit = async () => {
       if (response.success) {
         router.push('/registration-success');
       } else {
-        showNotification('error', response.error || 'Registration failed');
+        showNotification('error', response.error || t('auth.errors.registrationFailed'));
       }
     } catch (error) {
-      showNotification('error', 'Registration failed. Please try again later.');
+      showNotification('error', t('auth.errors.registrationFailedGeneric'));
       console.error(error);
     } finally {
       isLoading.value = false;
@@ -63,6 +66,7 @@ const onSubmit = async () => {
 <template>
   <v-card elevation="4">
     <v-card-item class="pa-6">
+      <h5 class="text-h5 text-center mb-4">{{ t('auth.signUpTitle') }}</h5>
       <v-alert 
         v-if="showAlert" 
         :type="alertType" 
@@ -77,25 +81,25 @@ const onSubmit = async () => {
       <v-form ref="refVForm" @submit.prevent="onSubmit">
           <GlobalsTextField
             v-model="firstName"
-            label="First Name"
-            placeholder="Enter your first name"
+            :label="t('common.firstName')"
+            :placeholder="t('auth.firstNamePlaceholder')"
             :rules="[requiredValidator, alphaValidator]"
             :error-messages="errors.firstName"
           />
 
           <GlobalsTextField
             v-model="lastName"
-            label="Last Name"
-            placeholder="Enter your last name"
+            :label="t('common.lastName')"
+            :placeholder="t('auth.lastNamePlaceholder')"
             :rules="[requiredValidator, alphaValidator]"
             :error-messages="errors.lastName"
           />
 
         <GlobalsTextField
           v-model="email"
-          label="Email"
+          :label="t('common.email')"
           type="email"
-          placeholder="Email address here"
+          :placeholder="t('auth.emailPlaceholder')"
           :rules="[requiredValidator, emailValidator]"
           :error-messages="errors.email"
           class="mb-3"
@@ -103,8 +107,8 @@ const onSubmit = async () => {
 
         <GlobalsTextField
           v-model="password"
-          label=" Password"
-          placeholder="************"
+          :label="t('common.password')"
+          :placeholder="t('auth.passwordPlaceholder')"
           :rules="[requiredValidator, passwordValidator]"
           type="password"
           :error-messages="errors.password"
@@ -113,8 +117,8 @@ const onSubmit = async () => {
 
         <GlobalsTextField
           v-model="confirmPassword"
-          label=" Confirm Password"
-          placeholder="************"
+          :label="t('common.confirmPassword')"
+          :placeholder="t('auth.passwordPlaceholder')"
           :rules="[requiredValidator, confirmedValidator(confirmPassword, password)]"
           :type="isPasswordVisible ? 'text' : 'password'"
           :error-messages="errors.confirmPassword"
@@ -125,27 +129,26 @@ const onSubmit = async () => {
 
         <v-checkbox
           v-model="policyCheck"
-          label="Remember me"
           class="mb-4"
           :rules="[requiredValidator]"
           :error-messages="errors.policyCheck"
         >
           <template #label>
             <p class="text-body-1">
-              I agree to the
-              <NuxtLink to="/" class="mx-1 font-weight-5 text-primary">Terms of Service </NuxtLink>
-              and
-              <NuxtLink to="/" class="ml-1 font-weight-5 text-primary">Privacy Policy</NuxtLink>.
+              {{ t('auth.agreeTo') }}
+              <NuxtLink to="/" class="mx-1 font-weight-5 text-primary">{{ t('common.termsOfService') }} </NuxtLink>
+              {{ t('common.and') }}
+              <NuxtLink to="/" class="ml-1 font-weight-5 text-primary">{{ t('common.privacyPolicy') }}</NuxtLink>.
             </p>
           </template>
         </v-checkbox>
 
-        <v-btn type="submit" block :loading="isLoading"> Create Free Account </v-btn>
+        <v-btn type="submit" block :loading="isLoading"> {{ t('auth.createFreeAccountBtn') }} </v-btn>
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
           <NuxtLink to="sign-in" class="font-weight-5 text-primary">
-            Already member? Login
+             {{ t('auth.alreadyMember') }}
           </NuxtLink>
-          <NuxtLink to="forget-password" class="font-weight-5"> Forgot your password? </NuxtLink>
+          <NuxtLink to="forget-password" class="font-weight-5"> {{ t('auth.forgotPasswordLink') }} </NuxtLink>
         </div>
       </v-form>
     </v-card-item>

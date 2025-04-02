@@ -1,19 +1,23 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useAuth } from '~/composables/auth';
+import { useI18n } from 'vue-i18n';
+import { useValidators } from '~/composables/validators';
+
 const { requiredValidator } = useValidators();
+const { t, locale } = useI18n();
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
 const email = ref("");
 const password = ref("");
 const rememberMe = ref(false);
-const errorMessage = ref(null);
+const errorMessage = ref<string | null>(null);
 
 // Get the auth composable
 const { login, loading: isLoading } = useAuth();
 
-const errors = ref({
+const errors = ref<{ email: string | undefined; password: string | undefined }>({
   email: undefined,
   password: undefined,
 });
@@ -37,20 +41,22 @@ const onSubmit = async () => {
       navigateTo('/');
     } else {
       // Handle specific errors based on the API response
-      errorMessage.value = result.error;
+      errorMessage.value = result.error?.message || result.error || t('auth.errors.loginFailedGeneric', 'Login failed. Please check your credentials.');
       
       // Handle field-specific errors if available
-      if (result.status === 422 && result.error?.errors) {
-        const apiErrors = result.error.errors;
+      if (result.status === 422 && result.error && typeof result.error === 'object' && 'errors' in result.error && result.error.errors) {
+        const apiErrors = result.error.errors as Record<string, string>;
         
         if (apiErrors.email === 'notFound') {
-          errors.value.email = 'Email not found';
+          errors.value.email = t('auth.errors.emailNotFound');
         } else if (apiErrors.email?.startsWith('needLoginViaProvider:')) {
           const provider = apiErrors.email.split(':')[1];
-          errors.value.email = `Please login using ${provider}`;
+          errors.value.email = t('auth.errors.loginViaProvider', { provider });
         } else if (apiErrors.password === 'incorrectPassword') {
-          errors.value.password = 'Incorrect password';
+          errors.value.password = t('auth.errors.incorrectPassword');
         }
+      } else if (!result.error) {
+        errorMessage.value = t('auth.errors.loginFailedGeneric', 'Login failed. Please check your credentials.');
       }
     }
   }
@@ -59,8 +65,9 @@ const onSubmit = async () => {
 <template>
   <v-card elevation="4">
     <v-card-item class="pa-6">
+      <h5 class="text-h5 text-center mb-4">{{ t('auth.signInTitle') }}</h5>
       <v-alert
-        v-if="errorMessage"
+        v-if="errorMessage && !errors.email && !errors.password"
         type="error"
         density="compact"
         class="mb-4"
@@ -74,10 +81,10 @@ const onSubmit = async () => {
       <v-form ref="refVForm" @submit.prevent="onSubmit">
         <GlobalsTextField
           v-model="email"
-          label="Email"
+          :label="t('common.email')"
           type="email"
           autofocus
-          placeholder="Email address here"
+          :placeholder="t('auth.emailPlaceholder')"
           :rules="[requiredValidator]"
           :error-messages="errors.email"
           :loading="isLoading"
@@ -87,8 +94,8 @@ const onSubmit = async () => {
 
         <GlobalsTextField
           v-model="password"
-          label=" Password"
-          placeholder="************"
+          :label="t('common.password')"
+          :placeholder="t('auth.passwordPlaceholder')"
           :rules="[requiredValidator]"
           :type="isPasswordVisible ? 'text' : 'password'"
           :error-messages="errors.password"
@@ -99,12 +106,12 @@ const onSubmit = async () => {
           class="mb-3"
         />
 
-        <v-checkbox v-model="rememberMe" label="Remember me" class="mb-4" />
+        <v-checkbox v-model="rememberMe" :label="t('auth.rememberMe')" class="mb-4" />
 
-        <v-btn type="submit" block :loading="isLoading" :disabled="isLoading"> Sign in </v-btn>
+        <v-btn type="submit" block :loading="isLoading" :disabled="isLoading"> {{ t('signIn') }} </v-btn>
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
-          <NuxtLink to="sign-up" class="font-weight-5 text-primary"> Create An Account </NuxtLink>
-          <NuxtLink to="forget-password" class="font-weight-5"> Forgot your password? </NuxtLink>
+          <NuxtLink to="sign-up" class="font-weight-5 text-primary"> {{ t('auth.createAccountLink') }} </NuxtLink>
+          <NuxtLink to="forget-password" class="font-weight-5"> {{ t('auth.forgotPasswordLink') }} </NuxtLink>
         </div>
       </v-form>
     </v-card-item>

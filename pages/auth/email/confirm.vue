@@ -1,5 +1,8 @@
 <script setup>
 import EmailConfirmation from "@/components/layouts-pages/authentications/EmailConfirmation.vue";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 definePageMeta({
   layout: "blank",
@@ -7,10 +10,10 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: "Email Confirmation",
-  ogTitle: "Email Confirmation",
-  description: "Verify your email address to complete your registration.",
-  ogDescription: "Verify your email address to complete your registration.",
+  title: t('auth.emailConfirmTitle'),
+  ogTitle: t('auth.emailConfirmTitle'),
+  description: t('auth.emailConfirmMetaDescription'),
+  ogDescription: t('auth.emailConfirmMetaDescription'),
   ogImage: "",
   twitterCard: "summary_large_image",
 });

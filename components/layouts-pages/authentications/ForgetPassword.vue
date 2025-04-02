@@ -1,7 +1,9 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useValidators } from '~/composables/validators';
+import { useApi } from '~/composables/api';
 
 const route = useRoute();
 const { t } = useI18n();
@@ -29,7 +31,7 @@ const showNotification = (type, message) => {
 // Check for expired token query param
 onMounted(() => {
   if (route.query.expired === 'true') {
-    showNotification('error', t('resetTokenExpired', 'Your password reset link has expired. Please request a new one below.'));
+    showNotification('error', t('auth.errors.resetTokenExpired'));
   }
 });
 
@@ -48,11 +50,11 @@ const onSubmit = async () => {
       
       if (response.success) {
         // Show success message
-        showNotification('success', t('passwordResetEmailSent', 'An email has been sent to your email address with instructions to reset your password.'));
+        showNotification('success', t('auth.errors.passwordResetEmailSent'));
         email.value = ""; // Clear the input field
       } else {
-        // Show error message from API
-        showNotification('error', response.error || t('passwordResetFailed', 'Password reset request failed. Please try again.'));
+        // Show error message from API or fallback translation
+        showNotification('error', response.error || t('auth.errors.passwordResetFailed'));
         
         // Handle field-specific errors if available
         if (response.status === 422 && response.error?.errors?.email) {
@@ -61,7 +63,7 @@ const onSubmit = async () => {
       }
     } catch (error) {
       console.error('Forgot password error:', error);
-      showNotification('error', t('passwordResetError', 'An error occurred while processing your request. Please try again later.'));
+      showNotification('error', t('auth.errors.passwordResetError'));
     } finally {
       isLoading.value = false;
     }
@@ -71,6 +73,9 @@ const onSubmit = async () => {
 <template>
   <v-card elevation="4">
     <v-card-item class="pa-6">
+      <h5 class="text-h5 text-center mb-2">{{ t('auth.forgotPasswordTitle') }}</h5>
+      <p class="text-body-2 text-center mb-4">{{ t('auth.forgotPasswordInstructions') }}</p>
+      
       <!-- Alert to show success or error messages with distinct icons -->
       <v-alert 
         v-if="showAlert" 
@@ -86,10 +91,10 @@ const onSubmit = async () => {
       <v-form ref="refVForm" @submit.prevent="onSubmit">
         <GlobalsTextField
           v-model="email"
-          label="Email"
+          :label="t('common.email')"
           type="email"
           autofocus
-          placeholder="Email address here"
+          :placeholder="t('auth.emailPlaceholder')"
           :rules="[requiredValidator, emailValidator]"
           :error-messages="errors.email"
           :loading="isLoading"
@@ -98,15 +103,13 @@ const onSubmit = async () => {
         />
 
         <v-btn type="submit" block :loading="isLoading" :disabled="isLoading">
-          {{ t('resetPassword', 'Reset Password') }}
+          {{ t('auth.resetPasswordBtn') }}
         </v-btn>
-        <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
-          <p class="text-body-1">
-            {{ t('noAccount', "Don't have an account?") }}
-            <NuxtLink to="sign-up" class="font-weight-5 text-primary">
-              {{ t('signUp', 'sign up') }}
-            </NuxtLink>
-          </p>
+        <div class="mt-4 d-flex align-center justify-center ga-2 flex-wrap">
+           <NuxtLink to="sign-in" class="font-weight-5 text-primary">
+            <v-icon start icon="tabler-chevron-left" />
+            {{ t('backToLogin') }}
+          </NuxtLink>
         </div>
       </v-form>
     </v-card-item>

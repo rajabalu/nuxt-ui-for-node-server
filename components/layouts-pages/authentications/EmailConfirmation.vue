@@ -1,6 +1,11 @@
 <script setup>
+import { useI18n } from 'vue-i18n';
+import { useApi } from '~/composables/api';
+
 const api = useApi();
 const route = useRoute();
+const { t } = useI18n();
+
 const isLoading = ref(true);
 const isSuccess = ref(false);
 const errorMessage = ref('');
@@ -12,7 +17,7 @@ const hash = computed(() => route.query.hash?.toString() || '');
 onMounted(async () => {
   if (!hash.value) {
     isLoading.value = false;
-    errorMessage.value = 'Invalid confirmation link. The verification hash is missing.';
+    errorMessage.value = t('auth.emailVerification.failMessageInvalidLink');
     return;
   }
 
@@ -22,11 +27,11 @@ onMounted(async () => {
     if (response.success) {
       isSuccess.value = true;
     } else {
-      errorMessage.value = response.error || 'Email verification failed. Please try again.';
+      errorMessage.value = response.error || t('auth.emailVerification.failMessageGeneric');
     }
   } catch (error) {
     console.error('Email confirmation error:', error);
-    errorMessage.value = 'An error occurred during email verification. Please try again later.';
+    errorMessage.value = t('auth.emailVerification.failMessageError');
   } finally {
     isLoading.value = false;
   }
@@ -44,32 +49,32 @@ onMounted(async () => {
         <!-- Loading state -->
         <div v-if="isLoading" class="d-flex flex-column align-center py-8">
           <v-progress-circular indeterminate color="primary" size="70" width="5"></v-progress-circular>
-          <p class="text-body-1 mt-4">Verifying your email address...</p>
+          <p class="text-body-1 mt-4">{{ t('auth.emailVerification.verifying') }}</p>
         </div>
         
         <!-- Success state -->
         <div v-else-if="isSuccess" class="py-6">
           <v-icon class="mb-4" color="success" icon="tabler-circle-check-filled" size="80"></v-icon>
-          <h1 class="text-h4 mb-2">Email Verified Successfully!</h1>
+          <h1 class="text-h4 mb-2">{{ t('auth.emailVerification.successTitle') }}</h1>
           <p class="text-body-1 mb-6">
-            Your email has been verified successfully. You can now login to your account.
+            {{ t('auth.emailVerification.successMessage') }}
           </p>
           
           <v-btn to="/sign-in" color="primary" class="mt-4" block>
-            Login to Your Account
+            {{ t('auth.emailVerification.loginBtn') }}
           </v-btn>
         </div>
         
         <!-- Error state -->
         <div v-else class="py-6">
           <v-icon class="mb-4" color="error" icon="tabler-alert-circle-filled" size="80"></v-icon>
-          <h1 class="text-h4 mb-2">Email Verification Failed</h1>
+          <h1 class="text-h4 mb-2">{{ t('auth.emailVerification.failTitle') }}</h1>
           <p class="text-body-1 mb-4">
             {{ errorMessage }}
           </p>
           
           <v-btn to="/" color="primary" variant="outlined" class="mt-4">
-            Return to Home
+            {{ t('auth.emailVerification.returnHomeBtn') }}
           </v-btn>
         </div>
       </div>
