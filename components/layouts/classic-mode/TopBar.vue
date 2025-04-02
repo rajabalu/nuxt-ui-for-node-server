@@ -36,9 +36,9 @@ if (smallDisplay.value) {
 <template>
   <v-app-bar :height="themeHeaderHeight" class="app-header" fixed>
     <template #prepend>
-      <div class="d-flex align-item-center mr-3">
+      <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-item-center mr-3">
         <NuxtLink to="/" class="d-flex">
-          <img v-if="!authStore.isAuthenticated"
+          <img 
             :src="
               themeName === 'light'
                 ? '/images/brand/logo/logo-light.svg'
@@ -48,7 +48,6 @@ if (smallDisplay.value) {
           />
         </NuxtLink>
       </div>
-
       <icon-btn v-if="authStore.isAuthenticated"
         class="d-none d-sm-flex"
         @click.stop="globalStore.sideBarToggle()"

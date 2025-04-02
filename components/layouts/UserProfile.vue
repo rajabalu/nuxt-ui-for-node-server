@@ -26,16 +26,6 @@ const menuVisible = ref(false);
 
 const itemList = computed(() => [
   {
-    name: t("editProfile"),
-    icon: "tabler-user",
-    value: "edit-profile",
-  },
-  {
-    name: t("activityLog"),
-    icon: "tabler-activity",
-    value: "activity-log",
-  },
-  {
     name: t("settings"),
     icon: "tabler-settings",
     value: "settings",
@@ -82,7 +72,6 @@ const handleItemClick = (item) => {
     <v-list>
       <div class="px-4 pt-2">
         <h5 class="text-h5">{{ userName }}</h5>
-        <NuxtLink class="text-body-2" to="/profile">{{ t('viewProfile') }}</NuxtLink>
         <v-divider class="my-2" />
       </div>
       <v-list-item 
