@@ -1,0 +1,126 @@
+/* 
+ * RTL (Right-to-Left) Support Styles
+ * These styles will be applied when the html element has dir="rtl"
+ */
+
+[dir="rtl"] {
+  // Text alignment
+  .text-left {
+    text-align: right !important;
+  }
+  
+  .text-right {
+    text-align: left !important;
+  }
+  
+  // Margins and paddings
+  .ml-auto {
+    margin-left: unset !important;
+    margin-right: auto !important;
+  }
+  
+  .mr-auto {
+    margin-right: unset !important;
+    margin-left: auto !important;
+  }
+  
+  .ms-auto {
+    margin-right: auto !important;
+    margin-left: unset !important;
+  }
+  
+  .me-auto {
+    margin-left: auto !important;
+    margin-right: unset !important;
+  }
+  
+  // Reverse flex direction
+  .flex-row {
+    flex-direction: row-reverse !important;
+  }
+  
+  // Overwrite float classes
+  .float-start {
+    float: right !important;
+  }
+  
+  .float-end {
+    float: left !important;
+  }
+  
+  // Overwrite Vuetify's left/right components if needed
+  .v-list-item__prepend {
+    margin-left: 16px;
+    margin-right: 0;
+  }
+  
+  // Icons in fields
+  .v-field__prepend-inner {
+    padding-left: 4px;
+    padding-right: 0;
+  }
+  
+  .v-field__append-inner {
+    padding-right: 4px;
+    padding-left: 0;
+  }
+  
+  // Borders
+  .border-start {
+    border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
+    border-left: none !important;
+  }
+  
+  .border-end {
+    border-left: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
+    border-right: none !important;
+  }
+  
+  // Reverse any other directional components as needed
+  .v-btn__prepend {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+  
+  .v-btn__append {
+    margin-left: 0;
+    margin-right: 8px;
+  }
+  
+  // Forms
+  .v-label {
+    text-align: right;
+  }
+  
+  // Settings specific UI elements
+  .v-tabs--vertical .v-tab {
+    text-align: right;
+    justify-content: flex-start;
+  }
+  
+  // User dropdown in TopBar
+  .v-menu .v-list-item__prepend {
+    margin-left: 12px;
+    margin-right: 0;
+  }
+}
+
+// Specific fixes for Vuetify's RTL support
+.v-application {
+  &[dir="rtl"] {
+    // Handle any Vuetify-specific RTL issues here
+    .v-field__field {
+      text-align: right;
+    }
+    
+    // Force icon direction for certain icons
+    .v-icon--flip-rtl {
+      transform: scaleX(-1);
+    }
+  }
+}
+
+// Helper class for Arabic text styling if needed
+.arabic-text {
+  font-family: 'Tajawal', 'Roboto', sans-serif; // Add an Arabic-compatible font
+} 

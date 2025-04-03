@@ -10,6 +10,9 @@ export default defineNuxtPlugin((app) => {
     defaults,
     theme,
     icons,
+    rtl: {
+      auto: true
+    },
   });
 
   app.vueApp.use(vuetify);

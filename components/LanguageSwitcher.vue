@@ -15,8 +15,33 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n';
+import { watch, onMounted } from 'vue';
 
 const { locale, locales, setLocale } = useI18n();
+
+// Set RTL direction for Arabic language
+const setDocumentDirection = (lang) => {
+  const isRTL = lang === 'ar';
+  document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang;
+  
+  // You may also want to set a specific class on the body for RTL styling
+  if (isRTL) {
+    document.body.classList.add('rtl');
+  } else {
+    document.body.classList.remove('rtl');
+  }
+};
+
+// Set direction on initial load
+onMounted(() => {
+  setDocumentDirection(locale.value);
+});
+
+// Watch for language changes and update direction
+watch(locale, (newLocale) => {
+  setDocumentDirection(newLocale);
+});
 
 const changeLanguage = (lang) => {
   setLocale(lang);
