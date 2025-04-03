@@ -41,7 +41,8 @@
     "success": "Succès",
     "termsOfService": "Conditions d'utilisation",
     "privacyPolicy": "Politique de confidentialité",
-    "and": "et"
+    "and": "et",
+    "cancel": "Annuler"
   },
   "notifications": {
     "title": "Notifications",
@@ -107,5 +108,30 @@
       "resetTokenExpired": "Votre lien de réinitialisation de mot de passe a expiré. Veuillez en demander un nouveau ci-dessous.",
       "invalidResetLink": "Lien de réinitialisation invalide ou expiré. Veuillez en demander un nouveau."
     }
+  },
+  "settings": {
+    "confirmPasswordChange": "Confirmer le changement de mot de passe",
+    "logoutAfterPasswordChange": "Vous serez déconnecté après avoir changé votre mot de passe. Toutes vos autres sessions actives seront également terminées.",
+    "confirmContinue": "Êtes-vous sûr de vouloir continuer?",
+    "yesChangePassword": "Oui, changer le mot de passe",
+    "basicInformation": "Informations de base",
+    "changeEmail": "Changer l'email",
+    "changePassword": "Changer le mot de passe",
+    "fullName": "Nom complet",
+    "avatar": "Avatar",
+    "uploadPhoto": "Télécharger une photo",
+    "newEmail": "Nouvel email",
+    "emailVerificationProcess": "Processus de vérification de l'email",
+    "pleaseNote": "Veuillez noter les étapes suivantes",
+    "verificationEmailWillBeSent": "Un email de vérification sera envoyé à votre nouvelle adresse email",
+    "mustVerifyEmail": "Vous devez vérifier cet email en cliquant sur le lien dans le message",
+    "afterVerificationCanLogin": "Après vérification, vous pouvez utiliser le nouvel email pour vous connecter",
+    "oldEmailRemains": "Votre ancien email restera actif jusqu'à ce que la vérification soit terminée",
+    "saveChanges": "Enregistrer les modifications",
+    "changeYourPassword": "Changer votre mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "enterCurrentPassword": "Entrez le mot de passe actuel",
+    "enterNewPassword": "Entrez le nouveau mot de passe",
+    "confirmNewPassword": "Confirmez le nouveau mot de passe"
   }
 }

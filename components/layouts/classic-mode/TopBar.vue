@@ -27,17 +27,11 @@ const toggleSidebarPhone = (tempObj) => {
 };
 
 const toggleLightDarkMode = () => {
-  console.log('TopBar - Before toggle - Dark mode:', globalStore.datkMode);
-  console.log('TopBar - Before toggle - Theme:', themeName.value);
   globalStore.darkModeToggle();
   themeChangeMode();
-  console.log('TopBar - After toggle - Dark mode:', globalStore.datkMode);
-  console.log('TopBar - After toggle - Theme:', themeName.value);
 };
 
 watch(() => globalStore.datkMode, (newVal) => {
-  console.log('TopBar - Dark mode changed:', newVal);
-  console.log('TopBar - Current theme:', themeName.value);
 }, { immediate: true });
 
 watch(smallDisplay, (newValue, oldValue) => {

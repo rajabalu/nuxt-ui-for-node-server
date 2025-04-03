@@ -1,7 +1,9 @@
 <script setup>
 import avatar11 from "/images/avatar/avatar-11.jpg";
 import { useAuthStore } from '~/stores/auth';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
   useValidators();
 
@@ -45,11 +47,6 @@ const passwordForm = reactive({
   confirmPassword: "",
 });
 
-const preferencesForm = reactive({
-  langauge: "English",
-  timeZone: "GMT +5.30",
-  dateFormat: "No Preference",
-});
 
 const errors = ref({
   firstName: undefined,
@@ -299,7 +296,7 @@ const onEmail = async () => {
     closable
     class="mb-4"
     border="start"
-    title="Success"
+    :title="t('common.success')"
   >
     <template v-slot:prepend>
       <v-icon icon="tabler-check" />
@@ -315,7 +312,7 @@ const onEmail = async () => {
     closable
     class="mb-4"
     border="start"
-    title="Error"
+    :title="t('common.error')"
   >
     <template v-slot:prepend>
       <v-icon icon="tabler-alert-circle" />
@@ -327,19 +324,19 @@ const onEmail = async () => {
   <v-dialog v-model="showPasswordConfirmDialog" max-width="500">
     <v-card>
       <v-card-title class="text-h5 bg-primary text-white pa-4">
-        Confirm Password Change
+        {{ t('settings.confirmPasswordChange') }}
       </v-card-title>
       <v-card-text class="pa-4 pt-6">
-        <p>You will be logged out after successfully changing your password. All your other active sessions will also be terminated.</p>
-        <p class="mt-2">Are you sure you want to continue?</p>
+        <p>{{ t('settings.logoutAfterPasswordChange') }}</p>
+        <p class="mt-2">{{ t('settings.confirmContinue') }}</p>
       </v-card-text>
       <v-card-actions class="pa-4 pt-0">
         <v-spacer></v-spacer>
         <v-btn color="grey-darken-1" variant="text" @click="showPasswordConfirmDialog = false">
-          Cancel
+          {{ t('common.cancel') }}
         </v-btn>
         <v-btn color="primary" @click="confirmPasswordChange" :loading="isPasswordSubmitting">
-          Yes, Change Password
+          {{ t('settings.yesChangePassword') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -352,19 +349,15 @@ const onEmail = async () => {
         <v-tabs v-model="currentTab" direction="vertical">
           <v-tab value="tab-1">
             <v-icon start icon="tabler-user" />
-            Basic Information
+            {{ t('settings.basicInformation') }}
           </v-tab>
           <v-tab value="tab-2">
             <v-icon start icon="tabler-mail" />
-            Change Email
+            {{ t('settings.changeEmail') }}
           </v-tab>
           <v-tab value="tab-3">
             <v-icon start icon="tabler-lock" />
-            Change Password
-          </v-tab>
-          <v-tab value="tab-4">
-            <v-icon start icon="tabler-settings" />
-            Preferences
+            {{ t('settings.changePassword') }}
           </v-tab>
         </v-tabs>
       </div>
@@ -373,11 +366,11 @@ const onEmail = async () => {
         <!-- Basic Information Tab -->
         <v-window-item value="tab-1">
           <v-card-item>
-            <h4 class="text-h4 my-4">Basic information</h4>
+            <h4 class="text-h4 my-4">{{ t('settings.basicInformation') }}</h4>
             <v-form ref="refBassicForm" @submit.prevent="onBasic">
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
-                  <v-label class="form-label">Full name</v-label>
+                  <v-label class="form-label">{{ t('settings.fullName') }}</v-label>
                 </v-col>
                 <v-col cols="12" sm="8">
                   <v-row>
@@ -386,7 +379,7 @@ const onEmail = async () => {
                         v-model="basicForm.firstName"
                         :rules="[requiredValidator, alphaValidator]"
                         :error-messages="errors.firstName"
-                        placeholder="First Name"
+                        :placeholder="t('common.firstName')"
                         readonly
                       />
                     </v-col>
@@ -395,7 +388,7 @@ const onEmail = async () => {
                         v-model="basicForm.lastName"
                         :rules="[requiredValidator, alphaValidator]"
                         :error-messages="errors.lastName"
-                        placeholder="Last Name"
+                        :placeholder="t('common.lastName')"
                         readonly
                       />
                     </v-col>
@@ -405,7 +398,7 @@ const onEmail = async () => {
 
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
-                  <v-label class="form-label"> Email </v-label>
+                  <v-label class="form-label"> {{ t('common.email') }} </v-label>
                 </v-col>
                 <v-col cols="12" sm="8">
                   <GlobalsTextField
@@ -413,7 +406,7 @@ const onEmail = async () => {
                     type="email"
                     :rules="[requiredValidator, emailValidator]"
                     :error-messages="errors.email"
-                    placeholder="Enter your email address"
+                    :placeholder="t('auth.emailPlaceholder')"
                     readonly
                   />
                 </v-col>
@@ -421,7 +414,7 @@ const onEmail = async () => {
 
               <v-row align="center">
                 <v-col cols="12" sm="4">
-                  <v-label class="form-label"> Avatar </v-label>
+                  <v-label class="form-label"> {{ t('settings.avatar') }} </v-label>
                 </v-col>
                 <v-col cols="12" sm="8" class="d-flex align-center gap-4">
                   <v-avatar size="56">
@@ -435,7 +428,7 @@ const onEmail = async () => {
                 <v-col cols="12" sm="4"></v-col>
                 <v-col cols="12" sm="8" class="d-flex align-center gap-4">
                   <v-btn variant="outlined" color="secondary" @click="$refs.file.click()" :loading="isUploading">
-                    Upload Photo
+                    {{ t('settings.uploadPhoto') }}
                   </v-btn>
                 </v-col>
               </v-row>
@@ -446,11 +439,11 @@ const onEmail = async () => {
         <!-- Change Email Tab -->
         <v-window-item value="tab-2">
           <v-card-item>
-            <h4 class="text-h4 mb-4">Email</h4>
+            <h4 class="text-h4 mb-4">{{ t('common.email') }}</h4>
             <v-form ref="refEmailVForm" @submit.prevent="onEmail">
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
-                  <v-label class="form-label"> New email </v-label>
+                  <v-label class="form-label"> {{ t('settings.newEmail') }} </v-label>
                 </v-col>
                 <v-col cols="12" sm="8">
                   <GlobalsTextField
@@ -458,24 +451,24 @@ const onEmail = async () => {
                     type="email"
                     :rules="[requiredValidator, emailValidator]"
                     :error-messages="errors.email"
-                    placeholder="Enter your email address"
+                    :placeholder="t('auth.emailPlaceholder')"
                   />
                   
                   <div class="mt-4">
-                    <p class="text-body-2 font-weight-8">Email verification process:</p>
-                    <p class="text-body-1 mb-4">Please note the following steps:</p>
+                    <p class="text-body-2 font-weight-8">{{ t('settings.emailVerificationProcess') }}:</p>
+                    <p class="text-body-1 mb-4">{{ t('settings.pleaseNote') }}:</p>
                     <ul>
-                      <li class="text-body-2 py-0">A verification email will be sent to your new email address</li>
-                      <li class="text-body-2 py-0">You must verify this email by clicking the link in the message</li>
-                      <li class="text-body-2 py-0">After verification, you can use the new email to login</li>
-                      <li class="text-body-2 py-0">Your old email will remain active until verification is complete</li>
+                      <li class="text-body-2 py-0">{{ t('settings.verificationEmailWillBeSent') }}</li>
+                      <li class="text-body-2 py-0">{{ t('settings.mustVerifyEmail') }}</li>
+                      <li class="text-body-2 py-0">{{ t('settings.afterVerificationCanLogin') }}</li>
+                      <li class="text-body-2 py-0">{{ t('settings.oldEmailRemains') }}</li>
                     </ul>
                   </div>
                 </v-col>
               </v-row>
               <v-row no-gutters class="pb-3">
                 <v-col offset-sm="4">
-                  <v-btn type="submit" :loading="isEmailSubmitting"> Save Changes </v-btn>
+                  <v-btn type="submit" :loading="isEmailSubmitting"> {{ t('settings.saveChanges') }} </v-btn>
                 </v-col>
               </v-row>
             </v-form>
@@ -485,39 +478,39 @@ const onEmail = async () => {
         <!-- Change Password Tab -->
         <v-window-item value="tab-3">
           <v-card-item>
-            <h4 class="text-h4 mb-4">Change your password</h4>
+            <h4 class="text-h4 mb-4">{{ t('settings.changeYourPassword') }}</h4>
             <v-form ref="refPasswordVForm" @submit.prevent="onPassword">
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
-                  <v-label class="form-label"> Current password </v-label>
+                  <v-label class="form-label"> {{ t('settings.currentPassword') }} </v-label>
                 </v-col>
                 <v-col cols="12" sm="8">
                   <GlobalsTextField
                     v-model="passwordForm.currentPassword"
                     :rules="[requiredValidator, passwordValidator]"
                     :error-messages="errors.currentPassword"
-                    placeholder="Enter Current password"
+                    :placeholder="t('settings.enterCurrentPassword')"
                     type="password"
                   />
                 </v-col>
               </v-row>
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
-                  <v-label class="form-label"> New password </v-label>
+                  <v-label class="form-label"> {{ t('settings.newPassword') }} </v-label>
                 </v-col>
                 <v-col cols="12" sm="8">
                   <GlobalsTextField
                     v-model="passwordForm.newPassword"
                     :rules="[requiredValidator, passwordValidator]"
                     :error-messages="errors.newPassword"
-                    placeholder="Enter New password"
+                    :placeholder="t('settings.enterNewPassword')"
                     type="password"
                   />
                 </v-col>
               </v-row>
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
-                  <v-label class="form-label"> Confirm new password </v-label>
+                  <v-label class="form-label"> {{ t('settings.confirmNewPassword') }} </v-label>
                 </v-col>
                 <v-col cols="12" sm="8">
                   <GlobalsTextField
@@ -527,98 +520,31 @@ const onEmail = async () => {
                       confirmedValidator(passwordForm.confirmPassword, passwordForm.newPassword),
                     ]"
                     :error-messages="errors.confirmPassword"
-                    placeholder="Enter New password"
+                    :placeholder="t('settings.enterNewPassword')"
                     type="password"
                   />
 
                   <div class="mt-4">
-                    <p class="text-body-2 font-weight-8">Password requirements:</p>
-                    <p class="text-body-1 mb-4">Ensure that these requirements are met:</p>
+                    <p class="text-body-2 font-weight-8">{{ t('passwordRequirements') }}:</p>
+                    <p class="text-body-1 mb-4">{{ t('requirementsMustBeMet') }}:</p>
                     <ul>
-                      <li class="text-body-2 py-0">Minimum 8 characters long the more, the better</li>
-                      <li class="text-body-2 py-0">At least one lowercase character</li>
-                      <li class="text-body-2 py-0">At least one uppercase character</li>
-                      <li class="text-body-2 py-0">
-                        At least one number, symbol, or whitespace character
-                      </li>
+                      <li class="text-body-2 py-0">{{ t('minimumLength') }}</li>
+                      <li class="text-body-2 py-0">{{ t('lowercase') }}</li>
+                      <li class="text-body-2 py-0">{{ t('uppercase') }}</li>
+                      <li class="text-body-2 py-0">{{ t('special') }}</li>
                     </ul>
                   </div>
                 </v-col>
               </v-row>
               <v-row no-gutters class="pb-3">
                 <v-col offset-sm="4">
-                  <v-btn type="submit" :loading="isPasswordSubmitting" color="primary"> Save Changes </v-btn>
+                  <v-btn type="submit" :loading="isPasswordSubmitting" color="primary"> {{ t('settings.saveChanges') }} </v-btn>
                 </v-col>
               </v-row>
             </v-form>
           </v-card-item>
         </v-window-item>
 
-        <!-- Preferences Tab -->
-        <v-window-item value="tab-4">
-          <v-card-item>
-            <h4 class="text-h4 mb-4">Preferences</h4>
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Langauge </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsSelect
-                  v-model="preferencesForm.langauge"
-                  :items="['English', 'Hindi', 'Spanish', 'Arabic']"
-                />
-              </v-col>
-            </v-row>
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Time Zone </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsSelect
-                  v-model="preferencesForm.timeZone"
-                  :items="['GTM +5.30', 'GTM +5.31', 'GTM +5.32', 'GTM +5.33']"
-                />
-              </v-col>
-            </v-row>
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Date Format </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <GlobalsSelect
-                  v-model="preferencesForm.dateFormat"
-                  :items="['No Preference', 'Preference']"
-                />
-              </v-col>
-            </v-row>
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Default </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <v-radio-group inline>
-                  <v-radio label="On" value="on" />
-                  <v-radio label="Off" value="off" class="ml-3" />
-                </v-radio-group>
-              </v-col>
-            </v-row>
-            <v-row no-gutters class="pb-3">
-              <v-col cols="12" sm="4">
-                <v-label class="form-label"> Choose option default </v-label>
-              </v-col>
-              <v-col cols="12" sm="8">
-                <v-checkbox label="Tell me" />
-                <v-checkbox label="Open e-mail" />
-                <v-checkbox label="Show default" />
-              </v-col>
-            </v-row>
-            <v-row no-gutters class="pb-3">
-              <v-col offset-sm="4">
-                <v-btn type="submit"> Save Changes </v-btn>
-              </v-col>
-            </v-row>
-          </v-card-item>
-        </v-window-item>
       </v-window>
     </div>
   </v-card>
