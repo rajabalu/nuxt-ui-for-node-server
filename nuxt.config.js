@@ -141,6 +141,17 @@ export default defineNuxtConfig({
       });
     },
   ],
+  
+  // Load plugins in specific order
+  plugins: [
+    // Client-only i18n plugin must run first to set the language before anything else
+    '~/plugins/i18n.client.js',
+    // Initial load plugin runs next
+    '~/plugins/initial-load.client.js', 
+    '~/plugins/persistent-settings.js',
+    // Other plugins will be loaded automatically
+  ],
+  
   i18n: {
     locales: [
       { code: 'en', iso: 'en-US', name: 'English', file: 'en.json' },
@@ -149,7 +160,7 @@ export default defineNuxtConfig({
     ],
     defaultLocale: 'en',
     lazy: true,
-    langDir: 'locales/',
+    langDir: 'i18n/locales/',
     strategy: 'prefix_except_default'
   },
   pwa: {

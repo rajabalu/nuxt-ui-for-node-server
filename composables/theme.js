@@ -23,9 +23,16 @@ export const themeConfig = () => {
   const themeName = computed(() => currentTheme.value);
   const themeColors = computed(() => theme.themes.value[currentTheme.value].colors);
 
-  const themeChangeMode = () => {
-    currentTheme.value = currentTheme.value === "light" ? "dark" : "light";
+  const themeChangeMode = (toggle = true) => {
+    if (toggle) {
+      currentTheme.value = currentTheme.value === "light" ? "dark" : "light";
+    }
+    
     theme.global.name.value = currentTheme.value;
+    
+    if (process.client) {
+      localStorage.setItem('user_theme', currentTheme.value);
+    }
   };
 
   return {
@@ -35,5 +42,6 @@ export const themeConfig = () => {
     themeName,
     themeColors,
     themeChangeMode,
+    currentTheme,
   };
 };

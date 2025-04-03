@@ -6,20 +6,51 @@ import { useGlobal } from "@/stores/global";
 import { useI18n } from "vue-i18n";
 import { useAuthStore } from '@/stores/auth';
 import { themeConfig } from '@/composables/theme';
-import { watch, computed } from 'vue';
+import { watch, computed, onMounted } from 'vue';
+import { useNuxtApp } from '#app';
+import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
+import { useUserPreferences } from '@/stores/userPreferences';
+
+console.log('[TopBar] Component setup started');
 
 const theme = themeConfig();
 const { themeHeaderHeight, themeSidebarWidth, smallDisplay, themeChangeMode } = theme;
 const themeName = computed(() => theme.themeName.value);
-console.log('TopBar - Initial theme:', themeName.value);
+const nuxtApp = useNuxtApp();
 
 const globalStore = useGlobal();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const authStore = useAuthStore();
+const userPreferencesStore = useUserPreferences();
+
+// Use the new preferences helper
+const preferencesHelper = useUserPreferencesHelper();
+
+// Need to call this on mount to ensure theme is applied
+onMounted(async () => {
+  console.log('[TopBar] Component mounted, current theme:', themeName.value);
+  console.log('[TopBar] Current dark mode state:', globalStore.datkMode);
+  console.log('[TopBar] Current locale:', locale.value);
+  console.log('[TopBar] Stored language preference:', userPreferencesStore.language);
+  
+  // Force sync with saved preferences
+  await preferencesHelper.syncLocaleWithPreferences();
+  
+  // Log a test translation to check if i18n is working
+  try {
+    console.log('[TopBar] Testing translation:', t('settings'));
+  } catch (error) {
+    console.warn('[TopBar] Translation test error:', error);
+  }
+});
+
+// Handle preferences initialization in the component
+preferencesHelper.initializePreferences();
 
 const languages = [
   { code: "en", name: "English" },
   { code: "fr", name: "Français" },
+  { code: "ar", name: "العربية" }
 ];
 
 const toggleSidebarPhone = (tempObj) => {
@@ -27,12 +58,24 @@ const toggleSidebarPhone = (tempObj) => {
 };
 
 const toggleLightDarkMode = () => {
+  console.log('[TopBar] Toggle light/dark mode clicked');
+  console.log('[TopBar] Current theme before toggle:', themeName.value);
+  console.log('[TopBar] Current dark mode before toggle:', globalStore.datkMode);
+  
+  // Toggle the dark mode
   globalStore.darkModeToggle();
+  
+  // Apply theme change through theme config
   themeChangeMode();
+  
+  console.log('[TopBar] Theme after toggle:', themeName.value);
+  console.log('[TopBar] Dark mode after toggle:', globalStore.datkMode);
+  
+  // Save theme preference to store using our helper
+  const currentTheme = globalStore.datkMode ? 'dark' : 'light';
+  console.log('[TopBar] Saving theme preference:', currentTheme);
+  preferencesHelper.saveThemePreference(currentTheme);
 };
-
-watch(() => globalStore.datkMode, (newVal) => {
-}, { immediate: true });
 
 watch(smallDisplay, (newValue, oldValue) => {
   if (newValue && !oldValue) {
