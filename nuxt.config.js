@@ -144,10 +144,8 @@ export default defineNuxtConfig({
   
   // Load plugins in specific order
   plugins: [
-    // Client-only i18n plugin must run first to set the language before anything else
-    '~/plugins/i18n.client.js',
-    // Initial load plugin runs next
-    '~/plugins/initial-load.client.js', 
+    // Unified app initialization plugin runs first
+    '~/plugins/app-initializer.client.js',
     '~/plugins/persistent-settings.js',
     // Other plugins will be loaded automatically
   ],
