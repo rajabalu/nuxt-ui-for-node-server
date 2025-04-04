@@ -1,12 +1,14 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
+import { useUserPreferences } from '@/stores/userPreferences';
 
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
   useValidators();
 const api = useApi();
 const router = useRouter();
 const { t, locale } = useI18n();
+const userPreferencesStore = useUserPreferences();
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
@@ -43,11 +45,18 @@ const onSubmit = async () => {
     try {
       isLoading.value = true;
       
+      // Get the current theme and language from user preferences
+      const currentTheme = userPreferencesStore.theme || 'light';
+      const currentLanguage = locale.value || 'en';
+      
       const response = await api.post('auth/email/register', {
         firstName: firstName.value,
         lastName: lastName.value,
         email: email.value,
-        password: password.value
+        password: password.value,
+        // Include theme and language preferences
+        theme: currentTheme,
+        language: currentLanguage
       });
       
       if (response.success) {
