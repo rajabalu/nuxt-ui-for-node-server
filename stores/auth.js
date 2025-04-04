@@ -129,10 +129,12 @@ export const useAuthStore = defineStore('auth', {
       
       // Redirect to sign-in page with proper locale if we're on the client side
       if (process.client) {
-        const { locale } = useI18n();
-        const signInPath = getLocalizedPath('/sign-in', locale.value);
+        // Get locale from nuxtApp instead of using useI18n directly
+        const locale = useNuxtApp().$i18n.locale.value;
+        const signInPath = getLocalizedPath('/sign-in', locale);
         
-        navigateTo(signInPath);
+        // Use navigateTo directly without nextTick
+        navigateTo(signInPath, { replace: true });
       }
     },
 
@@ -220,6 +222,16 @@ export const useAuthStore = defineStore('auth', {
       // Remove auth data from localStorage
       if (process.client) {
         localStorage.removeItem('auth');
+        // Clear any other potential auth-related storage items
+        sessionStorage.removeItem('auth');
+        
+        // Clear any auth-related cookies
+        document.cookie.split(';').forEach(cookie => {
+          const [name] = cookie.trim().split('=');
+          if (name && (name.includes('token') || name.includes('auth'))) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          }
+        });
       }
     },
 
