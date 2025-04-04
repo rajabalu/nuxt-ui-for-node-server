@@ -216,22 +216,21 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Sync user preferences with the server
+    // Apply user preferences from the server after login
     async syncUserPreferences() {
       try {
-        console.log('[authStore] Syncing user preferences with server after login');
+        console.log('[authStore] Applying server preferences to local after login');
         const userPreferencesStore = useUserPreferences();
         
-        // Make sure preferences are initialized from localStorage
-        if (!userPreferencesStore.initialized) {
-          userPreferencesStore.initPreferences();
+        // Fetch preferences from server and apply to local
+        const result = await userPreferencesStore.fetchFromServer();
+        if (result.success) {
+          console.log('[authStore] Successfully applied server preferences to local');
+        } else {
+          console.log('[authStore] No server preferences found or error occurred');
         }
-        
-        // Fetch preferences from server and sync with local values
-        await userPreferencesStore.fetchFromServer();
-        console.log('[authStore] User preferences sync completed');
       } catch (error) {
-        console.error('[authStore] Error syncing user preferences:', error);
+        console.error('[authStore] Error applying server preferences:', error);
       }
     },
 

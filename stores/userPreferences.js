@@ -1,16 +1,22 @@
 import { defineStore } from 'pinia';
 import { useTheme } from 'vuetify';
 import { themeConfig } from '@/composables/theme';
+import { useRouter, useRoute } from 'vue-router';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 export const useUserPreferences = defineStore('userPreferences', {
   state: () => ({
     language: null,
     theme: null,
     initialized: false,
-    syncStatus: null
+    isAuthenticated: false
   }),
 
   actions: {
+    setAuthenticated(status) {
+      this.isAuthenticated = status;
+    },
+
     setLanguage(lang) {
       console.log('[userPreferences] Setting language:', lang);
       if (!lang) {
@@ -20,13 +26,13 @@ export const useUserPreferences = defineStore('userPreferences', {
       
       this.language = lang;
       
-      // Save to localStorage
-      if (process.client) {
+      // Save to localStorage only if not authenticated
+      if (process.client && !this.isAuthenticated) {
         try {
           // Save in two locations for backward compatibility
           localStorage.setItem('user_language', lang);
           localStorage.setItem('app_language', lang); // For compatibility with older code
-          console.log('[userPreferences] Language saved to localStorage');
+          console.log('[userPreferences] Language saved to localStorage (not authenticated)');
         } catch (error) {
           console.error('[userPreferences] Error saving language to localStorage:', error);
         }
@@ -42,27 +48,34 @@ export const useUserPreferences = defineStore('userPreferences', {
       
       this.theme = theme;
       
-      // Save to localStorage
-      if (process.client) {
+      // Save to localStorage only if not authenticated
+      if (process.client && !this.isAuthenticated) {
         try {
           // Save in two locations for backward compatibility
           localStorage.setItem('user_theme', theme);
           localStorage.setItem('app_theme', theme); // For compatibility with older code
-          console.log('[userPreferences] Theme saved to localStorage');
+          console.log('[userPreferences] Theme saved to localStorage (not authenticated)');
         } catch (error) {
           console.error('[userPreferences] Error saving theme to localStorage:', error);
         }
       }
     },
     
-    // Initialize preferences from localStorage
+    // Initialize preferences from localStorage only when not authenticated
     initPreferences() {
       if (this.initialized) {
         console.log('[userPreferences] Already initialized, skipping');
         return;
       }
       
-      console.log('[userPreferences] Initializing preferences from localStorage');
+      // Skip loading from localStorage if already authenticated (server preferences will be used)
+      if (this.isAuthenticated) {
+        console.log('[userPreferences] User is authenticated, skipping localStorage initialization');
+        this.initialized = true;
+        return;
+      }
+      
+      console.log('[userPreferences] Initializing preferences from localStorage (not authenticated)');
       if (process.client) {
         try {
           // Get language from localStorage (check both keys)
@@ -113,42 +126,6 @@ export const useUserPreferences = defineStore('userPreferences', {
       }
     },
     
-    // For server API integration
-    async syncWithServer() {
-      console.log('[userPreferences] Syncing preferences with server');
-      
-      const nuxtApp = useNuxtApp();
-      const api = nuxtApp.$api;
-      
-      if (!api) {
-        console.error('[userPreferences] API not available');
-        this.syncStatus = 'error';
-        return { success: false, error: 'API not available' };
-      }
-      
-      try {
-        // Send current preferences to server
-        const response = await api.patch('user-preferences', {
-          theme: this.theme,
-          language: this.language
-        });
-        
-        if (response.success) {
-          console.log('[userPreferences] Successfully synced with server');
-          this.syncStatus = 'success';
-          return { success: true };
-        } else {
-          console.error('[userPreferences] Failed to sync with server:', response.error);
-          this.syncStatus = 'error';
-          return { success: false, error: response.error };
-        }
-      } catch (error) {
-        console.error('[userPreferences] Error syncing with server:', error);
-        this.syncStatus = 'error';
-        return { success: false, error: 'An unexpected error occurred' };
-      }
-    },
-    
     // Fetch user preferences from the server after login
     async fetchFromServer() {
       console.log('[userPreferences] Fetching preferences from server');
@@ -168,34 +145,64 @@ export const useUserPreferences = defineStore('userPreferences', {
         if (response.success && response.data) {
           console.log('[userPreferences] Received preferences from server:', response.data);
           
+          // Mark as authenticated to prevent localStorage override
+          this.setAuthenticated(true);
+          
           const serverTheme = response.data.theme;
           const serverLanguage = response.data.language;
           
-          // Compare server values with local values
-          const localTheme = this.theme;
-          const localLanguage = this.language;
-          
-          console.log('[userPreferences] Comparing - Local:', { theme: localTheme, language: localLanguage }, 
-                     'Server:', { theme: serverTheme, language: serverLanguage });
-          
-          // If local values exist and differ from server, update server with local values
-          // This happens if user changed preferences before logging in
-          if (localTheme && localTheme !== serverTheme) {
-            console.log('[userPreferences] Local theme differs from server, updating server');
-            await this.syncWithServer();
-          } else if (serverTheme) {
-            // If no local preference or server preference is different, update local with server value
-            console.log('[userPreferences] Updating local theme from server');
-            this.setTheme(serverTheme);
+          // First apply theme since that doesn't require navigation
+          if (serverTheme) {
+            console.log('[userPreferences] Applying server theme to local:', serverTheme);
+            this.theme = serverTheme; // Directly set theme without going through setTheme to avoid localStorage
           }
           
-          if (localLanguage && localLanguage !== serverLanguage) {
-            console.log('[userPreferences] Local language differs from server, updating server');
-            await this.syncWithServer();
-          } else if (serverLanguage) {
-            // If no local preference or server preference is different, update local with server value
-            console.log('[userPreferences] Updating local language from server');
-            this.setLanguage(serverLanguage);
+          // Then handle language change - requiring route update
+          if (serverLanguage) {
+            console.log('[userPreferences] Server language is:', serverLanguage);
+            
+            // Apply language directly to store
+            this.language = serverLanguage; // Directly set language without going through setLanguage to avoid localStorage
+            
+            // Get the current locale and route
+            const router = useRouter();
+            const route = useRoute();
+            const i18n = nuxtApp.$i18n;
+            const currentLocale = i18n.locale.value;
+            
+            // Only redirect if needed
+            if (serverLanguage !== currentLocale) {
+              console.log('[userPreferences] Need to update URL for language:', serverLanguage);
+              
+              // Force load messages for new locale
+              try {
+                const { forceLoadMessages } = await import('@/utils/i18n-helpers');
+                await forceLoadMessages(i18n, serverLanguage);
+              } catch (error) {
+                console.error('[userPreferences] Error loading messages:', error);
+              }
+              
+              // Get current path without locale prefix
+              const currentPath = route.fullPath;
+              // Remove locale prefix if it exists
+              let pathWithoutLocale = currentPath;
+              if (currentLocale !== 'en' && pathWithoutLocale.startsWith(`/${currentLocale}/`)) {
+                pathWithoutLocale = pathWithoutLocale.substring(currentLocale.length + 1);
+              } else if (currentLocale === 'en' && pathWithoutLocale.startsWith('/')) {
+                // For English, just use the path as is
+                pathWithoutLocale = currentPath;
+              }
+              
+              // Use getLocalizedPath helper to create the new path
+              const newPath = getLocalizedPath(pathWithoutLocale, serverLanguage);
+              
+              console.log(`[userPreferences] Updating route from ${currentPath} to ${newPath}`);
+              
+              // Update router with correct path
+              if (process.client) {
+                router.push(newPath);
+              }
+            }
           }
           
           return { success: true, data: response.data };
@@ -207,6 +214,12 @@ export const useUserPreferences = defineStore('userPreferences', {
         console.error('[userPreferences] Error fetching preferences from server:', error);
         return { success: false, error: 'An unexpected error occurred' };
       }
+    },
+    
+    // Reset authentication state on logout
+    logout() {
+      this.isAuthenticated = false;
+      // We don't reset preferences here, just the authentication status
     }
   }
 }); 
