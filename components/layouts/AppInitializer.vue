@@ -10,7 +10,7 @@ import { onMounted, onBeforeMount, watch } from 'vue';
 import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
 import { useUserPreferences } from '@/stores/userPreferences';
 import { useI18n } from 'vue-i18n';
-import { forceLoadMessages, applyRTLDirection } from '@/utils/i18n-helpers';
+import { forceLoadMessages, applyRTLDirection, preloadAllLocales } from '@/utils/i18n-helpers';
 import { useNuxtApp } from '#app';
 
 console.log('[AppInitializer] Component setup started');
@@ -58,6 +58,16 @@ onBeforeMount(async () => {
       language: userPreferencesStore.language
     });
     
+    // Ensure all locales are loaded for better user experience
+    if (nuxtApp.$preloadAllLocales) {
+      console.log('[AppInitializer] Preloading all locales');
+      try {
+        await nuxtApp.$preloadAllLocales();
+      } catch (error) {
+        console.warn('[AppInitializer] Error preloading locales:', error);
+      }
+    }
+    
     // Apply preferences - THIS IS IMPORTANT
     // Apply language first, then theme
     if (userPreferencesStore.language) {
@@ -88,6 +98,17 @@ onMounted(async () => {
     
     // Apply RTL direction
     applyRTLDirection(userPreferencesStore.language);
+  } else if (locale.value) {
+    // If the locale is already set correctly, still ensure messages are loaded
+    console.log('[AppInitializer] Ensuring messages are loaded for current locale:', locale.value);
+    await forceLoadMessages(nuxtApp.$i18n, locale.value);
+    
+    // Test a translation
+    try {
+      console.log('[AppInitializer] Testing translation for', locale.value, ':', t('settings'));
+    } catch (error) {
+      console.warn('[AppInitializer] Translation test error:', error);
+    }
   }
 });
 

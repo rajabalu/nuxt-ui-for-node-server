@@ -160,7 +160,7 @@ export default defineNuxtConfig({
     ],
     defaultLocale: 'en',
     lazy: true,
-    langDir: 'i18n/locales/',
+    langDir: 'locales/',
     strategy: 'prefix_except_default'
   },
   pwa: {

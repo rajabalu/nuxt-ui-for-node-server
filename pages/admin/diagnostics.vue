@@ -28,40 +28,8 @@ useHead({
       </v-col>
       
       <v-col cols="12">
-        <v-card class="mb-6">
-          <v-tabs v-model="activeTab">
-            <v-tab value="i18n">Internationalization (i18n)</v-tab>
-            <v-tab value="storage">Local Storage</v-tab>
-            <v-tab value="system">System Info</v-tab>
-          </v-tabs>
-          
-          <v-card-text>
-            <v-window v-model="activeTab">
-              <v-window-item value="i18n">
-                <I18nTester />
-              </v-window-item>
-              
-              <v-window-item value="storage">
-                <LocalStorageTester />
-              </v-window-item>
-              
-              <v-window-item value="system">
-                <SystemInfoTester />
-              </v-window-item>
-            </v-window>
-          </v-card-text>
-        </v-card>
+        <I18nTester />
       </v-col>
     </v-row>
   </v-container>
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      activeTab: 'i18n'
-    };
-  }
-};
-</script> 
+</template> 

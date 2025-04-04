@@ -1,7 +1,9 @@
 <script setup>
 import { useAuthStore } from '~/stores/auth';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { forceLoadMessages } from '@/utils/i18n-helpers';
+import { useNuxtApp } from '#app';
 
 // Initialize i18n
 const { t, locale } = useI18n();
@@ -26,7 +28,7 @@ const menuVisible = ref(false);
 
 const itemList = computed(() => [
   {
-    name: t("settings"),
+    name: t("settingsMenu"),
     icon: "tabler-settings",
     value: "settings",
     action: () => navigateTo('/settings')
@@ -49,6 +51,23 @@ const handleItemClick = (item) => {
     item.action();
   }
 };
+
+const nuxtApp = useNuxtApp();
+
+// Before using translations, ensure they're loaded
+onMounted(async () => {
+  console.log('[UserProfile] Component mounted, current locale:', locale.value);
+  
+  // Force load messages for the current locale
+  if (locale.value) {
+    try {
+      await forceLoadMessages(nuxtApp.$i18n, locale.value);
+      console.log('[UserProfile] Forced loading of messages for:', locale.value);
+    } catch (error) {
+      console.warn('[UserProfile] Error loading messages:', error);
+    }
+  }
+});
 </script>
 
 

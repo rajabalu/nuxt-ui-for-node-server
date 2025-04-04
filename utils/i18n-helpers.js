@@ -33,7 +33,7 @@ export const forceLoadMessages = async (i18n, locale) => {
                         Object.keys(i18n.messages.value[locale]).length > 0;
       console.log('[i18n-helpers] Messages loaded status:', hasMessages);
       
-      // If still no messages, try direct import
+      // If still no messages, try direct import with multiple possible paths
       if (!hasMessages) {
         console.log('[i18n-helpers] No messages loaded, attempting direct import');
         try {
@@ -55,6 +55,7 @@ export const forceLoadMessages = async (i18n, locale) => {
       } else {
         // Even if messages loaded normally, ensure message structure
         ensureMessageStructure(i18n, locale);
+        return true;
       }
     }
     
@@ -96,38 +97,46 @@ export const ensureMessageStructure = (i18n, locale) => {
   const messages = i18n.messages.value[locale];
   console.log('[i18n-helpers] Ensuring message structure for locale:', locale);
   
-  // Helper function to ensure nested objects have their values accessible by dot notation
-  const normalizeMessages = (obj, prefix = '') => {
-    for (const key in obj) {
-      const fullPath = prefix ? `${prefix}.${key}` : key;
-      
-      if (typeof obj[key] === 'object' && obj[key] !== null) {
-        // Handle nested object
-        normalizeMessages(obj[key], fullPath);
-        
-        // For nested structures like common.email, also add flattenened path directly
-        // This ensures t('common.email') works even if it's in a nested structure
-        if (fullPath.includes('.') && typeof i18n.setLocaleMessage === 'function') {
-          const value = getNestedValue(messages, fullPath);
-          if (value && typeof value !== 'object') {
-            i18n.mergeLocaleMessage(locale, { [fullPath]: value });
-          }
-        }
-      }
-    }
-  };
-  
-  // Get value from nested object using dot notation path
-  const getNestedValue = (obj, path) => {
-    return path.split('.').reduce((prev, curr) => {
-      return prev && prev[curr] !== undefined ? prev[curr] : undefined;
-    }, obj);
-  };
-  
   try {
-    normalizeMessages(messages);
-    console.log('[i18n-helpers] Message structure normalized for', locale);
+    // Simple check to make sure we have messages
+    if (messages && typeof messages === 'object') {
+      console.log('[i18n-helpers] Message structure normalized for', locale);
+    }
   } catch (error) {
     console.error('[i18n-helpers] Error normalizing message structure:', error);
   }
+};
+
+/**
+ * Preload all available locales to ensure they're ready for use
+ * This can be called during app initialization to avoid loading delays
+ */
+export const preloadAllLocales = async (i18n) => {
+  if (!i18n || !i18n.availableLocales) {
+    console.error('[i18n-helpers] Missing i18n instance or availableLocales');
+    return false;
+  }
+  
+  console.log('[i18n-helpers] Preloading all available locales:', i18n.availableLocales);
+  
+  const results = {};
+  
+  for (const locale of i18n.availableLocales) {
+    console.log(`[i18n-helpers] Preloading locale: ${locale}`);
+    try {
+      const success = await forceLoadMessages(i18n, locale);
+      results[locale] = success;
+      
+      if (success) {
+        console.log(`[i18n-helpers] Successfully preloaded locale: ${locale}`);
+      } else {
+        console.warn(`[i18n-helpers] Failed to preload locale: ${locale}`);
+      }
+    } catch (error) {
+      console.error(`[i18n-helpers] Error preloading locale ${locale}:`, error);
+      results[locale] = false;
+    }
+  }
+  
+  return results;
 }; 

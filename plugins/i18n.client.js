@@ -1,4 +1,4 @@
-import { forceLoadMessages, applyRTLDirection, ensureMessageStructure } from '@/utils/i18n-helpers';
+import { forceLoadMessages, applyRTLDirection, ensureMessageStructure, preloadAllLocales } from '@/utils/i18n-helpers';
 
 /**
  * i18n client-side initialization plugin
@@ -33,21 +33,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         // Debug logging
         console.log('[i18n] Available locales:', nuxtApp.$i18n.availableLocales);
         console.log('[i18n] Current locale:', nuxtApp.$i18n.locale.value);
-        
-        // Check if messages were actually loaded
-        const hasMessages = nuxtApp.$i18n.messages && 
-                           nuxtApp.$i18n.messages.value && 
-                           nuxtApp.$i18n.messages.value[savedLanguage] &&
-                           Object.keys(nuxtApp.$i18n.messages.value[savedLanguage]).length > 0;
-        
-        console.log('[i18n] Messages loaded status:', hasMessages);
-        
-        if (!hasMessages) {
-          console.warn('[i18n] No messages loaded for', savedLanguage, 'despite attempts to load them');
-        } else {
-          // Ensure proper message structure for nested paths
-          ensureMessageStructure(nuxtApp.$i18n, savedLanguage);
-        }
       } else {
         console.log('[i18n] No saved language found, using default');
         
@@ -55,7 +40,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         const defaultLocale = nuxtApp.$i18n.locale.value;
         if (defaultLocale) {
           console.log('[i18n] Ensuring message structure for default locale:', defaultLocale);
-          ensureMessageStructure(nuxtApp.$i18n, defaultLocale);
+          // Force load messages for default locale too
+          await forceLoadMessages(nuxtApp.$i18n, defaultLocale);
         }
       }
       
@@ -63,7 +49,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       nuxtApp.provide('ensureI18nMessages', async (locale) => {
         console.log('[i18n] Helper function called to ensure messages for:', locale);
         await forceLoadMessages(nuxtApp.$i18n, locale);
-        ensureMessageStructure(nuxtApp.$i18n, locale);
       });
       
     } catch (error) {

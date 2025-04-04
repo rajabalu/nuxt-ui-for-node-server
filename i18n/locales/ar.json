@@ -1,5 +1,5 @@
 {
-  "settings": "الإعدادات",
+  "settingsMenu": "الإعدادات",
   "signOut": "تسجيل الخروج",
   "guestUser": "مستخدم زائر",
   "resetPassword": "إعادة تعيين كلمة المرور",
