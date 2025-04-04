@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -126,9 +127,13 @@ export const useAuthStore = defineStore('auth', {
       this.clearAuthData();
       this.isAuthenticated = false;
       
-      // Redirect to sign-in page if we're on the client side
+      // Redirect to sign-in page with proper locale if we're on the client side
       if (process.client) {
-        navigateTo('/sign-in');
+        const { locale } = useI18n();
+        const signInPath = getLocalizedPath('/sign-in', locale.value);
+        
+        console.log(`[Auth] Logging out, navigating to localized sign-in: ${signInPath}`);
+        navigateTo(signInPath);
       }
     },
 

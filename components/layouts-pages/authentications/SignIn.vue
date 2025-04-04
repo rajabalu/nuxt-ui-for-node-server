@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useAuth } from '~/composables/auth';
 import { useI18n } from 'vue-i18n';
 import { useValidators } from '~/composables/validators';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 const { requiredValidator } = useValidators();
 const { t, locale } = useI18n();
@@ -37,8 +38,10 @@ const onSubmit = async () => {
     const result = await login(email.value, password.value);
     
     if (result.success) {
-      // Redirect to dashboard instead of the root path
-      navigateTo('/');
+      // Navigate with proper locale path
+      const homePath = getLocalizedPath('/', locale.value);
+      console.log(`[SignIn] Login successful, navigating to localized home: ${homePath}`);
+      navigateTo(homePath);
     } else {
       // Handle specific errors based on the API response
       errorMessage.value = result.error?.message || result.error || t('auth.errors.loginFailedGeneric', 'Login failed. Please check your credentials.');

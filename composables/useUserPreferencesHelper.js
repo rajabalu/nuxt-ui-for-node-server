@@ -5,6 +5,7 @@ import { watch, onMounted, nextTick } from 'vue';
 import { themeConfig } from '@/composables/theme';
 import { useNuxtApp } from '#app';
 import { forceLoadMessages, applyRTLDirection } from '@/utils/i18n-helpers';
+import { useRouter, useRoute } from 'vue-router';
 
 /**
  * Composable to handle user preferences (theme and language)
@@ -19,6 +20,8 @@ export const useUserPreferencesHelper = () => {
   const { locale, t } = useI18n();
   const theme = themeConfig();
   const nuxtApp = useNuxtApp();
+  const router = useRouter();
+  const route = useRoute();
   
   // Apply theme from preferences
   const applyTheme = (themeName) => {
@@ -43,7 +46,7 @@ export const useUserPreferencesHelper = () => {
     console.log('[useUserPreferencesHelper] Theme applied:', themeName);
   };
   
-  // Apply language from preferences
+  // Apply language from preferences WITH router support
   const applyLanguage = async (lang) => {
     console.log('[useUserPreferencesHelper] Applying language:', lang);
     if (!lang) {
@@ -59,12 +62,31 @@ export const useUserPreferencesHelper = () => {
       await forceLoadMessages(nuxtApp.$i18n, lang);
       
       if (locale.value !== lang) {
-        locale.value = lang;
+        // Prepare for routing - Get current path
+        const currentPath = route.fullPath;
+        const currentLocale = locale.value;
+        const isDefaultLocale = lang === 'en';
         
-        // Apply RTL direction using our helper
+        // Extract path without current locale prefix
+        let pathWithoutLocale = currentPath;
+        if (currentLocale !== 'en' && pathWithoutLocale.startsWith(`/${currentLocale}/`)) {
+          pathWithoutLocale = pathWithoutLocale.substring(currentLocale.length + 1);
+        }
+        
+        // Build new path
+        const newPath = isDefaultLocale 
+          ? pathWithoutLocale 
+          : `/${lang}${pathWithoutLocale.startsWith('/') ? pathWithoutLocale : '/' + pathWithoutLocale}`;
+        
+        console.log(`[useUserPreferencesHelper] Redirecting from ${currentPath} to ${newPath}`);
+        
+        // Apply RTL direction before navigation for better UX
         applyRTLDirection(lang);
         
-        // Force i18n to re-evaluate text
+        // Use router to navigate to new locale path
+        await router.push(newPath);
+        
+        // Router navigation will trigger locale change, but let's test
         await nextTick();
         try {
           console.log('[useUserPreferencesHelper] Testing translation:', t('settings'));

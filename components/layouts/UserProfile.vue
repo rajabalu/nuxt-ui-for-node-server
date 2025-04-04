@@ -2,7 +2,7 @@
 import { useAuthStore } from '~/stores/auth';
 import { computed, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { forceLoadMessages } from '@/utils/i18n-helpers';
+import { forceLoadMessages, getLocalizedPath } from '@/utils/i18n-helpers';
 import { useNuxtApp } from '#app';
 
 // Initialize i18n
@@ -31,7 +31,12 @@ const itemList = computed(() => [
     name: t("settingsMenu"),
     icon: "tabler-settings",
     value: "settings",
-    action: () => navigateTo('/settings')
+    action: () => {
+      // Navigate to settings with locale
+      const settingsPath = getLocalizedPath('/settings', locale.value);
+      console.log(`[UserProfile] Navigating to localized settings: ${settingsPath}`);
+      navigateTo(settingsPath);
+    }
   },
   {
     name: t("signOut"),

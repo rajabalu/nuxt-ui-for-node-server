@@ -19,6 +19,7 @@ import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper
 import { onMounted, watch } from 'vue';
 import { useNuxtApp } from '#app';
 import { forceLoadMessages, applyRTLDirection, ensureMessageStructure } from '@/utils/i18n-helpers';
+import { useRouter, useRoute } from 'vue-router';
 
 console.log('[LanguageSwitcher] Component setup started');
 
@@ -30,6 +31,10 @@ console.log('[LanguageSwitcher] Available locales:', locales.value);
 
 // Use the preferences helper
 const preferencesHelper = useUserPreferencesHelper();
+
+// Get router for navigation
+const router = useRouter();
+const route = useRoute();
 
 // Watch for global locale changes
 watch(locale, (newLocale) => {
@@ -71,32 +76,58 @@ const changeLanguage = async (lang) => {
       ensureMessageStructure(nuxtApp.$i18n, lang);
     }
     
-    // Update locale
-    setLocale(lang);
-    console.log('[LanguageSwitcher] Locale set to:', locale.value);
+    // IMPORTANT: Instead of directly changing the locale and continuing,
+    // we should let the router handle this by navigating to the localized path
     
-    // Directly apply the document direction
-    applyRTLDirection(lang);
+    // Get the current path without any locale prefix
+    let path = route.fullPath;
+    const currentLocale = locale.value;
     
-    console.log('[LanguageSwitcher] Language changed to:', locale.value);
-    
-    // Try to test a translation to verify it worked
-    try {
-      const testTranslation = t('settings');
-      console.log('[LanguageSwitcher] Test translation after change:', testTranslation);
-      
-      // Force a full refresh only if absolutely necessary
-      if (lang === 'ar' && !document.documentElement.dir.includes('rtl')) {
-        console.log('[LanguageSwitcher] RTL not applied correctly, forcing refresh');
-        window.location.reload();
-      }
-    } catch (error) {
-      console.warn('[LanguageSwitcher] Translation test failed after language change:', error);
-      // If we can't translate basic strings, we might need to force reload
-      window.location.reload();
+    // If current locale isn't default and is prefixed in the URL, remove it
+    if (currentLocale !== 'en' && path.startsWith(`/${currentLocale}/`)) {
+      path = path.substring(currentLocale.length + 1);
     }
+    
+    // If target language is the default language (en), we don't prefix
+    if (lang === 'en') {
+      console.log(`[LanguageSwitcher] Navigating to default locale path: ${path}`);
+      
+      // Apply RTL direction immediately for better UX during navigation
+      applyRTLDirection(lang);
+      
+      // Navigate to the path without locale prefix
+      await router.push(path);
+    } else {
+      // For non-default languages, add the language prefix
+      const localizedPath = `/${lang}${path.startsWith('/') ? path : '/' + path}`;
+      console.log(`[LanguageSwitcher] Navigating to localized path: ${localizedPath}`);
+      
+      // Apply RTL direction immediately for better UX during navigation
+      applyRTLDirection(lang);
+      
+      // Navigate to the path with locale prefix
+      await router.push(localizedPath);
+    }
+    
+    console.log('[LanguageSwitcher] Navigation completed');
+    
+    // The i18n module should handle setting the locale automatically based on the URL
+    // But we'll double check after a short delay to ensure everything is synchronized
+    setTimeout(() => {
+      if (locale.value !== lang) {
+        console.log('[LanguageSwitcher] Locale not updated by router, manually setting to:', lang);
+        locale.value = lang;
+      }
+      
+      // Double check RTL is applied
+      applyRTLDirection(lang);
+    }, 100);
   } catch (error) {
     console.error('[LanguageSwitcher] Error changing language:', error);
+    
+    // Fallback: If navigation fails, just set the locale directly
+    locale.value = lang;
+    applyRTLDirection(lang);
   }
 };
 </script>

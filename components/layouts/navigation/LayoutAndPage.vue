@@ -1,4 +1,7 @@
 <script setup>
+import { useI18n } from 'vue-i18n';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
+
 defineProps({
   menuType: {
     type: String,
@@ -7,23 +10,31 @@ defineProps({
 });
 
 const router = useRouter();
+const { locale } = useI18n();
+
+// Helper function to localize routes
+const localizedPath = (path) => getLocalizedPath(`/${path}`, locale.value);
 
 const Pages = [
   {
     title: "Profile",
     to: "profile",
+    path: localizedPath("profile"),
   },
   {
     title: "Settings",
     to: "settings",
+    path: localizedPath("settings"),
   },
   {
     title: "Pricing",
     to: "pricing",
+    path: localizedPath("pricing"),
   },
   {
     title: "404 Error",
     to: "error-404",
+    path: localizedPath("error-404"),
   },
 ];
 
@@ -31,14 +42,17 @@ const Authentication = [
   {
     title: "Sign In",
     to: "sign-in",
+    path: localizedPath("sign-in"),
   },
   {
     title: "Sign Up",
     to: "sign-up",
+    path: localizedPath("sign-up"),
   },
   {
     title: "Forget Password",
     to: "forget-password",
+    path: localizedPath("forget-password"),
   },
 ];
 </script>
@@ -61,7 +75,7 @@ const Authentication = [
         class="vertical-nav-list__group"
         :title="item.title"
         :value="item.to"
-        :to="`/${item.to}`"
+        :to="item.path"
       />
     </v-list-group>
 
@@ -81,7 +95,7 @@ const Authentication = [
         class="vertical-nav-list__group"
         :title="item.title"
         :value="item.to"
-        :to="`/${item.to}`"
+        :to="item.path"
       />
     </v-list-group>
 

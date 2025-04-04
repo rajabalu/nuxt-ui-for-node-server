@@ -93,8 +93,16 @@ const handleLoginClick = () => {
   if (process.client) {
     localStorage.removeItem('auth');
   }
-  // Navigate to sign-in page
-  navigateTo('/sign-in');
+  
+  // Get current locale for navigation
+  const { locale } = useI18n();
+  const currentLocale = locale.value;
+  const signInPath = currentLocale === 'en' ? '/sign-in' : `/${currentLocale}/sign-in`;
+  
+  console.log(`[Email Confirm] Navigating to localized sign-in: ${signInPath}`);
+  
+  // Navigate to sign-in page with locale
+  navigateTo(signInPath);
 };
 </script>
 

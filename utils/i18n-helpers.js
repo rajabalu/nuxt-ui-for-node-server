@@ -37,8 +37,42 @@ export const forceLoadMessages = async (i18n, locale) => {
       if (!hasMessages) {
         console.log('[i18n-helpers] No messages loaded, attempting direct import');
         try {
-          // Alternative approach - dynamically import the JSON file
-          const messages = await import(`@/i18n/locales/${locale}.json`);
+          // Try multiple possible paths for the locale file
+          let messages = null;
+          let importError = null;
+          
+          // The paths to try in sequence
+          const pathsToTry = [
+            // Path from config (this should be the correct one)
+            `@/locales/${locale}.json`,
+            // Legacy path
+            `@/i18n/locales/${locale}.json`,
+            // Absolute paths
+            `/locales/${locale}.json`,
+            `/i18n/locales/${locale}.json`
+          ];
+          
+          // Try each path until one succeeds
+          for (const path of pathsToTry) {
+            try {
+              console.log(`[i18n-helpers] Trying import path: ${path}`);
+              messages = await import(/* @vite-ignore */ path);
+              if (messages && messages.default) {
+                console.log(`[i18n-helpers] Successfully imported from: ${path}`);
+                break;
+              }
+            } catch (error) {
+              console.log(`[i18n-helpers] Import failed for path: ${path}`);
+              importError = error;
+              // Continue to next path
+            }
+          }
+          
+          // If no import succeeded, throw the last error
+          if (!messages || !messages.default) {
+            throw importError || new Error('No messages found after trying all paths');
+          }
+          
           if (typeof i18n.setLocaleMessage === 'function') {
             i18n.setLocaleMessage(locale, messages.default);
             console.log('[i18n-helpers] Manually loaded messages for', locale);
@@ -139,4 +173,28 @@ export const preloadAllLocales = async (i18n) => {
   }
   
   return results;
+};
+
+/**
+ * Generate a path with the appropriate locale prefix
+ * For default language (en), returns path without prefix
+ * For other languages, adds the locale as a prefix
+ * 
+ * @param {string} path - The path to localize
+ * @param {string} locale - The current locale
+ * @returns {string} - The localized path
+ */
+export const getLocalizedPath = (path, locale) => {
+  // Handle empty or undefined values
+  if (!path) return '/';
+  if (!locale) return path;
+  
+  // Default locale (en) has no prefix
+  if (locale === 'en') {
+    return path.startsWith('/') ? path : `/${path}`;
+  }
+  
+  // For non-default locales, add the prefix
+  const localePath = path.startsWith('/') ? path : `/${path}`;
+  return `/${locale}${localePath}`;
 }; 

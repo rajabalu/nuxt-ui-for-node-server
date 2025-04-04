@@ -50,7 +50,14 @@ const onSubmit = async () => {
       });
       
       if (response.success) {
-        router.push('/registration-success');
+        // Navigate with locale path
+        const currentLocale = t.locale?.value || 'en';
+        const successPath = currentLocale === 'en' 
+          ? '/registration-success' 
+          : `/${currentLocale}/registration-success`;
+        
+        console.log(`[SignUp] Registration successful, navigating to: ${successPath}`);
+        router.push(successPath);
       } else {
         showNotification('error', response.error || t('auth.errors.registrationFailed'));
       }
