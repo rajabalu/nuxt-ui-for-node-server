@@ -1,7 +1,8 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import { ref, reactive } from 'vue';
-const { t } = useI18n();
+import { getLocalizedPath } from '@/utils/i18n-helpers';
+const { t, locale } = useI18n();
 const { requiredValidator, passwordValidator, confirmedValidator } = useValidators();
 const api = useApi();
 const router = useRouter();
@@ -95,7 +96,8 @@ const onSubmit = async () => {
 };
 
 const navigateToLogin = () => {
-  router.push('/sign-in');
+  const signInPath = getLocalizedPath('/sign-in', locale.value);
+  router.push(signInPath);
 };
 </script>
 
@@ -183,7 +185,7 @@ const navigateToLogin = () => {
         </v-btn>
         
         <div class="mt-4 text-center">
-          <NuxtLink to="/sign-in" class="font-weight-5 text-primary">
+          <NuxtLink :to="getLocalizedPath('/sign-in', locale)" class="font-weight-5 text-primary">
             {{ t('backToLogin', 'Back to Login') }}
           </NuxtLink>
         </div>

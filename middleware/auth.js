@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 export default defineNuxtRouteMiddleware(async (to) => {
   console.log('Auth middleware checking route:', to.path);
@@ -36,6 +37,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // Check if there's auth in Pinia store
   const authStore = useAuthStore();
   
+  // Get current locale for localized redirects
+  const nuxtApp = useNuxtApp();
+  const locale = nuxtApp.$i18n?.locale?.value || 'en';
+  const signInPath = getLocalizedPath('/sign-in', locale);
+  
   // If not authenticated
   if (!authStore.isAuthenticated) {
     // Try to initialize from localStorage
@@ -45,12 +51,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
       // If still not authenticated after init, redirect to login
       if (!authStore.isAuthenticated) {
         console.log('Not authenticated, redirecting to sign-in');
-        return navigateTo('/sign-in');
+        return navigateTo(signInPath);
       }
     } else {
       // Server-side - redirect to sign-in
       console.log('Server-side check, not authenticated, redirecting to sign-in');
-      return navigateTo('/sign-in');
+      return navigateTo(signInPath);
     }
   }
   
@@ -62,7 +68,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     // If refresh failed, redirect to login
     if (!refreshResult.success) {
       console.log('Token refresh failed, redirecting to sign-in');
-      return navigateTo('/sign-in');
+      return navigateTo(signInPath);
     }
   }
   

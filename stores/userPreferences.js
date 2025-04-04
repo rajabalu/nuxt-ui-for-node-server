@@ -157,6 +157,18 @@ export const useUserPreferences = defineStore('userPreferences', {
             this.theme = serverTheme; // Directly set theme without going through setTheme to avoid localStorage
           }
           
+          // Set a flag in global window object to prevent feedback loops
+          if (process.client) {
+            window.__isServerPreferenceChange = true;
+            console.log('[userPreferences] Setting server preference change flag');
+            
+            // Reset the flag after a short delay
+            setTimeout(() => {
+              window.__isServerPreferenceChange = false;
+              console.log('[userPreferences] Reset server preference change flag');
+            }, 1000);
+          }
+          
           // Then handle language change - requiring route update
           if (serverLanguage) {
             console.log('[userPreferences] Server language is:', serverLanguage);

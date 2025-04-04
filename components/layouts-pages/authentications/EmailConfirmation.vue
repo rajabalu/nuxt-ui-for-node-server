@@ -1,10 +1,11 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 import { useApi } from '~/composables/api';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 const api = useApi();
 const route = useRoute();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const isLoading = ref(true);
 const isSuccess = ref(false);
@@ -42,7 +43,7 @@ onMounted(async () => {
   <v-card elevation="4">
     <v-card-item class="pa-6">
       <div class="mb-6 text-center">
-        <NuxtLink to="/" class="d-flex justify-center mb-4">
+        <NuxtLink :to="getLocalizedPath('/', locale.value)" class="d-flex justify-center mb-4">
           <img src="/images/brand/logo/logo-light.svg" height="60px" />
         </NuxtLink>
         

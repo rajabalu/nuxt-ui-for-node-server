@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 export default defineNuxtPlugin((nuxtApp) => {
   // Add auth interceptor for API requests
@@ -30,7 +31,10 @@ export default defineNuxtPlugin((nuxtApp) => {
         );
         
         if (!isPublicRoute && !authStore.isAuthenticated) {
-          navigateTo('/sign-in');
+          // Get current locale for localized redirects
+          const locale = nuxtApp.$i18n?.locale?.value || 'en';
+          const signInPath = getLocalizedPath('/sign-in', locale);
+          navigateTo(signInPath);
         }
       }, 0);
     }

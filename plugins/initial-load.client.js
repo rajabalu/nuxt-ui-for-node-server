@@ -1,4 +1,5 @@
 import { useUserPreferences } from '@/stores/userPreferences';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 /**
  * This plugin runs only on the client and loads user preferences
@@ -42,6 +43,40 @@ export default defineNuxtPlugin((nuxtApp) => {
         theme: userPreferencesStore.theme,
         language: userPreferencesStore.language
       });
+      
+      // Handle URL localization for public pages
+      const router = useRouter();
+      const route = router.currentRoute.value;
+      const currentPath = route.fullPath;
+      const language = userPreferencesStore.language;
+      
+      if (language && language !== 'en') {
+        // Check if we're at the root (/) or a path without locale prefix
+        const isHome = currentPath === '/';
+        const hasLocalePrefix = /^\/[a-z]{2}\//.test(currentPath);
+        
+        if ((isHome || !hasLocalePrefix) && !nuxtApp.$auth?.isAuthenticated) {
+          console.log(`[initial-load] Redirecting to localized path for ${language}`);
+          
+          // We're on a public page and need to redirect to localized version
+          let targetPath;
+          if (isHome) {
+            // For home page, simply add the language prefix
+            targetPath = `/${language}`;
+          } else {
+            // For other pages, use helper to get localized path
+            targetPath = getLocalizedPath(currentPath, language);
+          }
+          
+          console.log(`[initial-load] Redirecting from ${currentPath} to ${targetPath}`);
+          
+          // Use next tick to ensure the redirect happens after initial load
+          setTimeout(() => {
+            // Use router.push to avoid full page reload
+            router.push(targetPath);
+          }, 0);
+        }
+      }
       
       // The actual application of preferences will be done in components
       // via the useUserPreferencesHelper composable

@@ -83,6 +83,11 @@ const displaySyncMessage = () => {
 // Function to change language
 const changeLanguage = async (lang) => {
   try {
+    // Clear any server-initiated flags to ensure this is treated as user-initiated
+    if (process.client && window.__isServerPreferenceChange) {
+      window.__isServerPreferenceChange = false;
+    }
+    
     // Try to force load messages for the new locale
     await forceLoadMessages(nuxtApp.$i18n, lang);
     

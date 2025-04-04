@@ -1,4 +1,4 @@
-import { forceLoadMessages, applyRTLDirection, ensureMessageStructure, preloadAllLocales } from '@/utils/i18n-helpers';
+import { forceLoadMessages, applyRTLDirection, ensureMessageStructure, preloadAllLocales, getLocalizedPath } from '@/utils/i18n-helpers';
 
 /**
  * i18n client-side initialization plugin
@@ -14,6 +14,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       if (!savedLanguage) {
         savedLanguage = localStorage.getItem('app_language');
       }
+
+      console.log('[i18n] Saved language from localStorage:', savedLanguage);
       
       if (savedLanguage) {
         // Force load messages for the saved language
@@ -24,6 +26,68 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         
         // Apply RTL direction if needed
         applyRTLDirection(savedLanguage);
+        
+        // Handle URL localization
+        const router = useRouter();
+        const route = router.currentRoute.value;
+        const currentPath = route.fullPath;
+        
+        // For non-English languages, ensure URL has the correct locale prefix
+        if (savedLanguage !== 'en') {
+          const hasCorrectLocalePrefix = currentPath.startsWith(`/${savedLanguage}/`);
+          const hasAnyLocalePrefix = /^\/[a-z]{2}\//.test(currentPath);
+          const isRootPath = currentPath === '/';
+          
+          console.log('[i18n] URL localization info:', {
+            currentPath,
+            savedLanguage,
+            hasCorrectLocalePrefix,
+            hasAnyLocalePrefix,
+            isRootPath
+          });
+          
+          if (isRootPath) {
+            // Root path just needs the language prefix
+            const targetPath = `/${savedLanguage}`;
+            console.log(`[i18n] Will redirect from ${currentPath} to ${targetPath}`);
+            
+            // Wait for Vue router to be ready
+            setTimeout(() => {
+              router.push(targetPath);
+            }, 10);
+          } else if (!hasCorrectLocalePrefix) {
+            // Either has wrong locale prefix or none at all
+            let targetPath;
+            if (hasAnyLocalePrefix) {
+              // Replace wrong prefix
+              const pathWithoutPrefix = currentPath.replace(/^\/[a-z]{2}/, '');
+              targetPath = `/${savedLanguage}${pathWithoutPrefix}`;
+            } else {
+              // Add prefix
+              targetPath = getLocalizedPath(currentPath, savedLanguage);
+            }
+            
+            console.log(`[i18n] Will redirect from ${currentPath} to ${targetPath}`);
+            
+            // Wait for Vue router to be ready
+            setTimeout(() => {
+              router.push(targetPath);
+            }, 10);
+          }
+        } else if (savedLanguage === 'en') {
+          // For English, remove any locale prefix
+          const hasLocalePrefix = /^\/[a-z]{2}\//.test(currentPath);
+          
+          if (hasLocalePrefix) {
+            const targetPath = currentPath.replace(/^\/[a-z]{2}\//, '/');
+            console.log(`[i18n] Will redirect from ${currentPath} to ${targetPath}`);
+            
+            // Wait for Vue router to be ready
+            setTimeout(() => {
+              router.push(targetPath);
+            }, 10);
+          }
+        }
       } else {
         // Still ensure proper message structure for the default locale
         const defaultLocale = nuxtApp.$i18n.locale.value;

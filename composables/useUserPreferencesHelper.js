@@ -26,6 +26,9 @@ export const useUserPreferencesHelper = () => {
   const authStore = useAuthStore();
   const syncMessage = ref('');
   
+  // Add a flag to track if a change is coming from the server
+  const isServerInitiatedChange = ref(false);
+  
   // Save user preferences to server
   const savePreferencesToServer = async (preferences) => {
     if (!authStore.isAuthenticated) {
@@ -173,15 +176,29 @@ export const useUserPreferencesHelper = () => {
     // Watch for language changes
     watch(() => userPreferencesStore.language, (newLanguage) => {
       console.log('[useUserPreferencesHelper] Language changed in store:', newLanguage);
+      // Mark this as a server-initiated change to prevent feedback loop
+      isServerInitiatedChange.value = true;
       applyLanguage(newLanguage);
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        isServerInitiatedChange.value = false;
+      }, 500);
     });
     
     // Also watch the locale directly in case it's changed elsewhere
     watch(locale, (newLocale) => {
       console.log('[useUserPreferencesHelper] Locale changed externally to:', newLocale);
-      // Only save if different from what's in the store
-      if (newLocale !== userPreferencesStore.language) {
+      
+      // Check both our local flag and the global window flag
+      const isServerChange = isServerInitiatedChange.value || 
+                            (process.client && window.__isServerPreferenceChange);
+      
+      // Only save if different from what's in the store and not a server-initiated change
+      if (newLocale !== userPreferencesStore.language && !isServerChange) {
+        console.log('[useUserPreferencesHelper] Saving locale change to preferences');
         saveLanguagePreference(newLocale);
+      } else {
+        console.log('[useUserPreferencesHelper] Skipping save - server change or already synced');
       }
     });
   };
@@ -232,6 +249,7 @@ export const useUserPreferencesHelper = () => {
     syncLocaleWithPreferences,
     currentTheme: () => userPreferencesStore.theme,
     currentLanguage: () => userPreferencesStore.language,
-    syncMessage
+    syncMessage,
+    isServerInitiatedChange
   };
 }; 

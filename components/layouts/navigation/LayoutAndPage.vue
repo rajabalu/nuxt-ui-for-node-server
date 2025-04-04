@@ -109,7 +109,11 @@ const Authentication = [
         </v-list-item>
       </template>
 
-      <v-list-item title="Default" class="vertical-nav-list__group" @click="router.push('/')" />
+      <v-list-item 
+        title="Default" 
+        class="vertical-nav-list__group" 
+        @click="router.push(getLocalizedPath('/', locale.value))" 
+      />
     </v-list-group>
   </template>
 </template>

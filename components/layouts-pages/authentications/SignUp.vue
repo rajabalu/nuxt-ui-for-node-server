@@ -1,11 +1,12 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
   useValidators();
 const api = useApi();
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
@@ -51,10 +52,7 @@ const onSubmit = async () => {
       
       if (response.success) {
         // Navigate with locale path
-        const currentLocale = t.locale?.value || 'en';
-        const successPath = currentLocale === 'en' 
-          ? '/registration-success' 
-          : `/${currentLocale}/registration-success`;
+        const successPath = getLocalizedPath('/registration-success', locale.value);
         
         router.push(successPath);
       } else {
@@ -142,19 +140,25 @@ const onSubmit = async () => {
           <template #label>
             <p class="text-body-1">
               {{ t('auth.agreeTo') }}
-              <NuxtLink to="/" class="mx-1 font-weight-5 text-primary">{{ t('common.termsOfService') }} </NuxtLink>
+              <NuxtLink :to="getLocalizedPath('/', locale.value)" class="mx-1 font-weight-5 text-primary">
+                {{ t('common.termsOfService') }}
+              </NuxtLink>
               {{ t('common.and') }}
-              <NuxtLink to="/" class="ml-1 font-weight-5 text-primary">{{ t('common.privacyPolicy') }}</NuxtLink>.
+              <NuxtLink :to="getLocalizedPath('/', locale.value)" class="ml-1 font-weight-5 text-primary">
+                {{ t('common.privacyPolicy') }}
+              </NuxtLink>.
             </p>
           </template>
         </v-checkbox>
 
         <v-btn type="submit" block :loading="isLoading"> {{ t('auth.createFreeAccountBtn') }} </v-btn>
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
-          <NuxtLink to="sign-in" class="font-weight-5 text-primary">
+          <NuxtLink :to="getLocalizedPath('/sign-in', locale.value)" class="font-weight-5 text-primary">
              {{ t('auth.alreadyMember') }}
           </NuxtLink>
-          <NuxtLink to="forget-password" class="font-weight-5"> {{ t('auth.forgotPasswordLink') }} </NuxtLink>
+          <NuxtLink :to="getLocalizedPath('/forget-password', locale.value)" class="font-weight-5">
+            {{ t('auth.forgotPasswordLink') }}
+          </NuxtLink>
         </div>
       </v-form>
     </v-card-item>

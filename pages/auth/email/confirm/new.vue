@@ -1,4 +1,7 @@
 <script setup>
+import { getLocalizedPath } from '@/utils/i18n-helpers';
+import { useI18n } from 'vue-i18n';
+
 const api = useApi();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -6,6 +9,7 @@ const isLoading = ref(true);
 const isSuccess = ref(false);
 const errorMessage = ref('');
 const newEmail = ref('');
+const { locale } = useI18n();
 
 // Define page meta for layout
 definePageMeta({
@@ -76,10 +80,8 @@ const handleLoginClick = () => {
     localStorage.removeItem('auth');
   }
   
-  // Get current locale for navigation
-  const { locale } = useI18n();
-  const currentLocale = locale.value;
-  const signInPath = currentLocale === 'en' ? '/sign-in' : `/${currentLocale}/sign-in`;
+  // Use the locale already defined at the top level
+  const signInPath = getLocalizedPath('/sign-in', locale.value);
   
   // Navigate to sign-in page with locale
   navigateTo(signInPath);
@@ -93,7 +95,7 @@ const handleLoginClick = () => {
         <v-card elevation="4">
           <v-card-item class="pa-6">
             <div class="mb-6 text-center">
-              <NuxtLink to="/" class="d-flex justify-center mb-4">
+              <NuxtLink :to="getLocalizedPath('/', locale.value)" class="d-flex justify-center mb-4">
                 <img src="/images/brand/logo/logo-light.svg" height="60px" />
               </NuxtLink>
               
@@ -130,7 +132,7 @@ const handleLoginClick = () => {
                   {{ errorMessage }}
                 </p>
                 
-                <v-btn to="/" color="primary" variant="outlined" class="mt-4">
+                <v-btn :to="getLocalizedPath('/', locale.value)" color="primary" variant="outlined" class="mt-4">
                   Return to Home
                 </v-btn>
               </div>

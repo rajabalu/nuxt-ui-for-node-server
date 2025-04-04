@@ -10,6 +10,7 @@ import { watch, computed, onMounted, ref } from 'vue';
 import { useNuxtApp } from '#app';
 import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
 import { useUserPreferences } from '@/stores/userPreferences';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 console.log('[TopBar] Component setup started');
 
@@ -108,7 +109,7 @@ if (smallDisplay.value) {
   <v-app-bar :height="themeHeaderHeight" class="app-header" fixed>
     <template #prepend>
       <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-item-center mr-3">
-        <NuxtLink to="/" class="d-flex">
+        <NuxtLink :to="getLocalizedPath('/', locale.value)" class="d-flex">
           <img
           :src="
             themeName === 'light'

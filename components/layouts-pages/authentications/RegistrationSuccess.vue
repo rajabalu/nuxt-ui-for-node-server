@@ -1,6 +1,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n'; // Import useI18n
-const { t } = useI18n(); // Initialize i18n
+import { getLocalizedPath } from '@/utils/i18n-helpers';
+const { t, locale } = useI18n(); // Initialize i18n
 // Registration Success component
 </script>
 
@@ -8,7 +9,7 @@ const { t } = useI18n(); // Initialize i18n
   <v-card elevation="4">
     <v-card-item class="pa-6">
       <div class="mb-6 text-center">
-        <NuxtLink to="/" class="d-flex justify-center mb-4">
+        <NuxtLink :to="getLocalizedPath('/', locale.value)" class="d-flex justify-center mb-4">
           <img src="/images/brand/logo/logo-light.svg" height="60px" />
         </NuxtLink>
         <v-icon class="mb-4" color="success" icon="tabler-circle-check-filled" size="80"></v-icon>
@@ -32,7 +33,7 @@ const { t } = useI18n(); // Initialize i18n
         <v-btn to="/sign-in" color="primary" class="mb-4" block>
           {{ t('auth.registrationSuccess.loginBtn') }}
         </v-btn>
-        <NuxtLink to="/forget-password" class="text-body-1">
+        <NuxtLink :to="getLocalizedPath('/forget-password', locale.value)" class="text-body-1">
           {{ t('auth.forgotPasswordLink') }}
         </NuxtLink>
       </div>
