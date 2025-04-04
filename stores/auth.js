@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
+import { useUserPreferences } from '@/stores/userPreferences';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -204,11 +205,33 @@ export const useAuthStore = defineStore('auth', {
           refreshToken: this.refreshToken,
           tokenExpires: this.tokenExpires
         }));
+        
+        // Sync preferences with server after successful login
+        this.syncUserPreferences();
       }
       
       // If user data wasn't provided in the login response, fetch it
       if (!data.user) {
         this.fetchCurrentUser();
+      }
+    },
+
+    // Sync user preferences with the server
+    async syncUserPreferences() {
+      try {
+        console.log('[authStore] Syncing user preferences with server after login');
+        const userPreferencesStore = useUserPreferences();
+        
+        // Make sure preferences are initialized from localStorage
+        if (!userPreferencesStore.initialized) {
+          userPreferencesStore.initPreferences();
+        }
+        
+        // Fetch preferences from server and sync with local values
+        await userPreferencesStore.fetchFromServer();
+        console.log('[authStore] User preferences sync completed');
+      } catch (error) {
+        console.error('[authStore] Error syncing user preferences:', error);
       }
     },
 
@@ -249,7 +272,12 @@ export const useAuthStore = defineStore('auth', {
           this.isAuthenticated = true;
           
           // Fetch current user to validate the session
-          this.fetchCurrentUser();
+          this.fetchCurrentUser().then(result => {
+            if (result.success) {
+              // Also sync preferences after session is validated
+              this.syncUserPreferences();
+            }
+          });
         } catch (error) {
           this.clearAuthData();
         }

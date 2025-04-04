@@ -147,6 +147,66 @@ export const useUserPreferences = defineStore('userPreferences', {
         this.syncStatus = 'error';
         return { success: false, error: 'An unexpected error occurred' };
       }
+    },
+    
+    // Fetch user preferences from the server after login
+    async fetchFromServer() {
+      console.log('[userPreferences] Fetching preferences from server');
+      
+      const nuxtApp = useNuxtApp();
+      const api = nuxtApp.$api;
+      
+      if (!api) {
+        console.error('[userPreferences] API not available for fetching preferences');
+        return { success: false, error: 'API not available' };
+      }
+      
+      try {
+        // Get user preferences from server
+        const response = await api.get('user-preferences');
+        
+        if (response.success && response.data) {
+          console.log('[userPreferences] Received preferences from server:', response.data);
+          
+          const serverTheme = response.data.theme;
+          const serverLanguage = response.data.language;
+          
+          // Compare server values with local values
+          const localTheme = this.theme;
+          const localLanguage = this.language;
+          
+          console.log('[userPreferences] Comparing - Local:', { theme: localTheme, language: localLanguage }, 
+                     'Server:', { theme: serverTheme, language: serverLanguage });
+          
+          // If local values exist and differ from server, update server with local values
+          // This happens if user changed preferences before logging in
+          if (localTheme && localTheme !== serverTheme) {
+            console.log('[userPreferences] Local theme differs from server, updating server');
+            await this.syncWithServer();
+          } else if (serverTheme) {
+            // If no local preference or server preference is different, update local with server value
+            console.log('[userPreferences] Updating local theme from server');
+            this.setTheme(serverTheme);
+          }
+          
+          if (localLanguage && localLanguage !== serverLanguage) {
+            console.log('[userPreferences] Local language differs from server, updating server');
+            await this.syncWithServer();
+          } else if (serverLanguage) {
+            // If no local preference or server preference is different, update local with server value
+            console.log('[userPreferences] Updating local language from server');
+            this.setLanguage(serverLanguage);
+          }
+          
+          return { success: true, data: response.data };
+        } else {
+          console.error('[userPreferences] Failed to fetch preferences from server:', response.error);
+          return { success: false, error: response.error || 'Failed to fetch preferences' };
+        }
+      } catch (error) {
+        console.error('[userPreferences] Error fetching preferences from server:', error);
+        return { success: false, error: 'An unexpected error occurred' };
+      }
     }
   }
 }); 
