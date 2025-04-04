@@ -40,8 +40,8 @@ export default defineNuxtPlugin((nuxtApp) => {
         const isHome = currentPath === '/';
         const hasLocalePrefix = /^\/[a-z]{2}\//.test(currentPath);
         
-        if ((isHome || !hasLocalePrefix) && !nuxtApp.$auth?.isAuthenticated) {
-          // We're on a public page and need to redirect to localized version
+        if (isHome || !hasLocalePrefix) {
+          // We're on a page that needs to be redirected to localized version
           let targetPath;
           if (isHome) {
             // For home page, simply add the language prefix

@@ -132,6 +132,16 @@ export const useUserPreferences = defineStore('userPreferences', {
           // First apply theme since that doesn't require navigation
           if (serverTheme) {
             this.theme = serverTheme; // Directly set theme without going through setTheme to avoid localStorage
+            
+            // Also save to localStorage for persistence even when authenticated
+            if (process.client) {
+              try {
+                localStorage.setItem('user_theme', serverTheme);
+                localStorage.setItem('app_theme', serverTheme); // For backward compatibility
+              } catch (error) {
+                console.error('[userPreferences] Error saving theme to localStorage:', error);
+              }
+            }
           }
           
           // Set a flag in global window object to prevent feedback loops
@@ -148,6 +158,16 @@ export const useUserPreferences = defineStore('userPreferences', {
           if (serverLanguage) {
             // Apply language directly to store
             this.language = serverLanguage; // Directly set language without going through setLanguage to avoid localStorage
+            
+            // Also save to localStorage for persistence even when authenticated
+            if (process.client) {
+              try {
+                localStorage.setItem('user_language', serverLanguage);
+                localStorage.setItem('app_language', serverLanguage); // For backward compatibility
+              } catch (error) {
+                console.error('[userPreferences] Error saving language to localStorage:', error);
+              }
+            }
             
             // Get the current locale and route
             const router = useRouter();
