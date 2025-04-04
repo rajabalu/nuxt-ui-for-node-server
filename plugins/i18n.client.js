@@ -32,8 +32,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         
         // For non-English languages, ensure URL has the correct locale prefix
         if (savedLanguage !== 'en') {
-          const hasCorrectLocalePrefix = currentPath.startsWith(`/${savedLanguage}/`);
-          const hasAnyLocalePrefix = /^\/[a-z]{2}\//.test(currentPath);
+          // Check different URL patterns to avoid duplicate locale prefixes
+          const hasCorrectLocalePrefix = currentPath.startsWith(`/${savedLanguage}`);
+          const localePattern = /^\/([a-z]{2})(?:\/|$)/;
+          const localeMatch = currentPath.match(localePattern);
+          const existingLocale = localeMatch ? localeMatch[1] : null;
           const isRootPath = currentPath === '/';
           
           if (isRootPath) {
@@ -47,10 +50,10 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           } else if (!hasCorrectLocalePrefix) {
             // Either has wrong locale prefix or none at all
             let targetPath;
-            if (hasAnyLocalePrefix) {
+            if (existingLocale) {
               // Replace wrong prefix
-              const pathWithoutPrefix = currentPath.replace(/^\/[a-z]{2}/, '');
-              targetPath = `/${savedLanguage}${pathWithoutPrefix}`;
+              const pathWithoutPrefix = currentPath.replace(localePattern, '/');
+              targetPath = `/${savedLanguage}${pathWithoutPrefix.substring(1)}`;
             } else {
               // Add prefix
               targetPath = getLocalizedPath(currentPath, savedLanguage);

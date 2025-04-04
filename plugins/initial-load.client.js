@@ -38,9 +38,11 @@ export default defineNuxtPlugin((nuxtApp) => {
       if (language && language !== 'en') {
         // Check if we're at the root (/) or a path without locale prefix
         const isHome = currentPath === '/';
-        const hasLocalePrefix = /^\/[a-z]{2}\//.test(currentPath);
+        const localePattern = /^\/([a-z]{2})(?:\/|$)/;
+        const localeMatch = currentPath.match(localePattern);
+        const existingLocale = localeMatch ? localeMatch[1] : null;
         
-        if (isHome || !hasLocalePrefix) {
+        if (isHome || !existingLocale) {
           // We're on a page that needs to be redirected to localized version
           let targetPath;
           if (isHome) {

@@ -89,26 +89,29 @@ async function syncLanguageWithRouter(language) {
     
     // For clarity, determine if we need a localized path
     const shouldBeLocalePath = language !== 'en';
-    const hasLocalePrefix = currentPath.startsWith(`/${language}/`);
-    const otherLocalePrefix = !hasLocalePrefix && /^\/[a-z]{2}\//.test(currentPath);
-    const isDefaultLang = language === 'en';
+    
+    // Improved locale detection with regex pattern
+    const localePattern = /^\/([a-z]{2})(?:\/|$)/;
+    const localeMatch = currentPath.match(localePattern);
+    const existingLocale = localeMatch ? localeMatch[1] : null;
+    const hasCorrectLocalePrefix = existingLocale === language;
     
     // Conditions that require URL change:
     // 1. We need a localized path but don't have one
     // 2. We're on a different locale path than our preference
     // 3. We're using default language but have a locale prefix
-    if (shouldBeLocalePath && (isRootPath || (!hasLocalePrefix && !otherLocalePrefix))) {
+    if (shouldBeLocalePath && (isRootPath || !existingLocale)) {
       // Directly at root or missing locale prefix entirely - add locale prefix
       const targetPath = `/${language}${currentPath === '/' ? '' : currentPath}`;
       router.push(targetPath);
-    } else if (shouldBeLocalePath && otherLocalePrefix) {
+    } else if (shouldBeLocalePath && existingLocale && existingLocale !== language) {
       // We have the wrong locale prefix - replace it
-      const pathWithoutLocale = currentPath.replace(/^\/[a-z]{2}/, '');
-      const targetPath = `/${language}${pathWithoutLocale}`;
+      const pathWithoutLocale = currentPath.replace(localePattern, '/');
+      const targetPath = `/${language}${pathWithoutLocale.substring(1)}`;
       router.push(targetPath);
-    } else if (isDefaultLang && currentPath.match(/^\/[a-z]{2}\//)) {
+    } else if (!shouldBeLocalePath && existingLocale) {
       // We're on a localized path but should be on the default path
-      const newPath = currentPath.replace(/^\/[a-z]{2}\//, '/');
+      const newPath = currentPath.replace(localePattern, '/');
       router.push(newPath);
     }
   } catch (error) {
