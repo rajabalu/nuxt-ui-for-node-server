@@ -11,12 +11,31 @@
       </v-list-item>
     </v-list>
   </v-menu>
+  
+  <!-- Snackbar for sync message -->
+  <v-snackbar
+    v-model="showSyncMessage"
+    :timeout="3000"
+    color="success"
+    location="top"
+  >
+    {{ preferencesHelper.syncMessage }}
+    <template v-slot:actions>
+      <v-btn
+        color="white"
+        variant="text"
+        @click="showSyncMessage = false"
+      >
+        Close
+      </v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <script setup>
 import { useI18n } from 'vue-i18n';
 import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
-import { onMounted, watch } from 'vue';
+import { onMounted, watch, ref } from 'vue';
 import { useNuxtApp } from '#app';
 import { forceLoadMessages, applyRTLDirection, ensureMessageStructure } from '@/utils/i18n-helpers';
 import { useRouter, useRoute } from 'vue-router';
@@ -26,6 +45,7 @@ const { locale, locales, setLocale, t } = useI18n();
 
 // Use the preferences helper
 const preferencesHelper = useUserPreferencesHelper();
+const showSyncMessage = ref(false);
 
 // Get router for navigation
 const router = useRouter();
@@ -50,13 +70,29 @@ onMounted(() => {
   }
 });
 
+// Function to show sync message temporarily
+const displaySyncMessage = () => {
+  if (preferencesHelper.syncMessage.value) {
+    showSyncMessage.value = true;
+    setTimeout(() => {
+      showSyncMessage.value = false;
+    }, 3000); // Hide after 3 seconds
+  }
+};
+
 // Function to change language
 const changeLanguage = async (lang) => {
   try {
     // Try to force load messages for the new locale
     await forceLoadMessages(nuxtApp.$i18n, lang);
     
-    // Save the language preference
+    // Save the language preference (now returns promise)
+    await preferencesHelper.saveLanguagePreference(lang);
+    
+    // Show sync message
+    displaySyncMessage();
+    
+    // Apply language change
     preferencesHelper.applyLanguage(lang);
     
     // Apply RTL direction

@@ -6,7 +6,8 @@ export const useUserPreferences = defineStore('userPreferences', {
   state: () => ({
     language: null,
     theme: null,
-    initialized: false
+    initialized: false,
+    syncStatus: null
   }),
 
   actions: {
@@ -112,9 +113,40 @@ export const useUserPreferences = defineStore('userPreferences', {
       }
     },
     
-    // For future API integration
+    // For server API integration
     async syncWithServer() {
-      console.log('[userPreferences] Server sync would go here in the future');
+      console.log('[userPreferences] Syncing preferences with server');
+      
+      const nuxtApp = useNuxtApp();
+      const api = nuxtApp.$api;
+      
+      if (!api) {
+        console.error('[userPreferences] API not available');
+        this.syncStatus = 'error';
+        return { success: false, error: 'API not available' };
+      }
+      
+      try {
+        // Send current preferences to server
+        const response = await api.patch('user-preferences', {
+          theme: this.theme,
+          language: this.language
+        });
+        
+        if (response.success) {
+          console.log('[userPreferences] Successfully synced with server');
+          this.syncStatus = 'success';
+          return { success: true };
+        } else {
+          console.error('[userPreferences] Failed to sync with server:', response.error);
+          this.syncStatus = 'error';
+          return { success: false, error: response.error };
+        }
+      } catch (error) {
+        console.error('[userPreferences] Error syncing with server:', error);
+        this.syncStatus = 'error';
+        return { success: false, error: 'An unexpected error occurred' };
+      }
     }
   }
 }); 

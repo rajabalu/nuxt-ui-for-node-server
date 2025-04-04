@@ -6,7 +6,7 @@ import { useGlobal } from "@/stores/global";
 import { useI18n } from "vue-i18n";
 import { useAuthStore } from '@/stores/auth';
 import { themeConfig } from '@/composables/theme';
-import { watch, computed, onMounted } from 'vue';
+import { watch, computed, onMounted, ref } from 'vue';
 import { useNuxtApp } from '#app';
 import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
 import { useUserPreferences } from '@/stores/userPreferences';
@@ -25,6 +25,17 @@ const userPreferencesStore = useUserPreferences();
 
 // Use the new preferences helper
 const preferencesHelper = useUserPreferencesHelper();
+const showSyncMessage = ref(false);
+
+// Function to show sync message temporarily
+const displaySyncMessage = () => {
+  if (preferencesHelper.syncMessage.value) {
+    showSyncMessage.value = true;
+    setTimeout(() => {
+      showSyncMessage.value = false;
+    }, 3000); // Hide after 3 seconds
+  }
+};
 
 // Need to call this on mount to ensure theme is applied
 onMounted(async () => {
@@ -57,7 +68,7 @@ const toggleSidebarPhone = (tempObj) => {
   globalStore.sideBarToggle(tempObj);
 };
 
-const toggleLightDarkMode = () => {
+const toggleLightDarkMode = async () => {
   console.log('[TopBar] Toggle light/dark mode clicked');
   console.log('[TopBar] Current theme before toggle:', themeName.value);
   console.log('[TopBar] Current dark mode before toggle:', globalStore.datkMode);
@@ -74,7 +85,10 @@ const toggleLightDarkMode = () => {
   // Save theme preference to store using our helper
   const currentTheme = globalStore.datkMode ? 'dark' : 'light';
   console.log('[TopBar] Saving theme preference:', currentTheme);
-  preferencesHelper.saveThemePreference(currentTheme);
+  await preferencesHelper.saveThemePreference(currentTheme);
+  
+  // Show sync message
+  displaySyncMessage();
 };
 
 watch(smallDisplay, (newValue, oldValue) => {
@@ -124,5 +138,24 @@ if (smallDisplay.value) {
       <Notification v-if="authStore.isAuthenticated" />
       <UserProfile v-if="authStore.isAuthenticated" />
     </template>
+    
+    <!-- Snackbar for sync message -->
+    <v-snackbar
+      v-model="showSyncMessage"
+      :timeout="3000"
+      color="success"
+      location="top"
+    >
+      {{ preferencesHelper.syncMessage }}
+      <template v-slot:actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="showSyncMessage = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-app-bar>
 </template>

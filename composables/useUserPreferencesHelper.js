@@ -1,11 +1,12 @@
 import { useUserPreferences } from '@/stores/userPreferences';
 import { useGlobal } from '@/stores/global';
 import { useI18n } from 'vue-i18n';
-import { watch, onMounted, nextTick } from 'vue';
+import { watch, onMounted, nextTick, ref } from 'vue';
 import { themeConfig } from '@/composables/theme';
 import { useNuxtApp } from '#app';
 import { forceLoadMessages, applyRTLDirection } from '@/utils/i18n-helpers';
 import { useRouter, useRoute } from 'vue-router';
+import { useAuthStore } from '~/stores/auth';
 
 /**
  * Composable to handle user preferences (theme and language)
@@ -22,6 +23,41 @@ export const useUserPreferencesHelper = () => {
   const nuxtApp = useNuxtApp();
   const router = useRouter();
   const route = useRoute();
+  const authStore = useAuthStore();
+  const syncMessage = ref('');
+  
+  // Save user preferences to server
+  const savePreferencesToServer = async (preferences) => {
+    if (!authStore.isAuthenticated) {
+      console.log('[useUserPreferencesHelper] User not authenticated, skipping server sync');
+      return { success: false, message: 'Not authenticated' };
+    }
+    
+    try {
+      const api = nuxtApp.$api;
+      if (!api) {
+        console.error('[useUserPreferencesHelper] API not available');
+        return { success: false, message: 'API not available' };
+      }
+      
+      // Make API call to update preferences
+      const response = await api.patch('user-preferences', preferences);
+      
+      if (response.success) {
+        console.log('[useUserPreferencesHelper] Preferences saved to server:', preferences);
+        syncMessage.value = 'Preferences updated successfully';
+        return { success: true, message: 'Preferences updated successfully' };
+      } else {
+        console.error('[useUserPreferencesHelper] Error saving preferences to server:', response.error);
+        syncMessage.value = 'Failed to update preferences';
+        return { success: false, message: response.error || 'Failed to update preferences' };
+      }
+    } catch (error) {
+      console.error('[useUserPreferencesHelper] Error saving preferences to server:', error);
+      syncMessage.value = 'Failed to update preferences';
+      return { success: false, message: 'An unexpected error occurred' };
+    }
+  };
   
   // Apply theme from preferences
   const applyTheme = (themeName) => {
@@ -151,15 +187,25 @@ export const useUserPreferencesHelper = () => {
   };
   
   // Save theme preference
-  const saveThemePreference = (themeName) => {
+  const saveThemePreference = async (themeName) => {
     console.log('[useUserPreferencesHelper] Saving theme preference:', themeName);
     userPreferencesStore.setTheme(themeName);
+    
+    // Sync with server if user is authenticated
+    if (authStore.isAuthenticated) {
+      await savePreferencesToServer({ theme: themeName });
+    }
   };
   
   // Save language preference
-  const saveLanguagePreference = (lang) => {
+  const saveLanguagePreference = async (lang) => {
     console.log('[useUserPreferencesHelper] Saving language preference:', lang);
     userPreferencesStore.setLanguage(lang);
+    
+    // Sync with server if user is authenticated
+    if (authStore.isAuthenticated) {
+      await savePreferencesToServer({ language: lang });
+    }
   };
   
   // Ensure locale is consistent with preferences
@@ -185,6 +231,7 @@ export const useUserPreferencesHelper = () => {
     saveLanguagePreference,
     syncLocaleWithPreferences,
     currentTheme: () => userPreferencesStore.theme,
-    currentLanguage: () => userPreferencesStore.language
+    currentLanguage: () => userPreferencesStore.language,
+    syncMessage
   };
 }; 
