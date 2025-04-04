@@ -1,6 +1,6 @@
 <script setup>
 import Navigation from "@/components/layouts/navigation/Index.vue";
-import { computed, watch } from 'vue';
+import { computed, watch, onMounted } from 'vue';
 import { useGlobal } from "@/stores/global";
 import { themeConfig } from '@/composables/theme';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
@@ -11,10 +11,14 @@ const { themeSidebarWidth, smallDisplay } = theme;
 const globalStore = useGlobal();
 const { locale } = useI18n();
 
+// Create computed property for the localized home path
+const homePath = computed(() => getLocalizedPath('/', locale.value));
+
 const themeName = computed(() => {
   const currentTheme = globalStore.datkMode ? 'dark' : 'light';
   return currentTheme;
 });
+
 
 watch(() => globalStore.datkMode, (newVal) => {
 }, { immediate: true });
@@ -28,7 +32,7 @@ watch(() => globalStore.datkMode, (newVal) => {
     :class="{ 'sidebar-visibile': !smallDisplay && globalStore.sideNavBar }"
   >
     <div class="d-none d-md-flex app-nav-logo-wrapper aligin-center">
-      <NuxtLink :to="getLocalizedPath('/', locale.value)" class="d-flex">
+      <NuxtLink :to="homePath" class="d-flex">
         <img
           :src="
             themeName === 'light'

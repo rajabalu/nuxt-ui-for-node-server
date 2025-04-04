@@ -22,6 +22,10 @@ const { locale, t } = useI18n();
 const authStore = useAuthStore();
 const userPreferencesStore = useUserPreferences();
 
+// Debug computed properties
+const currentLocale = computed(() => locale.value);
+const homePath = computed(() => getLocalizedPath('/', locale.value));
+
 // Use the new preferences helper
 const preferencesHelper = useUserPreferencesHelper();
 const showSyncMessage = ref(false);
@@ -87,7 +91,7 @@ if (smallDisplay.value) {
   <v-app-bar :height="themeHeaderHeight" class="app-header" fixed>
     <template #prepend>
       <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-item-center mr-3">
-        <NuxtLink :to="getLocalizedPath('/', locale.value)" class="d-flex">
+        <NuxtLink :to="homePath" class="d-flex">
           <img
           :src="
             themeName === 'light'
@@ -97,6 +101,8 @@ if (smallDisplay.value) {
           height="60px"
         />
         </NuxtLink>
+        <!-- Debug info -->
+        <small class="d-none">Locale: {{ currentLocale }}, Path: {{ homePath }}</small>
       </div>
       <icon-btn v-if="authStore.isAuthenticated"
         class="d-none d-sm-flex"
