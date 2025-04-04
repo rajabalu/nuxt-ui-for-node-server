@@ -1,11 +1,15 @@
 import { useDisplay } from "vuetify";
 import { ref, computed } from "vue";
 import { useTheme } from "vuetify";
+import { useUserPreferences } from "@/stores/userPreferences";
 
 export const themeConfig = () => {
   const { name } = useDisplay();
   const theme = useTheme();
-  const currentTheme = ref(theme.global.current.value.dark ? "dark" : "light");
+  const userPreferencesStore = useUserPreferences();
+  
+  // Get initial theme from user preferences store
+  const currentTheme = ref(userPreferencesStore.theme || (theme.global.current.value.dark ? "dark" : "light"));
 
   // Fixed Value
   const themeHeaderHeight = "60";
@@ -28,11 +32,11 @@ export const themeConfig = () => {
       currentTheme.value = currentTheme.value === "light" ? "dark" : "light";
     }
     
+    // Apply theme to Vuetify
     theme.global.name.value = currentTheme.value;
     
-    if (process.client) {
-      localStorage.setItem('user_theme', currentTheme.value);
-    }
+    // Update user preferences store which handles persistence
+    userPreferencesStore.setTheme(currentTheme.value);
   };
 
   return {

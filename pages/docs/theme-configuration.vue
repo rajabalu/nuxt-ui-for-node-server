@@ -10,6 +10,10 @@ const contantList = [
     name: "Updating Colors",
     to: "updating-colors",
   },
+  {
+    name: "User Preferences",
+    to: "user-preferences",
+  },
 ];
 
 useSeoMeta({
@@ -110,6 +114,64 @@ useSeoMeta({
                   If you want to override any style or want to add your custom scss code, you can
                   use _user.scss file located at below path.<br />
                   File : /src/@core/styles/_user.scss
+                </p>
+              </v-alert>
+            </div>
+
+            <v-divider class="my-4" />
+
+            <div id="user-preferences" class="py-6">
+              <h2 class="text-h3">User Preferences System</h2>
+
+              <p class="intro-font my-3">
+                We've implemented a unified user preferences system that handles both theme and language settings consistently.
+                This ensures a smooth user experience with persistent preferences across sessions.
+              </p>
+
+              <p class="intro-font">Key components of this system include:</p>
+
+              <ul class="intro-font my-3">
+                <li class="my-2">
+                  <b>Pinia Store</b>: The <code>userPreferences</code> store manages both theme and language preferences
+                </li>
+                <li class="my-2">
+                  <b>App Initializer</b>: The client-side plugin loads preferences on startup
+                </li>
+                <li class="my-2">
+                  <b>Theme Composable</b>: <code>useThemeConfig()</code> provides reactive theme access
+                </li>
+              </ul>
+
+              <p class="intro-font my-3">
+                To change the theme programmatically:
+              </p>
+
+              <VueCodeHighlighter
+                lang="js"
+                :code="`// Option 1: Using the theme composable
+import { themeConfig } from '@/composables/theme';
+
+const { themeChangeMode } = themeConfig();
+themeChangeMode(); // Toggle between light/dark
+
+// Option 2: Using the store directly
+import { useUserPreferences } from '@/stores/userPreferences';
+
+const userPreferencesStore = useUserPreferences();
+userPreferencesStore.setTheme('dark'); // Set specific theme`"
+                width="100%"
+                height="100%"
+                font-size="16px"
+                theme="dark"
+                class="my-4"
+              />
+
+              <v-alert color="info" variant="outlined" class="my-4">
+                <p class="text-body-1 text-info">
+                  <b>NOTE</b>
+                  <br />
+                  The preference system automatically handles persistence to localStorage and synchronizes with
+                  the Vuetify theme system. It also coordinates with the i18n language settings for a consistent approach.
                 </p>
               </v-alert>
             </div>

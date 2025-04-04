@@ -13,6 +13,7 @@ import { useI18n } from 'vue-i18n';
 import { forceLoadMessages, applyRTLDirection, getLocalizedPath } from '@/utils/i18n-helpers';
 import { useNuxtApp } from '#app';
 import { useRouter } from 'vue-router';
+import { useTheme } from 'vuetify';
 
 // Initialize user preferences store
 const userPreferencesStore = useUserPreferences();
@@ -20,6 +21,7 @@ const preferencesHelper = useUserPreferencesHelper();
 const { locale } = useI18n();
 const nuxtApp = useNuxtApp();
 const router = useRouter();
+const theme = useTheme();
 
 // Watch for changes in the locale and update everything accordingly
 watch(locale, async (newLocale) => {
@@ -44,10 +46,10 @@ watch(locale, async (newLocale) => {
   }
 });
 
-// Watch for theme changes
+// Watch for theme changes from store and apply to Vuetify
 watch(() => userPreferencesStore.theme, (newTheme) => {
-  if (newTheme && process.client) {
-    preferencesHelper.applyTheme(newTheme);
+  if (newTheme && theme && theme.global) {
+    theme.global.name.value = newTheme;
   }
 });
 
@@ -57,9 +59,6 @@ watch(() => userPreferencesStore.language, (newLanguage) => {
     locale.value = newLanguage;
   }
 });
-
-// Initialize preferences helper
-preferencesHelper.initializePreferences();
 
 // Sync language with router to ensure URL reflects current locale
 async function syncLanguageWithRouter(language) {

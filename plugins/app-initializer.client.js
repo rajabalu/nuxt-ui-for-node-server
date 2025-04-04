@@ -1,5 +1,6 @@
 import { useUserPreferences } from '@/stores/userPreferences';
 import { forceLoadMessages, applyRTLDirection, ensureMessageStructure, getLocalizedPath } from '@/utils/i18n-helpers';
+import { useTheme } from 'vuetify';
 
 /**
  * Unified application initialization plugin that runs client-side
@@ -18,14 +19,23 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       return;
     }
     
+    // Get Vuetify theme instance
+    const vuetifyTheme = useTheme();
+    
     // 1. Initialize user preferences store and load saved preferences
     const userPreferencesStore = useUserPreferences();
     userPreferencesStore.initPreferences();
     
-    // 2. Get the current language from user preferences
+    // 2. Apply theme settings from preferences
+    if (userPreferencesStore.theme) {
+      // Apply theme to Vuetify
+      vuetifyTheme.global.name.value = userPreferencesStore.theme;
+    }
+    
+    // 3. Get the current language from user preferences
     const savedLanguage = userPreferencesStore.language || 'en';
     
-    // 3. Initialize i18n with the saved language
+    // 4. Initialize i18n with the saved language
     if (nuxtApp.$i18n) {
       // Force load messages for the saved language
       await forceLoadMessages(nuxtApp.$i18n, savedLanguage);
@@ -42,7 +52,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       });
     }
     
-    // 4. Handle URL localization based on language preference
+    // 5. Handle URL localization based on language preference
     const router = useRouter();
     const route = router.currentRoute.value;
     const currentPath = route.fullPath;
