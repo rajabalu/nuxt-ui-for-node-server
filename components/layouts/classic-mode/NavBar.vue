@@ -13,13 +13,10 @@ const { locale } = useI18n();
 
 const themeName = computed(() => {
   const currentTheme = globalStore.datkMode ? 'dark' : 'light';
-  console.log('NavBar - Current theme:', currentTheme);
   return currentTheme;
 });
 
 watch(() => globalStore.datkMode, (newVal) => {
-  console.log('NavBar - Dark mode changed:', newVal);
-  console.log('NavBar - Current theme:', themeName.value);
 }, { immediate: true });
 </script>
 

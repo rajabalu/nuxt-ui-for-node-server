@@ -93,37 +93,22 @@ async function syncLanguageWithRouter(language) {
     const otherLocalePrefix = !hasLocalePrefix && /^\/[a-z]{2}\//.test(currentPath);
     const isDefaultLang = language === 'en';
     
-    console.log('[AppInitializer] Current route info:', {
-      currentPath,
-      isRootPath,
-      language,
-      shouldBeLocalePath,
-      hasLocalePrefix,
-      otherLocalePrefix
-    });
-    
     // Conditions that require URL change:
     // 1. We need a localized path but don't have one
     // 2. We're on a different locale path than our preference
     // 3. We're using default language but have a locale prefix
     if (shouldBeLocalePath && (isRootPath || (!hasLocalePrefix && !otherLocalePrefix))) {
       // Directly at root or missing locale prefix entirely - add locale prefix
-      console.log('[AppInitializer] Adding locale prefix for non-English language');
       const targetPath = `/${language}${currentPath === '/' ? '' : currentPath}`;
-      console.log(`[AppInitializer] Redirecting from ${currentPath} to ${targetPath}`);
       router.push(targetPath);
     } else if (shouldBeLocalePath && otherLocalePrefix) {
       // We have the wrong locale prefix - replace it
-      console.log('[AppInitializer] Replacing wrong locale prefix');
       const pathWithoutLocale = currentPath.replace(/^\/[a-z]{2}/, '');
       const targetPath = `/${language}${pathWithoutLocale}`;
-      console.log(`[AppInitializer] Redirecting from ${currentPath} to ${targetPath}`);
       router.push(targetPath);
     } else if (isDefaultLang && currentPath.match(/^\/[a-z]{2}\//)) {
       // We're on a localized path but should be on the default path
-      console.log('[AppInitializer] Removing locale prefix for English language');
       const newPath = currentPath.replace(/^\/[a-z]{2}\//, '/');
-      console.log(`[AppInitializer] Redirecting from ${currentPath} to ${newPath}`);
       router.push(newPath);
     }
   } catch (error) {

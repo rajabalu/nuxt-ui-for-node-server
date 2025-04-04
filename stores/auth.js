@@ -219,16 +219,10 @@ export const useAuthStore = defineStore('auth', {
     // Apply user preferences from the server after login
     async syncUserPreferences() {
       try {
-        console.log('[authStore] Applying server preferences to local after login');
         const userPreferencesStore = useUserPreferences();
         
         // Fetch preferences from server and apply to local
         const result = await userPreferencesStore.fetchFromServer();
-        if (result.success) {
-          console.log('[authStore] Successfully applied server preferences to local');
-        } else {
-          console.log('[authStore] No server preferences found or error occurred');
-        }
       } catch (error) {
         console.error('[authStore] Error applying server preferences:', error);
       }

@@ -14,8 +14,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       if (!savedLanguage) {
         savedLanguage = localStorage.getItem('app_language');
       }
-
-      console.log('[i18n] Saved language from localStorage:', savedLanguage);
       
       if (savedLanguage) {
         // Force load messages for the saved language
@@ -38,18 +36,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           const hasAnyLocalePrefix = /^\/[a-z]{2}\//.test(currentPath);
           const isRootPath = currentPath === '/';
           
-          console.log('[i18n] URL localization info:', {
-            currentPath,
-            savedLanguage,
-            hasCorrectLocalePrefix,
-            hasAnyLocalePrefix,
-            isRootPath
-          });
-          
           if (isRootPath) {
             // Root path just needs the language prefix
             const targetPath = `/${savedLanguage}`;
-            console.log(`[i18n] Will redirect from ${currentPath} to ${targetPath}`);
             
             // Wait for Vue router to be ready
             setTimeout(() => {
@@ -67,8 +56,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
               targetPath = getLocalizedPath(currentPath, savedLanguage);
             }
             
-            console.log(`[i18n] Will redirect from ${currentPath} to ${targetPath}`);
-            
             // Wait for Vue router to be ready
             setTimeout(() => {
               router.push(targetPath);
@@ -80,7 +67,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           
           if (hasLocalePrefix) {
             const targetPath = currentPath.replace(/^\/[a-z]{2}\//, '/');
-            console.log(`[i18n] Will redirect from ${currentPath} to ${targetPath}`);
             
             // Wait for Vue router to be ready
             setTimeout(() => {

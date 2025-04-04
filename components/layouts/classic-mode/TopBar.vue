@@ -12,8 +12,6 @@ import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper
 import { useUserPreferences } from '@/stores/userPreferences';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
 
-console.log('[TopBar] Component setup started');
-
 const theme = themeConfig();
 const { themeHeaderHeight, themeSidebarWidth, smallDisplay, themeChangeMode } = theme;
 const themeName = computed(() => theme.themeName.value);
@@ -40,20 +38,8 @@ const displaySyncMessage = () => {
 
 // Need to call this on mount to ensure theme is applied
 onMounted(async () => {
-  console.log('[TopBar] Component mounted, current theme:', themeName.value);
-  console.log('[TopBar] Current dark mode state:', globalStore.datkMode);
-  console.log('[TopBar] Current locale:', locale.value);
-  console.log('[TopBar] Stored language preference:', userPreferencesStore.language);
-  
   // Force sync with saved preferences
   await preferencesHelper.syncLocaleWithPreferences();
-  
-  // Log a test translation to check if i18n is working
-  try {
-    console.log('[TopBar] Testing translation:', t('settings'));
-  } catch (error) {
-    console.warn('[TopBar] Translation test error:', error);
-  }
 });
 
 // Handle preferences initialization in the component
@@ -70,22 +56,14 @@ const toggleSidebarPhone = (tempObj) => {
 };
 
 const toggleLightDarkMode = async () => {
-  console.log('[TopBar] Toggle light/dark mode clicked');
-  console.log('[TopBar] Current theme before toggle:', themeName.value);
-  console.log('[TopBar] Current dark mode before toggle:', globalStore.datkMode);
-  
   // Toggle the dark mode
   globalStore.darkModeToggle();
   
   // Apply theme change through theme config
   themeChangeMode();
   
-  console.log('[TopBar] Theme after toggle:', themeName.value);
-  console.log('[TopBar] Dark mode after toggle:', globalStore.datkMode);
-  
   // Save theme preference to store using our helper
   const currentTheme = globalStore.datkMode ? 'dark' : 'light';
-  console.log('[TopBar] Saving theme preference:', currentTheme);
   await preferencesHelper.saveThemePreference(currentTheme);
   
   // Show sync message

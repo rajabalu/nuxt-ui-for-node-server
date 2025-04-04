@@ -18,7 +18,6 @@ export const useUserPreferences = defineStore('userPreferences', {
     },
 
     setLanguage(lang) {
-      console.log('[userPreferences] Setting language:', lang);
       if (!lang) {
         console.warn('[userPreferences] Attempted to set null language, skipping');
         return;
@@ -32,7 +31,6 @@ export const useUserPreferences = defineStore('userPreferences', {
           // Save in two locations for backward compatibility
           localStorage.setItem('user_language', lang);
           localStorage.setItem('app_language', lang); // For compatibility with older code
-          console.log('[userPreferences] Language saved to localStorage (not authenticated)');
         } catch (error) {
           console.error('[userPreferences] Error saving language to localStorage:', error);
         }
@@ -40,7 +38,6 @@ export const useUserPreferences = defineStore('userPreferences', {
     },
     
     setTheme(theme) {
-      console.log('[userPreferences] Setting theme:', theme);
       if (!theme) {
         console.warn('[userPreferences] Attempted to set null theme, skipping');
         return;
@@ -54,7 +51,6 @@ export const useUserPreferences = defineStore('userPreferences', {
           // Save in two locations for backward compatibility
           localStorage.setItem('user_theme', theme);
           localStorage.setItem('app_theme', theme); // For compatibility with older code
-          console.log('[userPreferences] Theme saved to localStorage (not authenticated)');
         } catch (error) {
           console.error('[userPreferences] Error saving theme to localStorage:', error);
         }
@@ -64,18 +60,15 @@ export const useUserPreferences = defineStore('userPreferences', {
     // Initialize preferences from localStorage only when not authenticated
     initPreferences() {
       if (this.initialized) {
-        console.log('[userPreferences] Already initialized, skipping');
         return;
       }
       
       // Skip loading from localStorage if already authenticated (server preferences will be used)
       if (this.isAuthenticated) {
-        console.log('[userPreferences] User is authenticated, skipping localStorage initialization');
         this.initialized = true;
         return;
       }
       
-      console.log('[userPreferences] Initializing preferences from localStorage (not authenticated)');
       if (process.client) {
         try {
           // Get language from localStorage (check both keys)
@@ -84,13 +77,11 @@ export const useUserPreferences = defineStore('userPreferences', {
             savedLanguage = localStorage.getItem('app_language');
           }
           
-          console.log('[userPreferences] Found language in localStorage:', savedLanguage);
           if (savedLanguage) {
             this.language = savedLanguage;
           } else {
             // Default to English if no saved preference
             this.language = 'en';
-            console.log('[userPreferences] No language found, defaulting to:', this.language);
           }
           
           // Get theme from localStorage (check both keys)
@@ -99,19 +90,12 @@ export const useUserPreferences = defineStore('userPreferences', {
             savedTheme = localStorage.getItem('app_theme');
           }
           
-          console.log('[userPreferences] Found theme in localStorage:', savedTheme);
           if (savedTheme) {
             this.theme = savedTheme;
           } else {
             // Default to light theme if no saved preference
             this.theme = 'light';
-            console.log('[userPreferences] No theme found, defaulting to:', this.theme);
           }
-          
-          console.log('[userPreferences] Preferences initialized:', {
-            language: this.language,
-            theme: this.theme
-          });
           
           this.initialized = true;
         } catch (error) {
@@ -121,15 +105,11 @@ export const useUserPreferences = defineStore('userPreferences', {
           this.language = 'en';
           this.theme = 'light';
         }
-      } else {
-        console.log('[userPreferences] Not in client, skipping localStorage initialization');
       }
     },
     
     // Fetch user preferences from the server after login
     async fetchFromServer() {
-      console.log('[userPreferences] Fetching preferences from server');
-      
       const nuxtApp = useNuxtApp();
       const api = nuxtApp.$api;
       
@@ -143,8 +123,6 @@ export const useUserPreferences = defineStore('userPreferences', {
         const response = await api.get('user-preferences');
         
         if (response.success && response.data) {
-          console.log('[userPreferences] Received preferences from server:', response.data);
-          
           // Mark as authenticated to prevent localStorage override
           this.setAuthenticated(true);
           
@@ -153,26 +131,21 @@ export const useUserPreferences = defineStore('userPreferences', {
           
           // First apply theme since that doesn't require navigation
           if (serverTheme) {
-            console.log('[userPreferences] Applying server theme to local:', serverTheme);
             this.theme = serverTheme; // Directly set theme without going through setTheme to avoid localStorage
           }
           
           // Set a flag in global window object to prevent feedback loops
           if (process.client) {
             window.__isServerPreferenceChange = true;
-            console.log('[userPreferences] Setting server preference change flag');
             
             // Reset the flag after a short delay
             setTimeout(() => {
               window.__isServerPreferenceChange = false;
-              console.log('[userPreferences] Reset server preference change flag');
             }, 1000);
           }
           
           // Then handle language change - requiring route update
           if (serverLanguage) {
-            console.log('[userPreferences] Server language is:', serverLanguage);
-            
             // Apply language directly to store
             this.language = serverLanguage; // Directly set language without going through setLanguage to avoid localStorage
             
@@ -184,8 +157,6 @@ export const useUserPreferences = defineStore('userPreferences', {
             
             // Only redirect if needed
             if (serverLanguage !== currentLocale) {
-              console.log('[userPreferences] Need to update URL for language:', serverLanguage);
-              
               // Force load messages for new locale
               try {
                 const { forceLoadMessages } = await import('@/utils/i18n-helpers');
@@ -207,8 +178,6 @@ export const useUserPreferences = defineStore('userPreferences', {
               
               // Use getLocalizedPath helper to create the new path
               const newPath = getLocalizedPath(pathWithoutLocale, serverLanguage);
-              
-              console.log(`[userPreferences] Updating route from ${currentPath} to ${newPath}`);
               
               // Update router with correct path
               if (process.client) {

@@ -2,11 +2,8 @@ import { useAuthStore } from '~/stores/auth';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  console.log('Auth middleware checking route:', to.path);
-  
   // First check if the route has 'public' middleware defined in its meta
   if (to.meta.middleware === 'public') {
-    console.log('Route has public middleware, allowing access');
     return;
   }
   
@@ -30,7 +27,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   );
   
   if (isPublicRoute) {
-    console.log('Path is in public routes list, allowing access');
     return;
   }
   
@@ -50,12 +46,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
       
       // If still not authenticated after init, redirect to login
       if (!authStore.isAuthenticated) {
-        console.log('Not authenticated, redirecting to sign-in');
         return navigateTo(signInPath);
       }
     } else {
       // Server-side - redirect to sign-in
-      console.log('Server-side check, not authenticated, redirecting to sign-in');
       return navigateTo(signInPath);
     }
   }
@@ -67,11 +61,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
     
     // If refresh failed, redirect to login
     if (!refreshResult.success) {
-      console.log('Token refresh failed, redirecting to sign-in');
       return navigateTo(signInPath);
     }
   }
   
   // Allow navigation if user is authenticated
-  console.log('User is authenticated, allowing access');
 }); 
