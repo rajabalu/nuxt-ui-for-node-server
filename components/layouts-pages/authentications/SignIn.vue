@@ -40,7 +40,6 @@ const onSubmit = async () => {
     if (result.success) {
       // Navigate with proper locale path
       const homePath = getLocalizedPath('/', locale.value);
-      console.log(`[SignIn] Login successful, navigating to localized home: ${homePath}`);
       navigateTo(homePath);
     } else {
       // Handle specific errors based on the API response

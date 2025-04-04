@@ -1,6 +1,4 @@
 <script setup>
-console.log('Email change confirmation page loaded - initial script execution');
-
 const api = useApi();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -26,64 +24,48 @@ useSeoMeta({
 
 // Extract the hash from URL query parameter
 const hash = computed(() => route.query.hash?.toString() || '');
-console.log('Page loaded, hash from URL:', hash.value);
 
 // Verify new email on component mount
 onMounted(async () => {
-  console.log('Email confirmation page mounted');
-  
   if (!hash.value) {
-    console.log('Error: Missing hash in URL');
     isLoading.value = false;
     errorMessage.value = 'Invalid confirmation link. The verification hash is missing.';
     return;
   }
 
   try {
-    console.log('Starting API verification process');
-    
     // Use the api composable instead of direct fetch
     const response = await api.post('auth/email/confirm/new', {
       hash: hash.value
     });
     
-    console.log('API response:', response);
-    
     if (response.success) {
-      console.log('Verification successful');
       isSuccess.value = true;
       
       // Store the new email if returned from the API
       if (response.data?.email) {
-        console.log('New email from API:', response.data.email);
         newEmail.value = response.data.email;
-      } else {
-        console.log('No email returned in response');
       }
       
       // Clear current session data to force re-login with new email
       if (authStore.isAuthenticated) {
-        console.log('Clearing auth session data after email change');
         // Use clearAuthData instead of logout to avoid automatic redirect
         authStore.clearAuthData();
         authStore.isAuthenticated = false;
       }
     } else {
-      console.log('Verification failed:', response.error);
       errorMessage.value = response.error || 'Email change verification failed. Please try again.';
     }
   } catch (error) {
     console.error('Email confirmation error:', error);
     errorMessage.value = 'An error occurred during email verification. Please try again later.';
   } finally {
-    console.log('Finishing verification process, setting isLoading to false');
     isLoading.value = false;
   }
 });
 
 // Button click handler to ensure user is properly logged out before redirecting
 const handleLoginClick = () => {
-  console.log('Login button clicked, ensuring user is logged out');
   // Clear auth data again to be extra safe
   if (authStore.isAuthenticated) {
     authStore.clearAuthData();
@@ -98,8 +80,6 @@ const handleLoginClick = () => {
   const { locale } = useI18n();
   const currentLocale = locale.value;
   const signInPath = currentLocale === 'en' ? '/sign-in' : `/${currentLocale}/sign-in`;
-  
-  console.log(`[Email Confirm] Navigating to localized sign-in: ${signInPath}`);
   
   // Navigate to sign-in page with locale
   navigateTo(signInPath);

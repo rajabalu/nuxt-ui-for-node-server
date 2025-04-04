@@ -12,18 +12,14 @@ export const forceLoadMessages = async (i18n, locale) => {
     return false;
   }
   
-  console.log('[i18n-helpers] Force loading messages for locale:', locale);
-  
   try {
     // First try the built-in functions if available
     if (typeof i18n.loadLocaleMessages === 'function') {
-      console.log('[i18n-helpers] Using loadLocaleMessages()');
       await i18n.loadLocaleMessages(locale);
     }
     
     // Then try to reload resources
     if (typeof i18n.reloadResources === 'function') {
-      console.log('[i18n-helpers] Using reloadResources()');
       await i18n.reloadResources(locale);
     }
     
@@ -31,11 +27,9 @@ export const forceLoadMessages = async (i18n, locale) => {
     if (i18n.messages && i18n.messages.value) {
       const hasMessages = i18n.messages.value[locale] && 
                         Object.keys(i18n.messages.value[locale]).length > 0;
-      console.log('[i18n-helpers] Messages loaded status:', hasMessages);
       
       // If still no messages, try direct import with multiple possible paths
       if (!hasMessages) {
-        console.log('[i18n-helpers] No messages loaded, attempting direct import');
         try {
           // Try multiple possible paths for the locale file
           let messages = null;
@@ -55,14 +49,11 @@ export const forceLoadMessages = async (i18n, locale) => {
           // Try each path until one succeeds
           for (const path of pathsToTry) {
             try {
-              console.log(`[i18n-helpers] Trying import path: ${path}`);
               messages = await import(/* @vite-ignore */ path);
               if (messages && messages.default) {
-                console.log(`[i18n-helpers] Successfully imported from: ${path}`);
                 break;
               }
             } catch (error) {
-              console.log(`[i18n-helpers] Import failed for path: ${path}`);
               importError = error;
               // Continue to next path
             }
@@ -75,7 +66,6 @@ export const forceLoadMessages = async (i18n, locale) => {
           
           if (typeof i18n.setLocaleMessage === 'function') {
             i18n.setLocaleMessage(locale, messages.default);
-            console.log('[i18n-helpers] Manually loaded messages for', locale);
             
             // Ensure nested paths are properly flattened or normalized
             ensureMessageStructure(i18n, locale);
@@ -114,7 +104,6 @@ export const applyRTLDirection = (locale) => {
     document.body.classList.remove('rtl');
   }
   
-  console.log('[i18n-helpers] Set document direction to:', isRTL ? 'rtl' : 'ltr');
   return isRTL;
 };
 
@@ -129,15 +118,10 @@ export const ensureMessageStructure = (i18n, locale) => {
   }
   
   const messages = i18n.messages.value[locale];
-  console.log('[i18n-helpers] Ensuring message structure for locale:', locale);
   
-  try {
-    // Simple check to make sure we have messages
-    if (messages && typeof messages === 'object') {
-      console.log('[i18n-helpers] Message structure normalized for', locale);
-    }
-  } catch (error) {
-    console.error('[i18n-helpers] Error normalizing message structure:', error);
+  // Simple check to make sure we have messages
+  if (!(messages && typeof messages === 'object')) {
+    console.error('[i18n-helpers] Invalid message structure for', locale);
   }
 };
 
@@ -151,19 +135,14 @@ export const preloadAllLocales = async (i18n) => {
     return false;
   }
   
-  console.log('[i18n-helpers] Preloading all available locales:', i18n.availableLocales);
-  
   const results = {};
   
   for (const locale of i18n.availableLocales) {
-    console.log(`[i18n-helpers] Preloading locale: ${locale}`);
     try {
       const success = await forceLoadMessages(i18n, locale);
       results[locale] = success;
       
-      if (success) {
-        console.log(`[i18n-helpers] Successfully preloaded locale: ${locale}`);
-      } else {
+      if (!success) {
         console.warn(`[i18n-helpers] Failed to preload locale: ${locale}`);
       }
     } catch (error) {

@@ -132,7 +132,6 @@ export const useAuthStore = defineStore('auth', {
         const { locale } = useI18n();
         const signInPath = getLocalizedPath('/sign-in', locale.value);
         
-        console.log(`[Auth] Logging out, navigating to localized sign-in: ${signInPath}`);
         navigateTo(signInPath);
       }
     },

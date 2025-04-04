@@ -28,7 +28,12 @@ useHead({
       </v-col>
       
       <v-col cols="12">
-        <I18nTester />
+        <v-card>
+          <v-card-title>System Diagnostics</v-card-title>
+          <v-card-text>
+            <p>Select a diagnostic tool from the menu.</p>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>

@@ -8,9 +8,6 @@ import { useNuxtApp } from '#app';
 // Initialize i18n
 const { t, locale } = useI18n();
 
-// Debug current locale
-console.log("🚀 Current Locale:", locale.value);
-
 // Get user data from auth store
 const authStore = useAuthStore();
 
@@ -34,7 +31,6 @@ const itemList = computed(() => [
     action: () => {
       // Navigate to settings with locale
       const settingsPath = getLocalizedPath('/settings', locale.value);
-      console.log(`[UserProfile] Navigating to localized settings: ${settingsPath}`);
       navigateTo(settingsPath);
     }
   },
@@ -61,13 +57,10 @@ const nuxtApp = useNuxtApp();
 
 // Before using translations, ensure they're loaded
 onMounted(async () => {
-  console.log('[UserProfile] Component mounted, current locale:', locale.value);
-  
   // Force load messages for the current locale
   if (locale.value) {
     try {
       await forceLoadMessages(nuxtApp.$i18n, locale.value);
-      console.log('[UserProfile] Forced loading of messages for:', locale.value);
     } catch (error) {
       console.warn('[UserProfile] Error loading messages:', error);
     }

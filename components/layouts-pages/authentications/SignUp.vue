@@ -56,7 +56,6 @@ const onSubmit = async () => {
           ? '/registration-success' 
           : `/${currentLocale}/registration-success`;
         
-        console.log(`[SignUp] Registration successful, navigating to: ${successPath}`);
         router.push(successPath);
       } else {
         showNotification('error', response.error || t('auth.errors.registrationFailed'));
