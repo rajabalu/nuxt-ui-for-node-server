@@ -46,6 +46,14 @@
     "languageChanged": "Langue changée avec succès",
     "languageChangeError": "Échec du changement de langue"
   },
+  "footer": {
+    "copyright": "Tous droits réservés",
+    "help": "Aide",
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
+    "contact": "Contact",
+    "about": "À propos"
+  },
   "notifications": {
     "title": "Notifications",
     "toggleMenu": "Basculer le menu des notifications",

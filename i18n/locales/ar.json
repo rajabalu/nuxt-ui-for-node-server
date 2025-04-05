@@ -46,6 +46,14 @@
     "languageChanged": "تم تغيير اللغة بنجاح",
     "languageChangeError": "فشل في تغيير اللغة"
   },
+  "footer": {
+    "copyright": "جميع الحقوق محفوظة",
+    "help": "المساعدة",
+    "terms": "الشروط",
+    "privacy": "الخصوصية",
+    "contact": "اتصل بنا",
+    "about": "حول"
+  },
   "notifications": {
     "title": "الإشعارات",
     "toggleMenu": "تبديل قائمة الإشعارات",

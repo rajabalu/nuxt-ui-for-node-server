@@ -45,6 +45,14 @@
     "languageChanged": "Language changed successfully",
     "languageChangeError": "Failed to change language"
   },
+  "footer": {
+    "copyright": "All Rights Reserved",
+    "help": "Help",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "contact": "Contact",
+    "about": "About"
+  },
   "settings": {
     "confirmPasswordChange": "Confirm Password Change",
     "logoutAfterPasswordChange": "You will be logged out after successfully changing your password. All your other active sessions will also be terminated.",
