@@ -65,7 +65,7 @@ onMounted(() => {
   // Try to use the i18n instance to force load messages
   try {
     // Access a translation to force i18n to load messages
-    t('settings');
+    t('settingsMenu');
   } catch (e) {
     console.warn('[LanguageSwitcher] Translation test error:', e);
   }

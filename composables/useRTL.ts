@@ -1,36 +1,65 @@
-import { computed, ref, readonly, watch } from 'vue';
+import { computed, ref, readonly, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type FlexDirection = 'row' | 'row-reverse' | 'column' | 'column-reverse';
 
+// Create a singleton instance for the RTL utilities
+let _rtlInstance: ReturnType<typeof createRTLUtils> | null = null;
+
 /**
- * Composable for managing RTL-related functionality throughout the application
- * Provides reactive properties and helper functions for RTL support
+ * Private function to create the RTL utilities
  */
-export function useRTL() {
+function createRTLUtils() {
+  console.log('[useRTL] Creating new RTL utility instance');
+  
   // Create a ref with a default value
   const isRTLRef = ref(false);
+  const isInitializedRef = ref(false);
   
   // List of RTL languages - can be expanded as needed
   const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
   
-  // Try to get the locale if i18n is available
-  try {
-    const { locale } = useI18n();
-    
-    // Update the isRTL value reactively based on locale
-    isRTLRef.value = rtlLanguages.includes(locale.value);
-    
-    // Watch for locale changes
-    if (locale && 'value' in locale) {
-      watch(locale, (newLocale) => {
-        isRTLRef.value = rtlLanguages.includes(newLocale);
-      });
+  // Function to initialize with i18n - can be called later when i18n is available
+  const initWithI18n = () => {
+    try {
+      console.log('[useRTL] Attempting to use i18n');
+      const { locale } = useI18n();
+      console.log(`[useRTL] Successfully got i18n locale: ${locale.value}`);
+      
+      // Update the isRTL value reactively based on locale
+      isRTLRef.value = rtlLanguages.includes(locale.value);
+      isInitializedRef.value = true;
+      
+      // Watch for locale changes
+      if (locale && 'value' in locale) {
+        watch(locale, (newLocale) => {
+          console.log(`[useRTL] Locale changed to: ${newLocale}`);
+          isRTLRef.value = rtlLanguages.includes(newLocale);
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      // If i18n is not available (e.g., during plugin initialization)
+      // Just use the default value (false = LTR)
+      console.warn('[useRTL] i18n not available, defaulting to LTR', error);
+      return false;
     }
-  } catch (error) {
-    // If i18n is not available (e.g., during plugin initialization)
-    // Just use the default value (false = LTR)
-    console.warn('RTL: i18n not available, defaulting to LTR', error);
+  };
+  
+  // Try to initialize immediately, but don't worry if it fails
+  initWithI18n();
+  
+  // Try again after a delay if not initialized (for plugins)
+  if (!isInitializedRef.value && typeof window !== 'undefined') {
+    nextTick(() => {
+      setTimeout(() => {
+        if (!isInitializedRef.value) {
+          console.log('[useRTL] Retrying i18n initialization after delay');
+          initWithI18n();
+        }
+      }, 100);
+    });
   }
   
   // Create a readonly computed property for isRTL
@@ -86,7 +115,7 @@ export function useRTL() {
     return isRTL.value ? rtlOrder : ltrOrder;
   };
   
-  // Return all utilities
+  // Return all utilities and the init function
   return {
     isRTL,
     textStyles,
@@ -96,6 +125,29 @@ export function useRTL() {
     getTransform,
     applyRTLClass,
     layoutDirection,
-    getOrder
+    getOrder,
+    initWithI18n, // Expose this so it can be called explicitly
+    isInitialized: isInitializedRef
   };
+}
+
+/**
+ * Composable for managing RTL-related functionality throughout the application
+ * Provides reactive properties and helper functions for RTL support
+ */
+export function useRTL() {
+  // Use the singleton instance or create a new one
+  if (!_rtlInstance) {
+    _rtlInstance = createRTLUtils();
+  } else {
+    console.log('[useRTL] Reusing existing RTL utility instance');
+  }
+  
+  // Try to initialize if not already initialized
+  if (!_rtlInstance.isInitialized.value) {
+    console.log('[useRTL] Trying to initialize with i18n during useRTL call');
+    _rtlInstance.initWithI18n();
+  }
+  
+  return _rtlInstance;
 } 
