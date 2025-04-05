@@ -11,7 +11,6 @@ export default defineNuxtPlugin({
   name: 'app-initializer',
   enforce: 'post', // Run after Vuetify and i18n are initialized
   async setup(nuxtApp) {
-    console.log('[app-initializer] Plugin initializing');
     if (typeof window === 'undefined') return;
     
     try {
@@ -26,9 +25,7 @@ export default defineNuxtPlugin({
       
       // Initialize auth state early to prevent 404s before login
       const authStore = useAuthStore();
-      console.log('[app-initializer] Initializing auth state');
       authStore.initAuth();
-      console.log('[app-initializer] Auth initialized, authenticated:', authStore.isAuthenticated);
       
       // 1. Initialize user preferences store and load saved preferences
       const userPreferencesStore = useUserPreferences();
@@ -49,7 +46,6 @@ export default defineNuxtPlugin({
               document.body.classList.add('v-theme--light');
               document.body.classList.remove('v-theme--dark');
             }
-            console.log('[app-initializer] Theme set with document classes:', theme);
           } catch (e) {
             console.error('[app-initializer] Error setting theme classes:', e);
           }
@@ -114,8 +110,6 @@ export default defineNuxtPlugin({
           router.push(targetPath);
         }, 10);
       }
-      
-      console.log('[app-initializer] Initialization complete');
       
     } catch (error) {
       console.error('[app-initializer] Error during application initialization:', error);

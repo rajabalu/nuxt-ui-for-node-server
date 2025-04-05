@@ -15,8 +15,6 @@ const isPluginContext = typeof window !== 'undefined' &&
  * Private function to create the RTL utilities
  */
 function createRTLUtils() {
-  console.log('[useRTL] Creating new RTL utility instance');
-  
   // Create a ref with a default value
   const isRTLRef = ref(false);
   const isInitializedRef = ref(false);
@@ -27,17 +25,13 @@ function createRTLUtils() {
   // Function to initialize with i18n - can be called later when i18n is available
   const initWithI18n = () => {
     try {
-      console.log('[useRTL] Attempting to use i18n');
-      
       // Skip if we're in a plugin context and not in a component setup function
       if (isPluginContext) {
         // In plugin context, we'll initialize later from a component
-        console.log('[useRTL] Plugin context detected, deferring i18n init');
         return false;
       }
       
       const { locale } = useI18n();
-      console.log(`[useRTL] Successfully got i18n locale: ${locale.value}`);
       
       // Update the isRTL value reactively based on locale
       isRTLRef.value = rtlLanguages.includes(locale.value);
@@ -46,7 +40,6 @@ function createRTLUtils() {
       // Watch for locale changes
       if (locale && 'value' in locale) {
         watch(locale, (newLocale) => {
-          console.log(`[useRTL] Locale changed to: ${newLocale}`);
           isRTLRef.value = rtlLanguages.includes(newLocale);
         });
       }
@@ -55,10 +48,6 @@ function createRTLUtils() {
     } catch (error) {
       // If i18n is not available (e.g., during plugin initialization)
       // Just use the default value (false = LTR)
-      if (!isPluginContext) {
-        // Only log the warning if not in a plugin context
-        console.warn('[useRTL] i18n not available, defaulting to LTR', error);
-      }
       return false;
     }
   };
@@ -71,7 +60,6 @@ function createRTLUtils() {
     nextTick(() => {
       setTimeout(() => {
         if (!isInitializedRef.value) {
-          console.log('[useRTL] Retrying i18n initialization after delay');
           initWithI18n();
         }
       }, 100);
@@ -155,13 +143,10 @@ export function useRTL() {
   // Use the singleton instance or create a new one
   if (!_rtlInstance) {
     _rtlInstance = createRTLUtils();
-  } else {
-    console.log('[useRTL] Reusing existing RTL utility instance');
   }
   
   // Try to initialize if not already initialized
   if (!_rtlInstance.isInitialized.value && !isPluginContext) {
-    console.log('[useRTL] Trying to initialize with i18n during useRTL call');
     _rtlInstance.initWithI18n();
   }
   

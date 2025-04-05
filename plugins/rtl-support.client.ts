@@ -18,35 +18,22 @@ export default defineNuxtPlugin({
   name: 'rtl-support',
   enforce: 'post',
   setup(nuxtApp) {
-    console.log('[rtl-support] Plugin initializing');
-    
     // Cast nuxtApp to include the _plugins property
     const app = nuxtApp as unknown as NuxtAppWithPlugins;
     
     // Skip if plugin already ran to prevent duplicate initialization
     if (app._plugins?.some(p => p.name === 'rtl-support' && p._called)) {
-      console.log('[rtl-support] Plugin already ran, skipping duplicate initialization');
       return {};
     }
 
-    // Wait for i18n to be ready
-    if (!app.$i18n) {
-      console.log('[rtl-support] i18n not available yet, plugin may run before it is ready');
-      // We continue anyway as useRTL has fallback mechanism
-    } else {
-      // Type assertion to access i18n properties
-      const i18n = app.$i18n as { locale: { value: string } };
-      console.log(`[rtl-support] i18n available with locale: ${i18n.locale.value}`);
-    }
+    // i18n is accessed, but we don't need to log its status
+    const i18n = app.$i18n;
 
     try {
       // Create the RTL utilities
       const rtlUtils = useRTL();
-      console.log('[rtl-support] RTL utilities created');
       
       // Add a global mixin - deferred to avoid Vue setup context issues
-      console.log('[rtl-support] Setting up RTL mixin');
-      
       // Use setTimeout to defer mixin addition
       setTimeout(() => {
         try {
@@ -58,7 +45,6 @@ export default defineNuxtPlugin({
               }
             }
           });
-          console.log('[rtl-support] RTL mixin added successfully');
         } catch (err) {
           console.warn('[rtl-support] Error adding RTL mixin:', err);
         }
@@ -66,9 +52,7 @@ export default defineNuxtPlugin({
       
       // Apply RTL-specific CSS classes to the document when in RTL mode
       if (typeof window !== 'undefined') {
-        console.log('[rtl-support] Setting up document class watcher');
         watch(() => rtlUtils.isRTL.value, (isRTL) => {
-          console.log(`[rtl-support] RTL state changed to: ${isRTL}`);
           if (isRTL) {
             document.documentElement.classList.add('rtl-mode');
             document.documentElement.dir = 'rtl';
@@ -78,8 +62,6 @@ export default defineNuxtPlugin({
           }
         }, { immediate: true });
       }
-      
-      console.log('[rtl-support] Plugin initialization complete');
       
       // Return empty object - don't provide anything
       return {};
