@@ -30,6 +30,7 @@ watch(() => globalStore.datkMode, (newVal) => {
     :width="themeSidebarWidth"
     :permanent="smallDisplay ? false : true"
     :class="{ 'sidebar-visibile': !smallDisplay && globalStore.sideNavBar }"
+    :position="locale === 'ar' ? 'end' : 'start'"
   >
     <div class="d-none d-md-flex app-nav-logo-wrapper aligin-center">
       <NuxtLink :to="homePath" class="d-flex">

@@ -1,7 +1,13 @@
 <script setup>
+import { useI18n } from 'vue-i18n';
+
 defineOptions({
   inheritAttrs: false,
 });
+
+const { locale } = useI18n();
+
+const isRTL = computed(() => locale.value === 'ar');
 
 const elementId = computed(() => {
   const attrs = useAttrs();
@@ -13,6 +19,11 @@ const elementId = computed(() => {
 });
 
 const label = computed(() => useAttrs().label);
+
+// Computed styles to apply to the text field based on RTL context
+const rtlStyles = computed(() => {
+  return isRTL.value ? { textAlign: 'right', direction: 'rtl' } : {};
+});
 </script>
 
 <template>
@@ -25,6 +36,7 @@ const label = computed(() => useAttrs().label);
         label: undefined,
         id: elementId,
       }"
+      :style="rtlStyles"
     >
       <template v-for="(_, name) in $slots" #[name]="slotProps">
         <slot :name="name" v-bind="slotProps || {}" />

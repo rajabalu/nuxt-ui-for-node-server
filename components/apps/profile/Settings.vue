@@ -345,7 +345,8 @@ const onEmail = async () => {
   <!-- Profile Settings with Vertical Tabs -->
   <v-card>
     <div class="d-flex">
-      <div>
+      <!-- In RTL mode, the tabs should be on the right and content on the left -->
+      <div :class="{ 'order-2': $i18n.locale === 'ar' }">
         <v-tabs v-model="currentTab" direction="vertical">
           <v-tab value="tab-1">
             <v-icon start icon="tabler-user" />
@@ -362,7 +363,7 @@ const onEmail = async () => {
         </v-tabs>
       </div>
 
-      <v-window v-model="currentTab" class="ms-3 flex-grow-1">
+      <v-window v-model="currentTab" :class="[$i18n.locale === 'ar' ? 'ms-0 me-3 order-1' : 'ms-3']" class="flex-grow-1">
         <!-- Basic Information Tab -->
         <v-window-item value="tab-1">
           <v-card-item>

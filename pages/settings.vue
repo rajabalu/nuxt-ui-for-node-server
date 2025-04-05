@@ -5,8 +5,8 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 useSeoMeta({
-  title: t('settings'),
-  ogTitle: t('settings'),
+  title: t('settingsMenu'),
+  ogTitle: t('settingsMenu'),
   description: "",
   ogDescription: "",
   ogImage: "",
@@ -14,8 +14,14 @@ useSeoMeta({
 });
 </script>
 <template>
-  <v-container fluid>
-    <GlobalsHeader :title="t('settings')" />
+  <v-container fluid :class="{ 'rtl-container': $i18n.locale === 'ar' }">
+    <GlobalsHeader :title="t('settingsMenu')" />
     <settings />
   </v-container>
 </template>
+
+<style scoped>
+.rtl-container {
+  direction: rtl;
+}
+</style>
