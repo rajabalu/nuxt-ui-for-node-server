@@ -275,6 +275,53 @@ export const useAuthStore = defineStore('auth', {
           this.clearAuthData();
         }
       }
+    },
+
+    // Add a new action for Facebook login
+    async loginWithFacebook(accessToken) {
+      this.authLoading = true;
+      this.authError = null;
+      
+      const nuxtApp = useNuxtApp();
+      const api = nuxtApp.$api;
+      
+      try {
+        if (!api) {
+          return { success: false, error: 'API not available' };
+        }
+        
+        // Get current theme and language preferences
+        const i18n = nuxtApp.$i18n;
+        const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        const language = i18n?.locale?.value || 'en';
+        
+        console.log('Sending Facebook token to backend', { theme, language });
+        
+        const response = await api.post('auth/facebook/login', { 
+          accessToken,
+          theme,
+          language
+        });
+        
+        if (response.success) {
+          this.setAuthData(response.data);
+          return { success: true };
+        } else {
+          console.error('Facebook login failed', response.error);
+          this.authError = response.error || 'Facebook login failed';
+          return { 
+            success: false, 
+            error: response.error,
+            status: response.status
+          };
+        }
+      } catch (error) {
+        console.error('Facebook login error:', error);
+        this.authError = 'An unexpected error occurred during Facebook login';
+        return { success: false, error: this.authError };
+      } finally {
+        this.authLoading = false;
+      }
     }
   }
 }); 

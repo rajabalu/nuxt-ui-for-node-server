@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
 import { useUserPreferences } from '@/stores/userPreferences';
+import { useAuth } from '~/composables/auth';
 
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
   useValidators();
@@ -9,6 +10,8 @@ const api = useApi();
 const router = useRouter();
 const { t, locale } = useI18n();
 const userPreferencesStore = useUserPreferences();
+const nuxtApp = useNuxtApp();
+const { loginWithFacebook } = useAuth();
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
@@ -19,6 +22,7 @@ const password = ref("");
 const confirmPassword = ref("");
 const policyCheck = ref(false);
 const isLoading = ref(false);
+const facebookLoading = ref(false);
 const showAlert = ref(false);
 const alertType = ref("success");
 const alertMessage = ref("");
@@ -73,6 +77,36 @@ const onSubmit = async () => {
     } finally {
       isLoading.value = false;
     }
+  }
+};
+
+const handleFacebookLogin = async () => {
+  facebookLoading.value = true;
+  showAlert.value = false;
+  
+  try {
+    // Use the plugin to trigger Facebook login dialog
+    const fbResponse = await nuxtApp.$fbLogin();
+    
+    if (fbResponse.success) {
+      // Send token to our API
+      const result = await loginWithFacebook(fbResponse.accessToken);
+      
+      if (result.success) {
+        // Navigate with proper locale path
+        const homePath = getLocalizedPath('/', locale.value);
+        router.push(homePath);
+      } else {
+        showNotification('error', result.error?.message || result.error || t('auth.errors.facebookLoginFailed', 'Facebook login failed'));
+      }
+    } else {
+      showNotification('error', fbResponse.error || t('auth.errors.facebookLoginCancelled', 'Facebook login was cancelled'));
+    }
+  } catch (error) {
+    console.error('Facebook login error:', error);
+    showNotification('error', t('auth.errors.facebookLoginError', 'An error occurred during Facebook login'));
+  } finally {
+    facebookLoading.value = false;
   }
 };
 </script>
@@ -160,7 +194,23 @@ const onSubmit = async () => {
           </template>
         </v-checkbox>
 
-        <v-btn type="submit" block :loading="isLoading"> {{ t('auth.createFreeAccountBtn') }} </v-btn>
+        <v-btn type="submit" block :loading="isLoading" class="mb-3"> 
+          {{ t('auth.createFreeAccountBtn') }} 
+        </v-btn>
+        
+        <!-- Facebook Login Button -->
+        <v-btn 
+          block 
+          color="#4267B2" 
+          class="mb-3"
+          :loading="facebookLoading"
+          :disabled="facebookLoading || isLoading"
+          @click="handleFacebookLogin" 
+        >
+          <v-icon start icon="tabler-brand-facebook" class="mr-2"></v-icon>
+          {{ t('auth.continueWithFacebook', 'Continue with Facebook') }}
+        </v-btn>
+        
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
           <NuxtLink :to="getLocalizedPath('/sign-in', locale.value)" class="font-weight-5 text-primary">
              {{ t('auth.alreadyMember') }}

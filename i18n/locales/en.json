@@ -98,6 +98,7 @@
     "resetPasswordBtn": "Reset Password",
     "emailConfirmTitle": "Email Confirmation",
     "emailConfirmMetaDescription": "Verify your email address to complete your registration.",
+    "continueWithFacebook": "Continue with Facebook",
     "emailVerification": {
       "verifying": "Verifying your email address...",
       "successTitle": "Email Verified Successfully!",
@@ -130,7 +131,10 @@
       "passwordResetFailed": "Password reset request failed. Please try again.",
       "passwordResetError": "An error occurred while processing your request. Please try again later.",
       "resetTokenExpired": "Your password reset link has expired. Please request a new one below.",
-      "invalidResetLink": "Invalid or expired reset link. Please request a new one."
+      "invalidResetLink": "Invalid or expired reset link. Please request a new one.",
+      "facebookLoginFailed": "Facebook login failed. Please try again.",
+      "facebookLoginCancelled": "Facebook login was cancelled.",
+      "facebookLoginError": "An error occurred during Facebook login."
     }
   }
 }

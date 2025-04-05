@@ -106,8 +106,12 @@
       "passwordResetFailed": "La demande de réinitialisation du mot de passe a échoué. Veuillez réessayer.",
       "passwordResetError": "Une erreur s'est produite lors du traitement de votre demande. Veuillez réessayer plus tard.",
       "resetTokenExpired": "Votre lien de réinitialisation de mot de passe a expiré. Veuillez en demander un nouveau ci-dessous.",
-      "invalidResetLink": "Lien de réinitialisation invalide ou expiré. Veuillez en demander un nouveau."
-    }
+      "invalidResetLink": "Lien de réinitialisation invalide ou expiré. Veuillez en demander un nouveau.",
+      "facebookLoginFailed": "La connexion Facebook a échoué. Veuillez réessayer.",
+      "facebookLoginCancelled": "La connexion Facebook a été annulée.",
+      "facebookLoginError": "Une erreur s'est produite lors de la connexion Facebook."
+    },
+    "continueWithFacebook": "Continuer avec Facebook"
   },
   "settings": {
     "confirmPasswordChange": "Confirmer le changement de mot de passe",

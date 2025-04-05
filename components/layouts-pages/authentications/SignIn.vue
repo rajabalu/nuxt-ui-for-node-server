@@ -7,6 +7,7 @@ import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 const { requiredValidator } = useValidators();
 const { t, locale } = useI18n();
+const nuxtApp = useNuxtApp();
 
 const refVForm = ref();
 const isPasswordVisible = ref(false);
@@ -14,9 +15,10 @@ const email = ref("");
 const password = ref("");
 const rememberMe = ref(false);
 const errorMessage = ref<string | null>(null);
+const facebookLoading = ref(false);
 
 // Get the auth composable
-const { login, loading: isLoading } = useAuth();
+const { login, loginWithFacebook, loading: isLoading } = useAuth();
 
 const errors = ref<{ email: string | undefined; password: string | undefined }>({
   email: undefined,
@@ -61,6 +63,40 @@ const onSubmit = async () => {
         errorMessage.value = t('auth.errors.loginFailedGeneric', 'Login failed. Please check your credentials.');
       }
     }
+  }
+};
+
+const handleFacebookLogin = async () => {
+  facebookLoading.value = true;
+  errorMessage.value = null;
+  errors.value = {
+    email: undefined,
+    password: undefined,
+  };
+  
+  try {
+    // Use the plugin to trigger Facebook login dialog
+    const fbResponse = await nuxtApp.$fbLogin();
+    
+    if (fbResponse.success) {
+      // Send token to our API
+      const result = await loginWithFacebook(fbResponse.accessToken);
+      
+      if (result.success) {
+        // Navigate with proper locale path
+        const homePath = getLocalizedPath('/', locale.value);
+        navigateTo(homePath);
+      } else {
+        errorMessage.value = result.error?.message || result.error || t('auth.errors.facebookLoginFailed', 'Facebook login failed');
+      }
+    } else {
+      errorMessage.value = fbResponse.error || t('auth.errors.facebookLoginCancelled', 'Facebook login was cancelled');
+    }
+  } catch (error) {
+    console.error('Facebook login error:', error);
+    errorMessage.value = t('auth.errors.facebookLoginError', 'An error occurred during Facebook login');
+  } finally {
+    facebookLoading.value = false;
   }
 };
 </script>
@@ -110,7 +146,23 @@ const onSubmit = async () => {
 
         <v-checkbox v-model="rememberMe" :label="t('auth.rememberMe')" class="mb-4" />
 
-        <v-btn type="submit" block :loading="isLoading" :disabled="isLoading"> {{ t('signIn') }} </v-btn>
+        <v-btn type="submit" block :loading="isLoading" :disabled="isLoading" class="mb-3"> 
+          {{ t('signIn') }} 
+        </v-btn>
+        
+        <!-- Facebook Login Button -->
+        <v-btn 
+          block 
+          color="#4267B2" 
+          class="mb-3"
+          :loading="facebookLoading"
+          :disabled="facebookLoading || isLoading"
+          @click="handleFacebookLogin" 
+        >
+          <v-icon start icon="tabler-brand-facebook" class="mr-2"></v-icon>
+          {{ t('auth.continueWithFacebook', 'Continue with Facebook') }}
+        </v-btn>
+        
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
           <NuxtLink to="sign-up" class="font-weight-5 text-primary"> {{ t('auth.createAccountLink') }} </NuxtLink>
           <NuxtLink to="forget-password" class="font-weight-5"> {{ t('auth.forgotPasswordLink') }} </NuxtLink>

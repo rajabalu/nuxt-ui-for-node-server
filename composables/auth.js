@@ -39,6 +39,37 @@ export const useAuth = () => {
   };
   
   /**
+   * Login with Facebook
+   */
+  const loginWithFacebook = async (accessToken) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      console.log('Starting Facebook login with token');
+      const result = await authStore.loginWithFacebook(accessToken);
+      
+      if (!result.success) {
+        error.value = result.error?.message || result.error || 'Facebook login failed';
+        console.error('Facebook login failed in composable', result.error);
+        return { 
+          success: false, 
+          error: result.error,
+          status: result.status
+        };
+      }
+      
+      return { success: true };
+    } catch (e) {
+      console.error('Facebook login error in composable:', e);
+      error.value = 'An unexpected error occurred';
+      return { success: false, error: error.value };
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  /**
    * Logout current user
    */
   const logout = async () => {
@@ -104,6 +135,7 @@ export const useAuth = () => {
     
     // Methods
     login,
+    loginWithFacebook,
     logout,
     refreshTokens,
     getCurrentUser
