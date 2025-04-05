@@ -147,8 +147,10 @@ export default defineNuxtConfig({
     // Unified app initialization plugin runs first
     '~/plugins/app-initializer.client.js',
     '~/plugins/persistent-settings.js',
-    // Facebook SDK integration
+    // Social Login SDK integrations
     '~/plugins/facebook-sdk.js',
+    '~/plugins/google-sdk.js',
+    '~/plugins/apple-sdk.js',
     // Other plugins will be loaded automatically
   ],
   

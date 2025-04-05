@@ -16,9 +16,11 @@ const password = ref("");
 const rememberMe = ref(false);
 const errorMessage = ref<string | null>(null);
 const facebookLoading = ref(false);
+const googleLoading = ref(false);
+const appleLoading = ref(false);
 
 // Get the auth composable
-const { login, loginWithFacebook, loading: isLoading } = useAuth();
+const { login, loginWithFacebook, loginWithGoogle, loginWithApple, loading: isLoading } = useAuth();
 
 const errors = ref<{ email: string | undefined; password: string | undefined }>({
   email: undefined,
@@ -99,6 +101,74 @@ const handleFacebookLogin = async () => {
     facebookLoading.value = false;
   }
 };
+
+const handleGoogleLogin = async () => {
+  googleLoading.value = true;
+  errorMessage.value = null;
+  errors.value = {
+    email: undefined,
+    password: undefined,
+  };
+  
+  try {
+    // Use the plugin to trigger Google login dialog
+    const googleResponse = await nuxtApp.$googleLogin();
+    
+    if (googleResponse.success) {
+      // Send token to our API
+      const result = await loginWithGoogle(googleResponse.idToken);
+      
+      if (result.success) {
+        // Navigate with proper locale path
+        const homePath = getLocalizedPath('/', locale.value);
+        navigateTo(homePath);
+      } else {
+        errorMessage.value = result.error?.message || result.error || t('auth.errors.googleLoginFailed', 'Google login failed');
+      }
+    } else {
+      errorMessage.value = googleResponse.error || t('auth.errors.googleLoginCancelled', 'Google login was cancelled');
+    }
+  } catch (error) {
+    console.error('Google login error:', error);
+    errorMessage.value = t('auth.errors.googleLoginError', 'An error occurred during Google login');
+  } finally {
+    googleLoading.value = false;
+  }
+};
+
+const handleAppleLogin = async () => {
+  appleLoading.value = true;
+  errorMessage.value = null;
+  errors.value = {
+    email: undefined,
+    password: undefined,
+  };
+  
+  try {
+    // Use the plugin to trigger Apple login dialog
+    const appleResponse = await nuxtApp.$appleLogin();
+    
+    if (appleResponse.success) {
+      // Send token to our API
+      const result = await loginWithApple(appleResponse.idToken);
+      
+      if (result.success) {
+        // Navigate with proper locale path
+        const homePath = getLocalizedPath('/', locale.value);
+        navigateTo(homePath);
+      } else {
+        errorMessage.value = result.error?.message || result.error || t('auth.errors.appleLoginFailed', 'Apple login failed');
+      }
+    } else {
+      errorMessage.value = appleResponse.error || t('auth.errors.appleLoginCancelled', 'Apple login was cancelled');
+    }
+  } catch (error) {
+    console.error('Apple login error:', error);
+    errorMessage.value = t('auth.errors.appleLoginError', 'An error occurred during Apple login');
+  } finally {
+    appleLoading.value = false;
+  }
+};
 </script>
 <template>
   <v-card elevation="4">
@@ -150,17 +220,47 @@ const handleFacebookLogin = async () => {
           {{ t('signIn') }} 
         </v-btn>
         
+        <!-- Social Login Buttons -->
+        <p class="text-center text-body-2 text-medium-emphasis my-2">{{ t('auth.orContinueWith') }}</p>
+        
         <!-- Facebook Login Button -->
         <v-btn 
           block 
           color="#4267B2" 
           class="mb-3"
           :loading="facebookLoading"
-          :disabled="facebookLoading || isLoading"
+          :disabled="facebookLoading || isLoading || googleLoading || appleLoading"
           @click="handleFacebookLogin" 
         >
           <v-icon start icon="tabler-brand-facebook" class="mr-2"></v-icon>
           {{ t('auth.continueWithFacebook', 'Continue with Facebook') }}
+        </v-btn>
+        
+        <!-- Google Login Button -->
+        <v-btn 
+          block 
+          variant="outlined"
+          class="mb-3"
+          :loading="googleLoading"
+          :disabled="googleLoading || isLoading || facebookLoading || appleLoading"
+          @click="handleGoogleLogin" 
+        >
+          <v-icon start icon="tabler-brand-google" color="#DB4437" class="mr-2"></v-icon>
+          {{ t('auth.continueWithGoogle', 'Continue with Google') }}
+        </v-btn>
+        
+        <!-- Apple Login Button -->
+        <v-btn 
+          block 
+          variant="outlined"
+          color="black" 
+          class="mb-3"
+          :loading="appleLoading"
+          :disabled="appleLoading || isLoading || facebookLoading || googleLoading"
+          @click="handleAppleLogin" 
+        >
+          <v-icon start icon="tabler-brand-apple" class="mr-2"></v-icon>
+          {{ t('auth.continueWithApple', 'Continue with Apple') }}
         </v-btn>
         
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">

@@ -70,6 +70,68 @@ export const useAuth = () => {
   };
   
   /**
+   * Login with Google
+   */
+  const loginWithGoogle = async (idToken) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      console.log('Starting Google login with token');
+      const result = await authStore.loginWithGoogle(idToken);
+      
+      if (!result.success) {
+        error.value = result.error?.message || result.error || 'Google login failed';
+        console.error('Google login failed in composable', result.error);
+        return { 
+          success: false, 
+          error: result.error,
+          status: result.status
+        };
+      }
+      
+      return { success: true };
+    } catch (e) {
+      console.error('Google login error in composable:', e);
+      error.value = 'An unexpected error occurred';
+      return { success: false, error: error.value };
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  /**
+   * Login with Apple
+   */
+  const loginWithApple = async (idToken) => {
+    loading.value = true;
+    error.value = null;
+    
+    try {
+      console.log('Starting Apple login with token');
+      const result = await authStore.loginWithApple(idToken);
+      
+      if (!result.success) {
+        error.value = result.error?.message || result.error || 'Apple login failed';
+        console.error('Apple login failed in composable', result.error);
+        return { 
+          success: false, 
+          error: result.error,
+          status: result.status
+        };
+      }
+      
+      return { success: true };
+    } catch (e) {
+      console.error('Apple login error in composable:', e);
+      error.value = 'An unexpected error occurred';
+      return { success: false, error: error.value };
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  /**
    * Logout current user
    */
   const logout = async () => {
@@ -136,6 +198,8 @@ export const useAuth = () => {
     // Methods
     login,
     loginWithFacebook,
+    loginWithGoogle,
+    loginWithApple,
     logout,
     refreshTokens,
     getCurrentUser

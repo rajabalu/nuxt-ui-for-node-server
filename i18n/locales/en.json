@@ -99,6 +99,9 @@
     "emailConfirmTitle": "Email Confirmation",
     "emailConfirmMetaDescription": "Verify your email address to complete your registration.",
     "continueWithFacebook": "Continue with Facebook",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple",
+    "orContinueWith": "Or continue with",
     "emailVerification": {
       "verifying": "Verifying your email address...",
       "successTitle": "Email Verified Successfully!",
@@ -134,7 +137,13 @@
       "invalidResetLink": "Invalid or expired reset link. Please request a new one.",
       "facebookLoginFailed": "Facebook login failed. Please try again.",
       "facebookLoginCancelled": "Facebook login was cancelled.",
-      "facebookLoginError": "An error occurred during Facebook login."
+      "facebookLoginError": "An error occurred during Facebook login.",
+      "googleLoginFailed": "Google login failed. Please try again.",
+      "googleLoginCancelled": "Google login was cancelled.",
+      "googleLoginError": "An error occurred during Google login.",
+      "appleLoginFailed": "Apple login failed. Please try again.",
+      "appleLoginCancelled": "Apple login was cancelled.",
+      "appleLoginError": "An error occurred during Apple login."
     }
   }
 }

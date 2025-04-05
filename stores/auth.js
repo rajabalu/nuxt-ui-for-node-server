@@ -322,6 +322,100 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.authLoading = false;
       }
+    },
+
+    // Add Google login method
+    async loginWithGoogle(idToken) {
+      this.authLoading = true;
+      this.authError = null;
+      
+      const nuxtApp = useNuxtApp();
+      const api = nuxtApp.$api;
+      
+      try {
+        if (!api) {
+          return { success: false, error: 'API not available' };
+        }
+        
+        // Get current theme and language preferences
+        const i18n = nuxtApp.$i18n;
+        const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        const language = i18n?.locale?.value || 'en';
+        
+        console.log('Sending Google token to backend', { theme, language });
+        
+        const response = await api.post('auth/google/login', { 
+          idToken,
+          theme,
+          language
+        });
+        
+        if (response.success) {
+          this.setAuthData(response.data);
+          return { success: true };
+        } else {
+          console.error('Google login failed', response.error);
+          this.authError = response.error || 'Google login failed';
+          return { 
+            success: false, 
+            error: response.error,
+            status: response.status
+          };
+        }
+      } catch (error) {
+        console.error('Google login error:', error);
+        this.authError = 'An unexpected error occurred during Google login';
+        return { success: false, error: this.authError };
+      } finally {
+        this.authLoading = false;
+      }
+    },
+
+    // Add Apple login method
+    async loginWithApple(idToken) {
+      this.authLoading = true;
+      this.authError = null;
+      
+      const nuxtApp = useNuxtApp();
+      const api = nuxtApp.$api;
+      
+      try {
+        if (!api) {
+          return { success: false, error: 'API not available' };
+        }
+        
+        // Get current theme and language preferences
+        const i18n = nuxtApp.$i18n;
+        const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        const language = i18n?.locale?.value || 'en';
+        
+        console.log('Sending Apple token to backend', { theme, language });
+        
+        const response = await api.post('auth/apple/login', { 
+          idToken,
+          theme,
+          language
+        });
+        
+        if (response.success) {
+          this.setAuthData(response.data);
+          return { success: true };
+        } else {
+          console.error('Apple login failed', response.error);
+          this.authError = response.error || 'Apple login failed';
+          return { 
+            success: false, 
+            error: response.error,
+            status: response.status
+          };
+        }
+      } catch (error) {
+        console.error('Apple login error:', error);
+        this.authError = 'An unexpected error occurred during Apple login';
+        return { success: false, error: this.authError };
+      } finally {
+        this.authLoading = false;
+      }
     }
   }
 }); 
