@@ -46,7 +46,6 @@ export const useAuth = () => {
     error.value = null;
     
     try {
-      console.log('Starting Facebook login with token');
       const result = await authStore.loginWithFacebook(accessToken);
       
       if (!result.success) {
@@ -77,7 +76,6 @@ export const useAuth = () => {
     error.value = null;
     
     try {
-      console.log('Starting Google login with token');
       const result = await authStore.loginWithGoogle(idToken);
       
       if (!result.success) {
@@ -108,7 +106,6 @@ export const useAuth = () => {
     error.value = null;
     
     try {
-      console.log('Starting Apple login with token');
       const result = await authStore.loginWithApple(idToken);
       
       if (!result.success) {

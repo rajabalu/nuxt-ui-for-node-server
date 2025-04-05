@@ -53,14 +53,12 @@ export default defineNuxtPlugin((nuxtApp) => {
             // 'email' scope must be approved for your app in the Facebook Developer Dashboard
             FB.login(function(response) {
               if (response.authResponse) {
-                console.log('Facebook login successful, getting user info');
                 // User authenticated and gave permissions
                 resolve({
                   success: true,
                   accessToken: response.authResponse.accessToken
                 });
               } else {
-                console.log('Facebook login failed or was cancelled by user');
                 // User cancelled or didn't authorize
                 resolve({ 
                   success: false, 

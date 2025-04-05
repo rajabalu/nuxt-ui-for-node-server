@@ -295,8 +295,6 @@ export const useAuthStore = defineStore('auth', {
         const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         const language = i18n?.locale?.value || 'en';
         
-        console.log('Sending Facebook token to backend', { theme, language });
-        
         const response = await api.post('auth/facebook/login', { 
           accessToken,
           theme,
@@ -342,8 +340,6 @@ export const useAuthStore = defineStore('auth', {
         const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         const language = i18n?.locale?.value || 'en';
         
-        console.log('Sending Google token to backend', { theme, language });
-        
         const response = await api.post('auth/google/login', { 
           idToken,
           theme,
@@ -388,8 +384,6 @@ export const useAuthStore = defineStore('auth', {
         const i18n = nuxtApp.$i18n;
         const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         const language = i18n?.locale?.value || 'en';
-        
-        console.log('Sending Apple token to backend', { theme, language });
         
         const response = await api.post('auth/apple/login', { 
           idToken,

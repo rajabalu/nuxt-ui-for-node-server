@@ -31,8 +31,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       
       // Initialize once the script is loaded
       script.onload = () => {
-        console.log('Apple Sign-In API loaded');
-        
         // Configure Apple Sign-In
         AppleID.auth.init({
           clientId: appleClientId,
@@ -65,7 +63,6 @@ export default defineNuxtPlugin((nuxtApp) => {
               // Try to authenticate with Apple
               AppleID.auth.signIn()
                 .then((response) => {
-                  console.log('Apple login successful');
                   // For Apple, we get an authorization object with id_token
                   if (response.authorization && response.authorization.id_token) {
                     resolve({

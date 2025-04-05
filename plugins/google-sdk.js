@@ -30,7 +30,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       
       // Initialize once the script is loaded
       script.onload = () => {
-        console.log('Google Sign-In API loaded');
       };
     };
     
@@ -61,7 +60,6 @@ export default defineNuxtPlugin((nuxtApp) => {
                           });
                         } else {
                           // We need to send the ID token to our backend
-                          console.log('Google login successful');
                           resolve({
                             success: true,
                             idToken: data.sub, // Using sub as ID token for this example
@@ -77,7 +75,6 @@ export default defineNuxtPlugin((nuxtApp) => {
                         });
                       });
                   } else {
-                    console.log('Google login failed or was cancelled');
                     resolve({ 
                       success: false, 
                       error: 'Google login was cancelled or failed' 
