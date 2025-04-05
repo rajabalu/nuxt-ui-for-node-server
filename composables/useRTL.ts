@@ -6,6 +6,11 @@ type FlexDirection = 'row' | 'row-reverse' | 'column' | 'column-reverse';
 // Create a singleton instance for the RTL utilities
 let _rtlInstance: ReturnType<typeof createRTLUtils> | null = null;
 
+// Detect if we're in a plugin context more safely
+const isPluginContext = typeof window !== 'undefined' && 
+  (window as any).__NUXT__?.config && 
+  !(window as any).__VUE__;
+
 /**
  * Private function to create the RTL utilities
  */
@@ -23,6 +28,14 @@ function createRTLUtils() {
   const initWithI18n = () => {
     try {
       console.log('[useRTL] Attempting to use i18n');
+      
+      // Skip if we're in a plugin context and not in a component setup function
+      if (isPluginContext) {
+        // In plugin context, we'll initialize later from a component
+        console.log('[useRTL] Plugin context detected, deferring i18n init');
+        return false;
+      }
+      
       const { locale } = useI18n();
       console.log(`[useRTL] Successfully got i18n locale: ${locale.value}`);
       
@@ -42,7 +55,10 @@ function createRTLUtils() {
     } catch (error) {
       // If i18n is not available (e.g., during plugin initialization)
       // Just use the default value (false = LTR)
-      console.warn('[useRTL] i18n not available, defaulting to LTR', error);
+      if (!isPluginContext) {
+        // Only log the warning if not in a plugin context
+        console.warn('[useRTL] i18n not available, defaulting to LTR', error);
+      }
       return false;
     }
   };
@@ -144,7 +160,7 @@ export function useRTL() {
   }
   
   // Try to initialize if not already initialized
-  if (!_rtlInstance.isInitialized.value) {
+  if (!_rtlInstance.isInitialized.value && !isPluginContext) {
     console.log('[useRTL] Trying to initialize with i18n during useRTL call');
     _rtlInstance.initWithI18n();
   }

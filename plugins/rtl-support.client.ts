@@ -11,8 +11,8 @@ interface NuxtAppWithPlugins {
 
 /**
  * RTL Support Plugin
- * Adds RTL utilities to the Nuxt app instance and makes it available throughout the application
- * Runs last after all other plugins to ensure i18n and Vuetify are initialized
+ * This plugin sets up RTL-related functionality for the application
+ * It only applies document classes and sets up a Vue mixin - it does not provide $rtl
  */
 export default defineNuxtPlugin({
   name: 'rtl-support',
@@ -23,12 +23,12 @@ export default defineNuxtPlugin({
     // Cast nuxtApp to include the _plugins property
     const app = nuxtApp as unknown as NuxtAppWithPlugins;
     
-    // Skip if RTL utilities are already provided - check in different ways
-    if (app.hasOwnProperty('$rtl') || app._plugins?.some(p => p.name === 'rtl-support' && p._called)) {
-      console.log('[rtl-support] RTL utilities already provided, skipping initialization');
+    // Skip if plugin already ran to prevent duplicate initialization
+    if (app._plugins?.some(p => p.name === 'rtl-support' && p._called)) {
+      console.log('[rtl-support] Plugin already ran, skipping duplicate initialization');
       return {};
     }
-    
+
     // Wait for i18n to be ready
     if (!app.$i18n) {
       console.log('[rtl-support] i18n not available yet, plugin may run before it is ready');
@@ -44,33 +44,25 @@ export default defineNuxtPlugin({
       const rtlUtils = useRTL();
       console.log('[rtl-support] RTL utilities created');
       
-      // Check if the app already has a mixin with $rtl
-      let hasMixin = false;
-      if (app.vueApp._context && 
-          app.vueApp._context.mixins && 
-          app.vueApp._context.mixins.length) {
-        hasMixin = app.vueApp._context.mixins.some((mixin: any) => 
-          mixin.computed && mixin.computed.$rtl);
-        
-        if (hasMixin) {
-          console.log('[rtl-support] RTL mixin already exists');
-        }
-      }
+      // Add a global mixin - deferred to avoid Vue setup context issues
+      console.log('[rtl-support] Setting up RTL mixin');
       
-      // Add a global mixin only if it doesn't exist yet - but defer it
-      if (!hasMixin) {
-        console.log('[rtl-support] Adding RTL mixin to Vue app');
-        // Use setTimeout to defer mixin addition
-        setTimeout(() => {
+      // Use setTimeout to defer mixin addition
+      setTimeout(() => {
+        try {
           app.vueApp.mixin({
             computed: {
               $rtl() {
-                return rtlUtils;
+                // Always create a fresh instance when accessed from components
+                return useRTL();
               }
             }
           });
-        }, 0);
-      }
+          console.log('[rtl-support] RTL mixin added successfully');
+        } catch (err) {
+          console.warn('[rtl-support] Error adding RTL mixin:', err);
+        }
+      }, 0);
       
       // Apply RTL-specific CSS classes to the document when in RTL mode
       if (typeof window !== 'undefined') {
@@ -87,15 +79,10 @@ export default defineNuxtPlugin({
         }, { immediate: true });
       }
       
-      // Return the RTL utilities but don't use provide - just return it for others to use
       console.log('[rtl-support] Plugin initialization complete');
       
-      // Return an empty object instead of providing rtl
-      return {
-        provide: {
-          // Empty to prevent property redefinition error
-        }
-      };
+      // Return empty object - don't provide anything
+      return {};
     } catch (err) {
       console.warn('[rtl-support] Could not initialize RTL utilities', err);
       return {};

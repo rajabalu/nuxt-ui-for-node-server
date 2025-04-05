@@ -1,7 +1,7 @@
 import { useUserPreferences } from '@/stores/userPreferences';
 import { useAuthStore } from '@/stores/auth';
 import { forceLoadMessages, applyRTLDirection, ensureMessageStructure, getLocalizedPath } from '@/utils/i18n-helpers';
-import { getCurrentInstance, onMounted, defineComponent, createApp, nextTick } from 'vue';
+import { getCurrentInstance, onMounted, defineComponent, createApp, nextTick, h } from 'vue';
 
 /**
  * Unified application initialization plugin that runs client-side
@@ -34,65 +34,26 @@ export default defineNuxtPlugin({
       const userPreferencesStore = useUserPreferences();
       userPreferencesStore.initPreferences();
       
-      // 2. Apply theme settings from preferences - but defer the theme application
+      // 2. Apply theme settings from preferences using a simpler approach
       const theme = userPreferencesStore.theme;
       if (theme) {
-        // Instead of dynamic imports, create a global function to set the theme later
-        window.__setVuetifyTheme = (themeName) => {
+        // Simpler approach - just update the document class for theme
+        setTimeout(() => {
           try {
-            // This function will be called later when Vuetify is ready
-            const vuetifyApp = document.querySelector('.v-application');
-            if (vuetifyApp && nuxtApp.vueApp) {
-              console.log('[app-initializer] Setting Vuetify theme to:', themeName);
-              
-              // Create a small component to apply the theme
-              const ThemeApplier = defineComponent({
-                setup() {
-                  // To be executed within the component lifecycle
-                  onMounted(() => {
-                    // Access Vuetify through the Nuxt app instance
-                    if (nuxtApp.$vuetify && nuxtApp.$vuetify.theme) {
-                      nuxtApp.$vuetify.theme.global.name.value = themeName;
-                      console.log('[app-initializer] Theme set via $vuetify');
-                    } else {
-                      console.warn('[app-initializer] $vuetify not available on nuxtApp');
-                    }
-                    return () => null;
-                  });
-                }
-              });
-              
-              // Add to DOM temporarily
-              const div = document.createElement('div');
-              div.style.display = 'none';
-              document.body.appendChild(div);
-              
-              // Mount and unmount
-              const app = createApp(ThemeApplier);
-              const instance = app.mount(div);
-              
-              // Cleanup
-              setTimeout(() => {
-                app.unmount();
-                document.body.removeChild(div);
-              }, 100);
+            // Apply the theme directly to the document
+            const isDark = theme === 'dark';
+            if (isDark) {
+              document.body.classList.add('v-theme--dark');
+              document.body.classList.remove('v-theme--light');
             } else {
-              console.warn('[app-initializer] Vuetify app not found in DOM');
+              document.body.classList.add('v-theme--light');
+              document.body.classList.remove('v-theme--dark');
             }
+            console.log('[app-initializer] Theme set with document classes:', theme);
           } catch (e) {
-            console.error('[app-initializer] Error setting theme:', e);
+            console.error('[app-initializer] Error setting theme classes:', e);
           }
-        };
-        
-        // Schedule theme application after next tick and after Vuetify is likely ready
-        nextTick(() => {
-          // Attempt after a short delay
-          setTimeout(() => {
-            if (window.__setVuetifyTheme) {
-              window.__setVuetifyTheme(theme);
-            }
-          }, 500);
-        });
+        }, 200);
       }
       
       // 3. Get the current language from user preferences
