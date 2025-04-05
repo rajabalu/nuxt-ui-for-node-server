@@ -50,22 +50,25 @@ export const forceLoadMessages = async (i18n, locale) => {
           // Try each path until one succeeds
           for (const path of pathsToTry) {
             try {
-              messages = await import(/* @vite-ignore */ path);
-              if (messages && messages.default) {
+              const imported = await import(/* @vite-ignore */ path);
+              if (imported && imported.default) {
+                messages = imported;
                 break;
               }
             } catch (error) {
+              // Save error but continue to next path
               importError = error;
-              // Continue to next path
             }
           }
           
-          // If no import succeeded, throw the last error
+          // If no import succeeded and we have an error, log it
           if (!messages || !messages.default) {
-            throw importError || new Error('No messages found after trying all paths');
+            console.warn('[i18n-helpers] Could not import locale file through any path');
+            // Don't throw here, just return false to indicate failure
+            return false;
           }
           
-          if (typeof i18n.setLocaleMessage === 'function') {
+          if (typeof i18n.setLocaleMessage === 'function' && messages && messages.default) {
             i18n.setLocaleMessage(locale, messages.default);
             
             // Ensure nested paths are properly flattened or normalized

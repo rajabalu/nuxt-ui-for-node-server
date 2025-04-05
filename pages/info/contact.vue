@@ -1,12 +1,17 @@
 <script setup>
 import { useI18n } from "vue-i18n";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 const { t } = useI18n();
+const config = useRuntimeConfig();
 
 definePageMeta({
   middleware: 'public'
 });
+
+const contactPhone = computed(() => config.public.CONTACT_PHONE || '');
+const contactEmail = computed(() => config.public.CONTACT_EMAIL || '');
+const contactAddress = computed(() => config.public.CONTACT_ADDRESS || '');
 
 const form = ref({
   name: "",
@@ -48,31 +53,31 @@ const handleSubmit = () => {
           <v-row>
             <v-col cols="12" md="5">
               <div class="text-body-1">
-                <h2 class="text-h5 mb-4">Get in Touch</h2>
+                <h2 class="text-h5 mb-4">{{ t('info.getInTouch') }}</h2>
                 <p class="mb-6">
-                  We'd love to hear from you! Fill out the form and our team will get back to you as soon as possible.
+                  {{ t('info.contactDescription') }}
                 </p>
                 
                 <v-list>
-                  <v-list-item>
+                  <v-list-item v-if="contactEmail">
                     <template v-slot:prepend>
                       <v-icon icon="tabler-mail" class="mr-2"></v-icon>
                     </template>
-                    <v-list-item-title>support@example.com</v-list-item-title>
+                    <v-list-item-title>{{ contactEmail }}</v-list-item-title>
                   </v-list-item>
                   
-                  <v-list-item>
+                  <v-list-item v-if="contactPhone">
                     <template v-slot:prepend>
                       <v-icon icon="tabler-phone" class="mr-2"></v-icon>
                     </template>
-                    <v-list-item-title>+1 (555) 123-4567</v-list-item-title>
+                    <v-list-item-title>{{ contactPhone }}</v-list-item-title>
                   </v-list-item>
                   
-                  <v-list-item>
+                  <v-list-item v-if="contactAddress">
                     <template v-slot:prepend>
                       <v-icon icon="tabler-map-pin" class="mr-2"></v-icon>
                     </template>
-                    <v-list-item-title>123 Business Ave, Suite 100, City, Country</v-list-item-title>
+                    <v-list-item-title>{{ contactAddress }}</v-list-item-title>
                   </v-list-item>
                 </v-list>
               </div>
@@ -82,7 +87,7 @@ const handleSubmit = () => {
               <v-form @submit.prevent="handleSubmit">
                 <v-text-field
                   v-model="form.name"
-                  label="Your Name"
+                  :label="t('info.yourName')"
                   required
                   variant="outlined"
                   class="mb-3"
@@ -90,7 +95,7 @@ const handleSubmit = () => {
                 
                 <v-text-field
                   v-model="form.email"
-                  label="Email Address"
+                  :label="t('info.emailAddress')"
                   type="email"
                   required
                   variant="outlined"
@@ -99,7 +104,7 @@ const handleSubmit = () => {
                 
                 <v-text-field
                   v-model="form.subject"
-                  label="Subject"
+                  :label="t('info.subject')"
                   required
                   variant="outlined"
                   class="mb-3"
@@ -107,7 +112,7 @@ const handleSubmit = () => {
                 
                 <v-textarea
                   v-model="form.message"
-                  label="Message"
+                  :label="t('info.message')"
                   required
                   variant="outlined"
                   rows="4"
@@ -120,7 +125,7 @@ const handleSubmit = () => {
                   block
                   :loading="loading"
                 >
-                  Send Message
+                  {{ t('info.sendMessage') }}
                 </v-btn>
               </v-form>
             </v-col>
@@ -140,7 +145,7 @@ const handleSubmit = () => {
           variant="text"
           @click="snackbar = false"
         >
-          Close
+          {{ t('common.close') }}
         </v-btn>
       </template>
     </v-snackbar>

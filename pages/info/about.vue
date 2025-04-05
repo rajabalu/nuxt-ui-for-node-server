@@ -19,43 +19,43 @@ definePageMeta({
           
           <div class="text-body-1">
             <p class="mb-4">
-              Welcome to our platform! We are dedicated to providing an exceptional user experience with cutting-edge technology solutions.
+              {{ t('info.about.welcome') }}
             </p>
             
             <p class="mb-4">
-              Our mission is to empower businesses and individuals with innovative tools that enhance productivity and streamline workflows.
+              {{ t('info.about.mission') }}
             </p>
             
-            <h2 class="text-h5 mb-3 mt-6">Our Vision</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.about.vision.title') }}</h2>
             <p class="mb-4">
-              To become the leading provider of intuitive, secure, and scalable solutions that transform how people interact with technology.
+              {{ t('info.about.vision.description') }}
             </p>
             
-            <h2 class="text-h5 mb-3 mt-6">Our Team</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.about.team.title') }}</h2>
             <p class="mb-4">
-              We are a diverse team of passionate professionals dedicated to creating exceptional experiences. Our experts come from various backgrounds including software development, design, security, and business strategy.
+              {{ t('info.about.team.description') }}
             </p>
             
-            <h2 class="text-h5 mb-3 mt-6">Our Values</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.about.values.title') }}</h2>
             <v-list>
               <v-list-item>
-                <v-list-item-title>Innovation</v-list-item-title>
-                <v-list-item-subtitle>We constantly push the boundaries of what's possible</v-list-item-subtitle>
+                <v-list-item-title>{{ t('info.about.values.items.innovation.title') }}</v-list-item-title>
+                <v-list-item-subtitle>{{ t('info.about.values.items.innovation.description') }}</v-list-item-subtitle>
               </v-list-item>
               
               <v-list-item>
-                <v-list-item-title>Security</v-list-item-title>
-                <v-list-item-subtitle>We prioritize the safety and privacy of our users' data</v-list-item-subtitle>
+                <v-list-item-title>{{ t('info.about.values.items.security.title') }}</v-list-item-title>
+                <v-list-item-subtitle>{{ t('info.about.values.items.security.description') }}</v-list-item-subtitle>
               </v-list-item>
               
               <v-list-item>
-                <v-list-item-title>Inclusivity</v-list-item-title>
-                <v-list-item-subtitle>We design solutions that work for everyone</v-list-item-subtitle>
+                <v-list-item-title>{{ t('info.about.values.items.inclusivity.title') }}</v-list-item-title>
+                <v-list-item-subtitle>{{ t('info.about.values.items.inclusivity.description') }}</v-list-item-subtitle>
               </v-list-item>
               
               <v-list-item>
-                <v-list-item-title>Excellence</v-list-item-title>
-                <v-list-item-subtitle>We strive for the highest quality in everything we do</v-list-item-subtitle>
+                <v-list-item-title>{{ t('info.about.values.items.excellence.title') }}</v-list-item-title>
+                <v-list-item-subtitle>{{ t('info.about.values.items.excellence.description') }}</v-list-item-subtitle>
               </v-list-item>
             </v-list>
           </div>

@@ -1,45 +1,61 @@
 <script setup>
 import { useI18n } from "vue-i18n";
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { getLocalizedPath } from "@/utils/i18n-helpers";
+import { useRouter } from "vue-router";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const config = useRuntimeConfig();
+const router = useRouter();
 
 definePageMeta({
   middleware: 'public'
 });
 
+const contactPhone = computed(() => config.public.CONTACT_PHONE || '');
+const contactEmail = computed(() => config.public.CONTACT_EMAIL || '');
+
+// Simple contact path - will be localized during navigation
+const contactPagePath = '/info/contact';
+
 const expandedItem = ref(null);
 
-const faqItems = [
+// Handle navigation while preserving language
+const handleNavigation = (path) => {
+  const localizedPath = getLocalizedPath(path, locale.value);
+  router.push(localizedPath);
+};
+
+const faqItems = computed(() => [
   {
-    question: "How do I create an account?",
-    answer: "To create an account, click on the 'Sign Up' button in the top-right corner of the page. Fill in your details including name, email, and password, then click 'Create Free Account'. You'll receive a verification email to activate your account."
+    question: t('info.faq.createAccount.question'),
+    answer: t('info.faq.createAccount.answer')
   },
   {
-    question: "I forgot my password. How can I reset it?",
-    answer: "Click on the 'Sign In' button, then select 'Forgot your password?'. Enter the email address associated with your account and follow the instructions sent to your email to reset your password."
+    question: t('info.faq.forgotPassword.question'),
+    answer: t('info.faq.forgotPassword.answer')
   },
   {
-    question: "How do I change my account settings?",
-    answer: "After signing in, click on your profile picture or name in the top-right corner, then select 'Settings'. From there, you can update your profile information, change your password, and manage notification preferences."
+    question: t('info.faq.changeSettings.question'),
+    answer: t('info.faq.changeSettings.answer')
   },
   {
-    question: "Can I change the language of the interface?",
-    answer: "Yes, you can change the language by clicking on the language selector in the top navigation bar or footer. Currently, we support English, French, and Arabic."
+    question: t('info.faq.changeLanguage.question'),
+    answer: t('info.faq.changeLanguage.answer')
   },
   {
-    question: "How do I contact customer support?",
-    answer: "You can reach our customer support team by visiting the 'Contact' page in the footer, sending an email to support@example.com, or calling us at +1 (555) 123-4567 during business hours."
+    question: t('info.faq.contactSupport.question'),
+    answer: t('info.faq.contactSupport.answer')
   },
   {
-    question: "Is my personal information secure?",
-    answer: "Yes, we take data security very seriously. We use industry-standard encryption and security measures to protect your personal information. You can learn more about our data practices in our Privacy Policy."
+    question: t('info.faq.dataSecure.question'),
+    answer: t('info.faq.dataSecure.answer')
   },
   {
-    question: "How do I delete my account?",
-    answer: "To delete your account, go to 'Settings' from your profile dropdown, scroll to the bottom of the page, and click on 'Delete Account'. Please note that this action is irreversible and all your data will be permanently removed."
+    question: t('info.faq.deleteAccount.question'),
+    answer: t('info.faq.deleteAccount.answer')
   }
-];
+]);
 </script>
 
 <template>
@@ -52,7 +68,7 @@ const faqItems = [
           <v-divider class="mb-6"></v-divider>
           
           <div class="text-body-1">
-            <h2 class="text-h5 mb-6">Frequently Asked Questions</h2>
+            <h2 class="text-h5 mb-6">{{ t('info.frequentlyAskedQuestions') }}</h2>
             
             <v-expansion-panels v-model="expandedItem">
               <v-expansion-panel
@@ -68,9 +84,9 @@ const faqItems = [
               </v-expansion-panel>
             </v-expansion-panels>
             
-            <h2 class="text-h5 mb-3 mt-8">Need More Help?</h2>
+            <h2 class="text-h5 mb-3 mt-8">{{ t('info.needMoreHelp') }}</h2>
             <p class="mb-4">
-              If you couldn't find the answer to your question in our FAQ, please don't hesitate to contact us:
+              {{ t('info.couldntFindAnswer') }}
             </p>
             
             <v-row class="mt-6">
@@ -78,9 +94,9 @@ const faqItems = [
                 <v-card variant="outlined" class="pa-4 h-100">
                   <div class="d-flex flex-column align-center text-center">
                     <v-icon icon="tabler-mail" size="36" class="mb-4 text-primary"></v-icon>
-                    <h3 class="text-h6 mb-2">Email Support</h3>
-                    <p class="mb-2">Send us an email anytime</p>
-                    <a href="mailto:support@example.com" class="text-decoration-none">support@example.com</a>
+                    <h3 class="text-h6 mb-2">{{ t('info.emailSupport') }}</h3>
+                    <p class="mb-2">{{ t('info.sendEmailAnytime') }}</p>
+                    <a v-if="contactEmail" :href="`mailto:${contactEmail}`" class="text-decoration-none">{{ contactEmail }}</a>
                   </div>
                 </v-card>
               </v-col>
@@ -89,9 +105,9 @@ const faqItems = [
                 <v-card variant="outlined" class="pa-4 h-100">
                   <div class="d-flex flex-column align-center text-center">
                     <v-icon icon="tabler-phone" size="36" class="mb-4 text-primary"></v-icon>
-                    <h3 class="text-h6 mb-2">Phone Support</h3>
-                    <p class="mb-2">Mon-Fri, 9am-5pm EST</p>
-                    <a href="tel:+15551234567" class="text-decoration-none">+1 (555) 123-4567</a>
+                    <h3 class="text-h6 mb-2">{{ t('info.phoneSupport') }}</h3>
+                    <p class="mb-2">{{ t('info.phoneHours') }}</p>
+                    <a v-if="contactPhone" :href="`tel:${contactPhone.replace ? contactPhone.replace(/\s/g, '') : contactPhone}`" class="text-decoration-none">{{ contactPhone }}</a>
                   </div>
                 </v-card>
               </v-col>
@@ -100,48 +116,19 @@ const faqItems = [
                 <v-card variant="outlined" class="pa-4 h-100">
                   <div class="d-flex flex-column align-center text-center">
                     <v-icon icon="tabler-messages" size="36" class="mb-4 text-primary"></v-icon>
-                    <h3 class="text-h6 mb-2">Live Chat</h3>
-                    <p class="mb-2">Available 24/7</p>
-                    <v-btn color="primary" variant="tonal" to="/info/contact">Start Chat</v-btn>
+                    <h3 class="text-h6 mb-2">{{ t('info.liveChat') }}</h3>
+                    <p class="mb-2">{{ t('info.available24_7') }}</p>
+                    <v-btn 
+                      color="primary" 
+                      variant="tonal" 
+                      @click="handleNavigation(contactPagePath)"
+                    >
+                      {{ t('info.startChat') }}
+                    </v-btn>
                   </div>
                 </v-card>
               </v-col>
             </v-row>
-            
-            <h2 class="text-h5 mb-3 mt-8">Documentation</h2>
-            <p class="mb-4">
-              Browse our comprehensive documentation for detailed guides and tutorials:
-            </p>
-            
-            <v-list>
-              <v-list-item to="/info/help/getting-started">
-                <template v-slot:prepend>
-                  <v-icon icon="tabler-book" class="mr-2"></v-icon>
-                </template>
-                <v-list-item-title>Getting Started Guide</v-list-item-title>
-              </v-list-item>
-              
-              <v-list-item to="/info/help/user-guide">
-                <template v-slot:prepend>
-                  <v-icon icon="tabler-file-text" class="mr-2"></v-icon>
-                </template>
-                <v-list-item-title>User Guide</v-list-item-title>
-              </v-list-item>
-              
-              <v-list-item to="/info/help/tutorials">
-                <template v-slot:prepend>
-                  <v-icon icon="tabler-video" class="mr-2"></v-icon>
-                </template>
-                <v-list-item-title>Video Tutorials</v-list-item-title>
-              </v-list-item>
-              
-              <v-list-item to="/info/help/api">
-                <template v-slot:prepend>
-                  <v-icon icon="tabler-code" class="mr-2"></v-icon>
-                </template>
-                <v-list-item-title>API Documentation</v-list-item-title>
-              </v-list-item>
-            </v-list>
           </div>
         </v-card>
       </v-col>

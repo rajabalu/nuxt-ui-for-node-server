@@ -13,7 +13,10 @@ const themeColor = "#f1f5f9";
 export default defineNuxtConfig({
   runtimeConfig: {
     public: {
-      SERVER_URL: process.env.SERVER_URL || 'http://localhost:8000/api/v1/'
+      SERVER_URL: process.env.SERVER_URL || 'http://localhost:8000/api/v1/',
+      CONTACT_PHONE: process.env.VITE_CONTACT_PHONE || '+61 2 8320 4047',
+      CONTACT_EMAIL: process.env.VITE_CONTACT_EMAIL || 'info@gosol.com.au',
+      CONTACT_ADDRESS: process.env.VITE_CONTACT_ADDRESS || 'Level 35, Tower One, International Towers, 100 Barangaroo Avenue, Sydney, 2000, NSW, Australia'
     }
   },  
   devServer: {

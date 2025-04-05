@@ -1,11 +1,16 @@
 <script setup>
 import { useI18n } from "vue-i18n";
+import { computed } from "vue";
 
 const { t } = useI18n();
+const config = useRuntimeConfig();
 
 definePageMeta({
   middleware: 'public'
 });
+
+const contactPhone = computed(() => config.public.CONTACT_PHONE || '');
+const contactEmail = computed(() => config.public.CONTACT_EMAIL || '');
 </script>
 
 <template>
@@ -19,81 +24,77 @@ definePageMeta({
           
           <div class="text-body-1">
             <p class="mb-4">
-              <em>Last updated: {{ new Date().toLocaleDateString() }}</em>
+              {{ t('info.privacy.introduction') }}
             </p>
             
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.privacy.informationCollect.title') }}</h2>
             <p class="mb-4">
-              At our company, we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your personal information when you use our service.
-            </p>
-            
-            <h2 class="text-h5 mb-3 mt-6">Information We Collect</h2>
-            <p class="mb-4">
-              We collect several types of information for various purposes to provide and improve our service to you:
+              {{ t('info.privacy.informationCollect.description') }}
             </p>
             
             <v-list>
               <v-list-item>
-                <v-list-item-title class="font-weight-medium">Personal Data</v-list-item-title>
-                <v-list-item-subtitle>Including email address, name, phone number, address, and other data you provide when using our services.</v-list-item-subtitle>
+                <v-list-item-title class="font-weight-medium">{{ t('info.privacy.informationCollect.personalData.title') }}</v-list-item-title>
+                <v-list-item-subtitle>{{ t('info.privacy.informationCollect.personalData.description') }}</v-list-item-subtitle>
               </v-list-item>
               
               <v-list-item>
-                <v-list-item-title class="font-weight-medium">Usage Data</v-list-item-title>
-                <v-list-item-subtitle>Information on how you access and use our service, including your IP address, browser type, pages visited, and time spent.</v-list-item-subtitle>
+                <v-list-item-title class="font-weight-medium">{{ t('info.privacy.informationCollect.usageData.title') }}</v-list-item-title>
+                <v-list-item-subtitle>{{ t('info.privacy.informationCollect.usageData.description') }}</v-list-item-subtitle>
               </v-list-item>
               
               <v-list-item>
-                <v-list-item-title class="font-weight-medium">Cookies and Tracking Data</v-list-item-title>
-                <v-list-item-subtitle>We use cookies and similar tracking technologies to track activity on our service and hold certain information.</v-list-item-subtitle>
+                <v-list-item-title class="font-weight-medium">{{ t('info.privacy.informationCollect.cookies.title') }}</v-list-item-title>
+                <v-list-item-subtitle>{{ t('info.privacy.informationCollect.cookies.description') }}</v-list-item-subtitle>
               </v-list-item>
             </v-list>
             
-            <h2 class="text-h5 mb-3 mt-6">How We Use Your Information</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.privacy.informationUse.title') }}</h2>
             <p class="mb-4">
-              We use the collected data for various purposes:
+              {{ t('info.privacy.informationUse.description') }}
             </p>
             
             <ul class="ml-6 mb-6">
-              <li class="mb-2">To provide and maintain our service</li>
-              <li class="mb-2">To notify you about changes to our service</li>
-              <li class="mb-2">To provide customer support</li>
-              <li class="mb-2">To gather analysis or valuable information to improve our service</li>
-              <li class="mb-2">To monitor the usage of our service</li>
-              <li class="mb-2">To detect, prevent and address technical issues</li>
+              <li class="mb-2">{{ t('info.privacy.informationUse.purposes.provideService') }}</li>
+              <li class="mb-2">{{ t('info.privacy.informationUse.purposes.notifyChanges') }}</li>
+              <li class="mb-2">{{ t('info.privacy.informationUse.purposes.customerSupport') }}</li>
+              <li class="mb-2">{{ t('info.privacy.informationUse.purposes.analysis') }}</li>
+              <li class="mb-2">{{ t('info.privacy.informationUse.purposes.monitorUsage') }}</li>
+              <li class="mb-2">{{ t('info.privacy.informationUse.purposes.technicalIssues') }}</li>
             </ul>
             
-            <h2 class="text-h5 mb-3 mt-6">Data Security</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.privacy.dataSecurity.title') }}</h2>
             <p class="mb-4">
-              The security of your data is important to us, but remember that no method of transmission over the Internet or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your personal data, we cannot guarantee its absolute security.
+              {{ t('info.privacy.dataSecurity.description') }}
             </p>
             
-            <h2 class="text-h5 mb-3 mt-6">Your Data Protection Rights</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.privacy.dataRights.title') }}</h2>
             <p class="mb-4">
-              You have the following data protection rights:
+              {{ t('info.privacy.dataRights.description') }}
             </p>
             
             <ul class="ml-6 mb-6">
-              <li class="mb-2">The right to access, update or delete the information we have on you</li>
-              <li class="mb-2">The right of rectification - the right to have your information corrected if it is inaccurate or incomplete</li>
-              <li class="mb-2">The right to object to our processing of your personal data</li>
-              <li class="mb-2">The right of restriction - the right to request that we restrict the processing of your personal information</li>
-              <li class="mb-2">The right to data portability - the right to receive a copy of your personal data in a structured, machine-readable format</li>
-              <li class="mb-2">The right to withdraw consent at any time where we relied on your consent to process your personal information</li>
+              <li class="mb-2">{{ t('info.privacy.dataRights.rights.access') }}</li>
+              <li class="mb-2">{{ t('info.privacy.dataRights.rights.rectification') }}</li>
+              <li class="mb-2">{{ t('info.privacy.dataRights.rights.object') }}</li>
+              <li class="mb-2">{{ t('info.privacy.dataRights.rights.restriction') }}</li>
+              <li class="mb-2">{{ t('info.privacy.dataRights.rights.portability') }}</li>
+              <li class="mb-2">{{ t('info.privacy.dataRights.rights.withdraw') }}</li>
             </ul>
             
-            <h2 class="text-h5 mb-3 mt-6">Changes to This Privacy Policy</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.privacy.changes.title') }}</h2>
             <p class="mb-4">
-              We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "last updated" date.
+              {{ t('info.privacy.changes.description') }}
             </p>
             
-            <h2 class="text-h5 mb-3 mt-6">Contact Us</h2>
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.privacy.contact.title') }}</h2>
             <p class="mb-4">
-              If you have any questions about this Privacy Policy, please contact us:
+              {{ t('info.privacy.contact.description') }}
             </p>
             
-            <ul class="ml-6 mb-6">
-              <li class="mb-2">By email: privacy@example.com</li>
-              <li class="mb-2">By phone: +1 (555) 123-4567</li>
+            <ul class="ml-6 mb-6" v-if="contactEmail || contactPhone">
+              <li class="mb-2" v-if="contactEmail">{{ t('info.privacy.contact.methods.email', { email: contactEmail }) }}</li>
+              <li class="mb-2" v-if="contactPhone">{{ t('info.privacy.contact.methods.phone', { phone: contactPhone }) }}</li>
             </ul>
           </div>
         </v-card>

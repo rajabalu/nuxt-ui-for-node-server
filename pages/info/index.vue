@@ -1,44 +1,48 @@
 <script setup>
 import { useI18n } from "vue-i18n";
+import { computed } from "vue";
+import { getLocalizedPath } from "@/utils/i18n-helpers";
+import { useRouter } from "vue-router";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const router = useRouter();
 
 definePageMeta({
   middleware: 'public'
 });
 
-const infoLinks = [
+const infoLinks = computed(() => [
   {
-    title: t("footer.about"),
-    icon: "tabler-info-circle",
-    to: "/info/about",
-    description: "Learn about our company, mission, and values"
+    title: t('info.about.title'),
+    icon: 'mdi-information-outline',
+    description: t('info.about.shortDescription'),
+    to: '/info/about'
   },
   {
-    title: t("footer.contact"),
-    icon: "tabler-mail",
-    to: "/info/contact",
-    description: "Get in touch with our team for questions or support"
+    title: t('info.help.title'),
+    icon: 'mdi-help-circle-outline',
+    description: t('info.help.shortDescription'),
+    to: '/info/help'
   },
   {
-    title: t("footer.privacy"),
-    icon: "tabler-shield-lock",
-    to: "/info/privacy",
-    description: "Read our privacy policy and how we protect your data"
+    title: t('info.privacy.title'),
+    icon: 'mdi-shield-lock-outline',
+    description: t('info.privacy.shortDescription'),
+    to: '/info/privacy'
   },
   {
-    title: t("footer.terms"),
-    icon: "tabler-file-text",
-    to: "/info/terms",
-    description: "View our terms of service and usage requirements"
-  },
-  {
-    title: t("footer.help"),
-    icon: "tabler-help-circle",
-    to: "/info/help",
-    description: "Find answers to frequently asked questions and support resources"
+    title: t('info.terms.title'),
+    icon: 'mdi-file-document-outline',
+    description: t('info.terms.shortDescription'),
+    to: '/info/terms'
   }
-];
+]);
+
+// Handle navigation while preserving language
+const handleNavigation = (path) => {
+  const localizedPath = getLocalizedPath(path, locale.value);
+  router.push(localizedPath);
+};
 </script>
 
 <template>
@@ -67,10 +71,10 @@ const infoLinks = [
               class="mb-4"
             >
               <v-card
-                :to="link.to"
                 class="h-100"
                 variant="outlined"
                 hover
+                @click="handleNavigation(link.to)"
               >
                 <v-card-item>
                   <template v-slot:prepend>
@@ -89,8 +93,8 @@ const infoLinks = [
                   <v-btn
                     variant="text"
                     color="primary"
-                    :to="link.to"
                     class="ml-auto"
+                    @click.stop="handleNavigation(link.to)"
                   >
                     View
                     <v-icon class="ml-1" icon="tabler-arrow-right"></v-icon>

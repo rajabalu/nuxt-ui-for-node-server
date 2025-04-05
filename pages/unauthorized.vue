@@ -6,7 +6,7 @@
       You don't have permission to access this page.
     </p>
     <div class="d-flex mt-4">
-      <v-btn color="primary" variant="outlined" class="me-4" to="/">
+      <v-btn color="primary" variant="outlined" class="me-4" @click="goHome">
         Go to Home
       </v-btn>
       <v-btn color="error" variant="outlined" @click="handleLogout">
@@ -18,8 +18,22 @@
 
 <script setup>
 import { useAuth } from '~/composables/auth';
+import { useI18n } from 'vue-i18n';
+import { computed } from 'vue';
+import { getLocalizedPath } from '@/utils/i18n-helpers';
+import { useRouter } from 'vue-router';
 
 const { logout } = useAuth();
+const { locale } = useI18n();
+const router = useRouter();
+
+// Simple home path - will be localized during navigation
+const homePath = '/';
+
+const goHome = () => {
+  const localizedPath = getLocalizedPath(homePath, locale.value);
+  router.push(localizedPath);
+};
 
 const handleLogout = async () => {
   await logout();

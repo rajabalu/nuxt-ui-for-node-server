@@ -147,5 +147,201 @@
     "enterCurrentPassword": "Entrez le mot de passe actuel",
     "enterNewPassword": "Entrez le nouveau mot de passe",
     "confirmNewPassword": "Confirmez le nouveau mot de passe"
+  },
+  "info": {
+    "about": {
+      "welcome": "Bienvenue sur notre plateforme! Nous nous engageons à fournir une expérience utilisateur exceptionnelle avec des solutions technologiques de pointe.",
+      "mission": "Notre mission est de donner aux entreprises et aux particuliers les moyens d'utiliser des outils innovants qui améliorent la productivité et simplifient les flux de travail.",
+      "vision": {
+        "title": "Notre Vision",
+        "description": "Devenir le principal fournisseur de solutions intuitives, sécurisées et évolutives qui transforment la façon dont les gens interagissent avec la technologie."
+      },
+      "team": {
+        "title": "Notre Équipe",
+        "description": "Nous sommes une équipe diversifiée de professionnels passionnés dédiés à créer des expériences exceptionnelles. Nos experts viennent de divers horizons, notamment le développement logiciel, la conception, la sécurité et la stratégie commerciale."
+      },
+      "values": {
+        "title": "Nos Valeurs",
+        "items": {
+          "innovation": {
+            "title": "Innovation",
+            "description": "Nous repoussons constamment les limites du possible"
+          },
+          "security": {
+            "title": "Sécurité",
+            "description": "Nous privilégions la sécurité et la confidentialité des données de nos utilisateurs"
+          },
+          "inclusivity": {
+            "title": "Inclusivité",
+            "description": "Nous concevons des solutions qui fonctionnent pour tous"
+          },
+          "excellence": {
+            "title": "Excellence",
+            "description": "Nous visons la plus haute qualité dans tout ce que nous faisons"
+          }
+        }
+      }
+    },
+    "getInTouch": "Contactez-nous",
+    "contactDescription": "Nous aimerions avoir de vos nouvelles! Remplissez le formulaire et notre équipe vous répondra dès que possible.",
+    "yourName": "Votre Nom",
+    "emailAddress": "Adresse Email",
+    "subject": "Sujet",
+    "message": "Message",
+    "sendMessage": "Envoyer le Message",
+    "frequentlyAskedQuestions": "Questions Fréquemment Posées",
+    "needMoreHelp": "Besoin de Plus d'Aide?",
+    "couldntFindAnswer": "Si vous n'avez pas trouvé la réponse à votre question dans notre FAQ, n'hésitez pas à nous contacter:",
+    "emailSupport": "Support par Email",
+    "sendEmailAnytime": "Envoyez-nous un email à tout moment",
+    "phoneSupport": "Support Téléphonique",
+    "phoneHours": "Lun-Ven, 9h-17h AEST",
+    "liveChat": "Chat en Direct",
+    "available24_7": "Disponible 24h/24 et 7j/7",
+    "startChat": "Démarrer le Chat",
+    "faq": {
+      "createAccount": {
+        "question": "Comment créer un compte?",
+        "answer": "Pour créer un compte, cliquez sur le bouton 'S'inscrire' dans le coin supérieur droit de la page. Remplissez vos coordonnées, y compris votre nom, votre email et votre mot de passe, puis cliquez sur 'Créer un compte gratuit'. Vous recevrez un email de vérification pour activer votre compte."
+      },
+      "forgotPassword": {
+        "question": "J'ai oublié mon mot de passe. Comment puis-je le réinitialiser?",
+        "answer": "Cliquez sur le bouton 'Se connecter', puis sélectionnez 'Mot de passe oublié?'. Entrez l'adresse email associée à votre compte et suivez les instructions envoyées à votre email pour réinitialiser votre mot de passe."
+      },
+      "changeSettings": {
+        "question": "Comment puis-je modifier mes paramètres de compte?",
+        "answer": "Après vous être connecté, cliquez sur votre photo de profil ou votre nom dans le coin supérieur droit, puis sélectionnez 'Paramètres'. De là, vous pouvez mettre à jour les informations de votre profil, changer votre mot de passe et gérer vos préférences de notification."
+      },
+      "changeLanguage": {
+        "question": "Puis-je changer la langue de l'interface?",
+        "answer": "Oui, vous pouvez changer la langue en cliquant sur le sélecteur de langue dans la barre de navigation supérieure ou le pied de page. Actuellement, nous prenons en charge l'anglais, le français et l'arabe."
+      },
+      "contactSupport": {
+        "question": "Comment puis-je contacter le support client?",
+        "answer": "Vous pouvez joindre notre équipe de support client en visitant la page 'Contact' dans le pied de page, en envoyant un email à notre adresse de support ou en nous appelant pendant les heures de bureau."
+      },
+      "dataSecure": {
+        "question": "Mes informations personnelles sont-elles sécurisées?",
+        "answer": "Oui, nous prenons très au sérieux la sécurité des données. Nous utilisons des mesures de cryptage et de sécurité standard de l'industrie pour protéger vos informations personnelles. Vous pouvez en savoir plus sur nos pratiques en matière de données dans notre Politique de confidentialité."
+      },
+      "deleteAccount": {
+        "question": "Comment puis-je supprimer mon compte?",
+        "answer": "Pour supprimer votre compte, allez dans 'Paramètres' depuis le menu déroulant de votre profil, faites défiler jusqu'au bas de la page et cliquez sur 'Supprimer le compte'. Veuillez noter que cette action est irréversible et que toutes vos données seront définitivement supprimées."
+      }
+    },
+    "privacy": {
+      "introduction": "Dans notre entreprise, nous prenons votre vie privée au sérieux. Cette Politique de confidentialité explique comment nous collectons, utilisons et protégeons vos informations personnelles lorsque vous utilisez notre service.",
+      "informationCollect": {
+        "title": "Informations que nous collectons",
+        "description": "Nous collectons plusieurs types d'informations à diverses fins pour fournir et améliorer notre service:",
+        "personalData": {
+          "title": "Données personnelles",
+          "description": "Y compris l'adresse email, le nom, le numéro de téléphone, l'adresse et d'autres données que vous fournissez lors de l'utilisation de nos services."
+        },
+        "usageData": {
+          "title": "Données d'utilisation",
+          "description": "Informations sur la façon dont vous accédez et utilisez notre service, y compris votre adresse IP, le type de navigateur, les pages visitées et le temps passé."
+        },
+        "cookies": {
+          "title": "Cookies et données de suivi",
+          "description": "Nous utilisons des cookies et des technologies de suivi similaires pour suivre l'activité sur notre service et conserver certaines informations."
+        }
+      },
+      "informationUse": {
+        "title": "Comment nous utilisons vos informations",
+        "description": "Nous utilisons les données collectées à diverses fins:",
+        "purposes": {
+          "provideService": "Pour fournir et maintenir notre service",
+          "notifyChanges": "Pour vous informer des changements apportés à notre service",
+          "customerSupport": "Pour fournir un support client",
+          "analysis": "Pour recueillir des analyses ou des informations précieuses afin d'améliorer notre service",
+          "monitorUsage": "Pour surveiller l'utilisation de notre service",
+          "technicalIssues": "Pour détecter, prévenir et résoudre les problèmes techniques"
+        }
+      },
+      "dataSecurity": {
+        "title": "Sécurité des données",
+        "description": "La sécurité de vos données est importante pour nous, mais n'oubliez pas qu'aucune méthode de transmission sur Internet ou méthode de stockage électronique n'est sécurisée à 100%. Bien que nous nous efforcions d'utiliser des moyens commercialement acceptables pour protéger vos données personnelles, nous ne pouvons pas garantir leur sécurité absolue."
+      },
+      "dataRights": {
+        "title": "Vos droits de protection des données",
+        "description": "Vous disposez des droits de protection des données suivants:",
+        "rights": {
+          "access": "Le droit d'accéder, de mettre à jour ou de supprimer les informations que nous détenons sur vous",
+          "rectification": "Le droit de rectification - le droit de faire corriger vos informations si elles sont inexactes ou incomplètes",
+          "object": "Le droit de s'opposer à notre traitement de vos données personnelles",
+          "restriction": "Le droit de restriction - le droit de demander que nous limitions le traitement de vos informations personnelles",
+          "portability": "Le droit à la portabilité des données - le droit de recevoir une copie de vos données personnelles dans un format structuré, lisible par machine",
+          "withdraw": "Le droit de retirer votre consentement à tout moment lorsque nous nous sommes appuyés sur votre consentement pour traiter vos informations personnelles"
+        }
+      },
+      "changes": {
+        "title": "Modifications de cette politique de confidentialité",
+        "description": "Nous pouvons mettre à jour notre Politique de confidentialité de temps à autre. Nous vous informerons de tout changement en publiant la nouvelle Politique de confidentialité sur cette page."
+      },
+      "contact": {
+        "title": "Contactez-nous",
+        "description": "Si vous avez des questions concernant cette Politique de confidentialité, veuillez nous contacter:",
+        "methods": {
+          "email": "Par email: {email}",
+          "phone": "Par téléphone: {phone}"
+        }
+      }
+    },
+    "terms": {
+      "introduction": "Veuillez lire attentivement ces Conditions d'utilisation (\"Conditions\", \"Conditions d'utilisation\") avant d'utiliser notre site Web et nos services.",
+      "sections": {
+        "acceptance": {
+          "title": "1. Acceptation des conditions",
+          "content": "En accédant ou en utilisant notre service, vous acceptez d'être lié par ces Conditions. Si vous n'êtes pas d'accord avec une partie des conditions, vous ne pouvez pas accéder au service."
+        },
+        "useOfService": {
+          "title": "2. Utilisation du service",
+          "content": "Notre service est conçu pour fournir aux utilisateurs une plateforme de collaboration. Vous acceptez d'utiliser le service uniquement à des fins légales et conformément à ces Conditions."
+        },
+        "userAccounts": {
+          "title": "3. Comptes utilisateurs",
+          "content": "Lorsque vous créez un compte chez nous, vous devez fournir des informations exactes, complètes et à jour. Vous êtes responsable de la protection du mot de passe que vous utilisez pour accéder au service et de toutes les activités ou actions effectuées sous votre mot de passe."
+        },
+        "intellectualProperty": {
+          "title": "4. Propriété intellectuelle",
+          "content": "Le service et son contenu original, ses fonctionnalités et ses fonctions sont et resteront la propriété exclusive de notre entreprise et de ses concédants. Le service est protégé par les lois sur le droit d'auteur, les marques de commerce et autres lois de l'Australie et des pays étrangers."
+        },
+        "userContent": {
+          "title": "5. Contenu généré par l'utilisateur",
+          "content": "Vous pouvez fournir du contenu par l'utilisation du service (\"Contenu utilisateur\"). En fournissant du Contenu utilisateur, vous nous accordez une licence mondiale, non exclusive, libre de redevances pour utiliser, reproduire, modifier, adapter, publier, traduire, distribuer et afficher ce contenu."
+        },
+        "prohibitedUses": {
+          "title": "6. Utilisations interdites",
+          "content": "Vous acceptez de ne pas utiliser le service:",
+          "items": {
+            "violateLaws": "D'une manière qui viole toute loi ou réglementation nationale ou internationale applicable",
+            "sendSpam": "Pour transmettre ou faire envoyer tout matériel publicitaire ou promotionnel, y compris du spam",
+            "impersonate": "Pour usurper l'identité ou tenter d'usurper l'identité de l'entreprise, d'un employé de l'entreprise, d'un autre utilisateur ou de toute autre personne",
+            "harmService": "D'une manière qui pourrait endommager, désactiver, surcharger ou altérer le service"
+          }
+        },
+        "termination": {
+          "title": "7. Résiliation",
+          "content": "Nous pouvons résilier ou suspendre votre compte immédiatement, sans préavis ni responsabilité, pour quelque raison que ce soit, y compris, sans limitation, si vous violez les Conditions."
+        },
+        "limitation": {
+          "title": "8. Limitation de responsabilité",
+          "content": "En aucun cas, la société, ni ses directeurs, employés, partenaires, agents, fournisseurs ou affiliés, ne seront responsables de tout dommage indirect, accessoire, spécial, consécutif ou punitif, y compris, sans limitation, la perte de profits, de données, d'utilisation, de bonne volonté ou d'autres pertes intangibles."
+        },
+        "changes": {
+          "title": "9. Modifications",
+          "content": "Nous nous réservons le droit, à notre seule discrétion, de modifier ou de remplacer ces Conditions à tout moment. Si une révision est importante, nous essaierons de fournir un préavis d'au moins 30 jours avant l'entrée en vigueur de nouvelles conditions."
+        },
+        "contact": {
+          "title": "10. Contactez-nous",
+          "content": "Si vous avez des questions concernant ces Conditions, veuillez nous contacter:",
+          "methods": {
+            "email": "Par email: {email}",
+            "phone": "Par téléphone: {phone}"
+          }
+        }
+      }
+    }
   }
 }

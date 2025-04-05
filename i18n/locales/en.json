@@ -155,5 +155,201 @@
       "appleLoginCancelled": "Apple login was cancelled.",
       "appleLoginError": "An error occurred during Apple login."
     }
+  },
+  "info": {
+    "about": {
+      "welcome": "Welcome to our platform! We are dedicated to providing an exceptional user experience with cutting-edge technology solutions.",
+      "mission": "Our mission is to empower businesses and individuals with innovative tools that enhance productivity and streamline workflows.",
+      "vision": {
+        "title": "Our Vision",
+        "description": "To become the leading provider of intuitive, secure, and scalable solutions that transform how people interact with technology."
+      },
+      "team": {
+        "title": "Our Team",
+        "description": "We are a diverse team of passionate professionals dedicated to creating exceptional experiences. Our experts come from various backgrounds including software development, design, security, and business strategy."
+      },
+      "values": {
+        "title": "Our Values",
+        "items": {
+          "innovation": {
+            "title": "Innovation",
+            "description": "We constantly push the boundaries of what's possible"
+          },
+          "security": {
+            "title": "Security",
+            "description": "We prioritize the safety and privacy of our users' data"
+          },
+          "inclusivity": {
+            "title": "Inclusivity",
+            "description": "We design solutions that work for everyone"
+          },
+          "excellence": {
+            "title": "Excellence",
+            "description": "We strive for the highest quality in everything we do"
+          }
+        }
+      }
+    },
+    "getInTouch": "Get in Touch",
+    "contactDescription": "We'd love to hear from you! Fill out the form and our team will get back to you as soon as possible.",
+    "yourName": "Your Name",
+    "emailAddress": "Email Address",
+    "subject": "Subject",
+    "message": "Message",
+    "sendMessage": "Send Message",
+    "frequentlyAskedQuestions": "Frequently Asked Questions",
+    "needMoreHelp": "Need More Help?",
+    "couldntFindAnswer": "If you couldn't find the answer to your question in our FAQ, please don't hesitate to contact us:",
+    "emailSupport": "Email Support",
+    "sendEmailAnytime": "Send us an email anytime",
+    "phoneSupport": "Phone Support",
+    "phoneHours": "Mon-Fri, 9am-5pm AEST",
+    "liveChat": "Live Chat",
+    "available24_7": "Available 24/7",
+    "startChat": "Start Chat",
+    "faq": {
+      "createAccount": {
+        "question": "How do I create an account?",
+        "answer": "To create an account, click on the 'Sign Up' button in the top-right corner of the page. Fill in your details including name, email, and password, then click 'Create Free Account'. You'll receive a verification email to activate your account."
+      },
+      "forgotPassword": {
+        "question": "I forgot my password. How can I reset it?",
+        "answer": "Click on the 'Sign In' button, then select 'Forgot your password?'. Enter the email address associated with your account and follow the instructions sent to your email to reset your password."
+      },
+      "changeSettings": {
+        "question": "How do I change my account settings?",
+        "answer": "After signing in, click on your profile picture or name in the top-right corner, then select 'Settings'. From there, you can update your profile information, change your password, and manage notification preferences."
+      },
+      "changeLanguage": {
+        "question": "Can I change the language of the interface?",
+        "answer": "Yes, you can change the language by clicking on the language selector in the top navigation bar or footer. Currently, we support English, French, and Arabic."
+      },
+      "contactSupport": {
+        "question": "How do I contact customer support?",
+        "answer": "You can reach our customer support team by visiting the 'Contact' page in the footer, sending an email to our support address, or calling us during business hours."
+      },
+      "dataSecure": {
+        "question": "Is my personal information secure?",
+        "answer": "Yes, we take data security very seriously. We use industry-standard encryption and security measures to protect your personal information. You can learn more about our data practices in our Privacy Policy."
+      },
+      "deleteAccount": {
+        "question": "How do I delete my account?",
+        "answer": "To delete your account, go to 'Settings' from your profile dropdown, scroll to the bottom of the page, and click on 'Delete Account'. Please note that this action is irreversible and all your data will be permanently removed."
+      }
+    },
+    "privacy": {
+      "introduction": "At our company, we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your personal information when you use our service.",
+      "informationCollect": {
+        "title": "Information We Collect",
+        "description": "We collect several types of information for various purposes to provide and improve our service to you:",
+        "personalData": {
+          "title": "Personal Data",
+          "description": "Including email address, name, phone number, address, and other data you provide when using our services."
+        },
+        "usageData": {
+          "title": "Usage Data",
+          "description": "Information on how you access and use our service, including your IP address, browser type, pages visited, and time spent."
+        },
+        "cookies": {
+          "title": "Cookies and Tracking Data",
+          "description": "We use cookies and similar tracking technologies to track activity on our service and hold certain information."
+        }
+      },
+      "informationUse": {
+        "title": "How We Use Your Information",
+        "description": "We use the collected data for various purposes:",
+        "purposes": {
+          "provideService": "To provide and maintain our service",
+          "notifyChanges": "To notify you about changes to our service",
+          "customerSupport": "To provide customer support",
+          "analysis": "To gather analysis or valuable information to improve our service",
+          "monitorUsage": "To monitor the usage of our service",
+          "technicalIssues": "To detect, prevent and address technical issues"
+        }
+      },
+      "dataSecurity": {
+        "title": "Data Security",
+        "description": "The security of your data is important to us, but remember that no method of transmission over the Internet or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your personal data, we cannot guarantee its absolute security."
+      },
+      "dataRights": {
+        "title": "Your Data Protection Rights",
+        "description": "You have the following data protection rights:",
+        "rights": {
+          "access": "The right to access, update or delete the information we have on you",
+          "rectification": "The right of rectification - the right to have your information corrected if it is inaccurate or incomplete",
+          "object": "The right to object to our processing of your personal data",
+          "restriction": "The right of restriction - the right to request that we restrict the processing of your personal information",
+          "portability": "The right to data portability - the right to receive a copy of your personal data in a structured, machine-readable format",
+          "withdraw": "The right to withdraw consent at any time where we relied on your consent to process your personal information"
+        }
+      },
+      "changes": {
+        "title": "Changes to This Privacy Policy",
+        "description": "We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "If you have any questions about this Privacy Policy, please contact us:",
+        "methods": {
+          "email": "By email: {email}",
+          "phone": "By phone: {phone}"
+        }
+      }
+    },
+    "terms": {
+      "introduction": "Please read these Terms of Service (\"Terms\", \"Terms of Service\") carefully before using our website and services.",
+      "sections": {
+        "acceptance": {
+          "title": "1. Acceptance of Terms",
+          "content": "By accessing or using our service, you agree to be bound by these Terms. If you disagree with any part of the terms, you may not access the service."
+        },
+        "useOfService": {
+          "title": "2. Use of Service",
+          "content": "Our service is designed to provide users with a platform for collaboration. You agree to use the service only for lawful purposes and in accordance with these Terms."
+        },
+        "userAccounts": {
+          "title": "3. User Accounts",
+          "content": "When you create an account with us, you must provide accurate, complete, and up-to-date information. You are responsible for safeguarding the password that you use to access the service and for any activities or actions under your password."
+        },
+        "intellectualProperty": {
+          "title": "4. Intellectual Property",
+          "content": "The service and its original content, features, and functionality are and will remain the exclusive property of our company and its licensors. The service is protected by copyright, trademark, and other laws of both Australia and foreign countries."
+        },
+        "userContent": {
+          "title": "5. User-Generated Content",
+          "content": "You may provide content through the use of the service (\"User Content\"). By providing User Content, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, adapt, publish, translate, distribute, and display such content."
+        },
+        "prohibitedUses": {
+          "title": "6. Prohibited Uses",
+          "content": "You agree not to use the service:",
+          "items": {
+            "violateLaws": "In any way that violates any applicable national or international law or regulation",
+            "sendSpam": "To transmit, or procure the sending of, any advertising or promotional material, including spam",
+            "impersonate": "To impersonate or attempt to impersonate the company, a company employee, another user, or any other person",
+            "harmService": "In any way that could harm, disable, overburden, or impair the service"
+          }
+        },
+        "termination": {
+          "title": "7. Termination",
+          "content": "We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms."
+        },
+        "limitation": {
+          "title": "8. Limitation of Liability",
+          "content": "In no event shall the company, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses."
+        },
+        "changes": {
+          "title": "9. Changes",
+          "content": "We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days notice prior to any new terms taking effect."
+        },
+        "contact": {
+          "title": "10. Contact Us",
+          "content": "If you have any questions about these Terms, please contact us:",
+          "methods": {
+            "email": "By email: {email}",
+            "phone": "By phone: {phone}"
+          }
+        }
+      }
+    }
   }
 }
