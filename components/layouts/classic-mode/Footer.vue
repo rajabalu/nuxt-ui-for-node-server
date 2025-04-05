@@ -8,27 +8,27 @@ const footerLinks = computed(() => [
   {
     title: t("footer.help"),
     icon: "tabler-help-circle",
-    to: "/help"
+    to: "/info/help"
   },
   {
     title: t("footer.terms"),
     icon: "tabler-file-text",
-    to: "/terms"
+    to: "/info/terms"
   },
   {
     title: t("footer.privacy"),
     icon: "tabler-shield-lock",
-    to: "/privacy"
+    to: "/info/privacy"
   },
   {
     title: t("footer.contact"),
     icon: "tabler-mail",
-    to: "/contact"
+    to: "/info/contact"
   },
   {
     title: t("footer.about"),
     icon: "tabler-info-circle",
-    to: "/about"
+    to: "/info/about"
   }
 ]);
 
