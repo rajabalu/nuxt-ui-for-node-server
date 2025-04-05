@@ -41,7 +41,9 @@
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
     "and": "and",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "languageChanged": "Language changed successfully",
+    "languageChangeError": "Failed to change language"
   },
   "settings": {
     "confirmPasswordChange": "Confirm Password Change",

@@ -139,7 +139,7 @@ const handleLoadMore = () => {
           </template>
           <template v-else-if="notifications.length === 0">
              <v-list-item>
-              <v-list-item-title>No notifications</v-list-item-title>
+              <v-list-item-title>{{ t('notifications.noNotifications') }}</v-list-item-title>
             </v-list-item>
           </template>
            <template v-else>
@@ -151,7 +151,7 @@ const handleLoadMore = () => {
                 :value="item.id" 
                 active-color="primary"
               >
-                <v-list-item-title class="text-subtitle-1 mb-1">{{ item.notificationType || 'Notification' }}</v-list-item-title>
+                <v-list-item-title class="text-subtitle-1 mb-1">{{ item.notificationType || t('notifications.defaultTitle') }}</v-list-item-title>
                 <v-list-item-subtitle class="text-body-2 text-grey-darken-1 text-truncate">{{ item.message }}</v-list-item-subtitle>
                 
                  <template v-slot:append>
@@ -203,7 +203,7 @@ const handleLoadMore = () => {
                 @click="handleLoadMore" 
                 :loading="loading"
               >
-                Load More
+                {{ t('common.loadMore') }}
               </v-btn>
             </v-list-item>
           </template>
@@ -233,7 +233,7 @@ const handleLoadMore = () => {
       <v-divider/>
       <v-card-text class="py-4" style="max-height: 400px; overflow-y: auto;">
         <p class="text-body-1">{{ selectedNotification.message }}</p>
-        <p class="text-caption text-grey mt-2">Received: {{ new Date(selectedNotification.createdAt).toLocaleString() }}</p>
+        <p class="text-caption text-grey mt-2">{{ t('notifications.received') }}: {{ new Date(selectedNotification.createdAt).toLocaleString() }}</p>
       </v-card-text>
        <v-divider/>
       <v-card-actions class="pa-3 justify-end ga-2">

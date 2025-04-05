@@ -42,7 +42,9 @@
     "termsOfService": "شروط الخدمة",
     "privacyPolicy": "سياسة الخصوصية",
     "and": "و",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "languageChanged": "تم تغيير اللغة بنجاح",
+    "languageChangeError": "فشل في تغيير اللغة"
   },
   "notifications": {
     "title": "الإشعارات",

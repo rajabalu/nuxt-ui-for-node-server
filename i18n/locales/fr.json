@@ -42,7 +42,9 @@
     "termsOfService": "Conditions d'utilisation",
     "privacyPolicy": "Politique de confidentialité",
     "and": "et",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "languageChanged": "Langue changée avec succès",
+    "languageChangeError": "Échec du changement de langue"
   },
   "notifications": {
     "title": "Notifications",

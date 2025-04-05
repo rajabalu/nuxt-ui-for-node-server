@@ -19,14 +19,14 @@
     color="success"
     location="top"
   >
-    {{ preferencesHelper.syncMessage }}
+    {{ successMessage }}
     <template v-slot:actions>
       <v-btn
         color="white"
         variant="text"
         @click="showSyncMessage = false"
       >
-        Close
+        {{ t('common.close') }}
       </v-btn>
     </template>
   </v-snackbar>
@@ -46,6 +46,7 @@ const { locale, locales, setLocale, t } = useI18n();
 // Use the preferences helper
 const preferencesHelper = useUserPreferencesHelper();
 const showSyncMessage = ref(false);
+const successMessage = ref('');
 
 // Get router for navigation
 const router = useRouter();
@@ -70,13 +71,22 @@ onMounted(() => {
   }
 });
 
-// Function to show sync message temporarily
-const displaySyncMessage = () => {
-  if (preferencesHelper.syncMessage.value) {
+// Function to show sync message temporarily with the message in the new language
+const displaySyncMessage = (newLocale) => {
+  // Set the success message using the new locale's translation
+  try {
+    // First load the messages for the new locale
+    successMessage.value = t('common.languageChanged');
+    
+    // Show the snackbar
     showSyncMessage.value = true;
+    
+    // Hide after timeout
     setTimeout(() => {
       showSyncMessage.value = false;
-    }, 3000); // Hide after 3 seconds
+    }, 3000);
+  } catch (e) {
+    console.warn('[LanguageSwitcher] Error displaying message:', e);
   }
 };
 
@@ -94,14 +104,17 @@ const changeLanguage = async (lang) => {
     // Save the language preference (now returns promise)
     await preferencesHelper.saveLanguagePreference(lang);
     
-    // Show sync message
-    displaySyncMessage();
-    
     // Apply language change
-    preferencesHelper.applyLanguage(lang);
+    await preferencesHelper.applyLanguage(lang);
     
     // Apply RTL direction
     const isRTL = applyRTLDirection(lang);
+    
+    // Wait for the language change to be applied
+    await nextTick();
+    
+    // Show message in the new language
+    displaySyncMessage(lang);
     
     // Force page refresh if we're switching to Arabic and RTL is not applied properly
     if (isRTL && document.documentElement.dir !== 'rtl') {
