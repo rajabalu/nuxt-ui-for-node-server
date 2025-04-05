@@ -188,6 +188,12 @@
             "description": "We strive for the highest quality in everything we do"
           }
         }
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "We'd love to hear from you. Here's how to reach us:",
+        "addressTitle": "Our Office",
+        "addressInfo": "Visit us at our headquarters: {address}"
       }
     },
     "getInTouch": "Get in Touch",
@@ -201,9 +207,9 @@
     "needMoreHelp": "Need More Help?",
     "couldntFindAnswer": "If you couldn't find the answer to your question in our FAQ, please don't hesitate to contact us:",
     "emailSupport": "Email Support",
-    "sendEmailAnytime": "Send us an email anytime",
+    "sendEmailAnytime": "Send us an email anytime at ",
     "phoneSupport": "Phone Support",
-    "phoneHours": "Mon-Fri, 9am-5pm AEST",
+    "phoneHours": "Mon-Fri, 9am-5pm AEST | {phone}",
     "liveChat": "Live Chat",
     "available24_7": "Available 24/7",
     "startChat": "Start Chat",
@@ -342,7 +348,7 @@
           "content": "We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days notice prior to any new terms taking effect."
         },
         "contact": {
-          "title": "10. Contact Us",
+          "title": "Contact Us",
           "content": "If you have any questions about these Terms, please contact us:",
           "methods": {
             "email": "By email: {email}",

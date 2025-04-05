@@ -75,9 +75,12 @@ const handleSubmit = () => {
                   
                   <v-list-item v-if="contactAddress">
                     <template v-slot:prepend>
-                      <v-icon icon="tabler-map-pin" class="mr-2"></v-icon>
+                      <v-icon icon="tabler-map-pin" class="mr-2 mt-0"></v-icon>
                     </template>
-                    <v-list-item-title>{{ contactAddress }}</v-list-item-title>
+                    <div>
+                      <div class="font-weight-bold">{{ t('info.about.contact.addressTitle') }}</div>
+                      <div class="text-wrap">{{ contactAddress }}</div>
+                    </div>
                   </v-list-item>
                 </v-list>
               </div>

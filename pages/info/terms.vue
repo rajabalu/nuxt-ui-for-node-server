@@ -11,6 +11,7 @@ definePageMeta({
 
 const contactPhone = computed(() => config.public.CONTACT_PHONE || '');
 const contactEmail = computed(() => config.public.CONTACT_EMAIL || '');
+const contactAddress = computed(() => config.public.CONTACT_ADDRESS || '');
 </script>
 
 <template>
@@ -84,10 +85,31 @@ const contactEmail = computed(() => config.public.CONTACT_EMAIL || '');
               {{ t('info.terms.sections.contact.content') }}
             </p>
             
-            <ul class="ml-6 mb-6" v-if="contactEmail || contactPhone">
-              <li class="mb-2" v-if="contactEmail">{{ t('info.terms.sections.contact.methods.email', { email: contactEmail }) }}</li>
-              <li class="mb-2" v-if="contactPhone">{{ t('info.terms.sections.contact.methods.phone', { phone: contactPhone }) }}</li>
-            </ul>
+            <v-list v-if="contactEmail || contactPhone || contactAddress">
+              <v-list-item v-if="contactEmail">
+                <template v-slot:prepend>
+                  <v-icon icon="tabler-mail" class="mr-2"></v-icon>
+                </template>
+                <v-list-item-title>{{ contactEmail }}</v-list-item-title>
+              </v-list-item>
+              
+              <v-list-item v-if="contactPhone">
+                <template v-slot:prepend>
+                  <v-icon icon="tabler-phone" class="mr-2"></v-icon>
+                </template>
+                <v-list-item-title>{{ contactPhone }}</v-list-item-title>
+              </v-list-item>
+              
+              <v-list-item v-if="contactAddress">
+                <template v-slot:prepend>
+                  <v-icon icon="tabler-map-pin" class="mr-2 mt-0"></v-icon>
+                </template>
+                <div>
+                  <div class="font-weight-bold">{{ t('info.about.contact.addressTitle') }}</div>
+                  <div class="text-wrap">{{ contactAddress }}</div>
+                </div>
+              </v-list-item>
+            </v-list>
           </div>
         </v-card>
       </v-col>

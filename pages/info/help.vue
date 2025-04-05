@@ -95,7 +95,7 @@ const faqItems = computed(() => [
                   <div class="d-flex flex-column align-center text-center">
                     <v-icon icon="tabler-mail" size="36" class="mb-4 text-primary"></v-icon>
                     <h3 class="text-h6 mb-2">{{ t('info.emailSupport') }}</h3>
-                    <p class="mb-2">{{ t('info.sendEmailAnytime') }}</p>
+                    <p class="mb-2">{{ t('info.sendEmailAnytime', { email: contactEmail }) }}</p>
                     <a v-if="contactEmail" :href="`mailto:${contactEmail}`" class="text-decoration-none">{{ contactEmail }}</a>
                   </div>
                 </v-card>
@@ -106,7 +106,7 @@ const faqItems = computed(() => [
                   <div class="d-flex flex-column align-center text-center">
                     <v-icon icon="tabler-phone" size="36" class="mb-4 text-primary"></v-icon>
                     <h3 class="text-h6 mb-2">{{ t('info.phoneSupport') }}</h3>
-                    <p class="mb-2">{{ t('info.phoneHours') }}</p>
+                    <p class="mb-2">{{ t('info.phoneHours', { phone: contactPhone }) }}</p>
                     <a v-if="contactPhone" :href="`tel:${contactPhone.replace ? contactPhone.replace(/\s/g, '') : contactPhone}`" class="text-decoration-none">{{ contactPhone }}</a>
                   </div>
                 </v-card>

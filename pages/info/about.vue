@@ -1,11 +1,17 @@
 <script setup>
 import { useI18n } from "vue-i18n";
+import { computed } from "vue";
 
 const { t } = useI18n();
+const config = useRuntimeConfig();
 
 definePageMeta({
   middleware: 'public'
 });
+
+const contactPhone = computed(() => config.public.CONTACT_PHONE || '');
+const contactEmail = computed(() => config.public.CONTACT_EMAIL || '');
+const contactAddress = computed(() => config.public.CONTACT_ADDRESS || '');
 </script>
 
 <template>
@@ -56,6 +62,37 @@ definePageMeta({
               <v-list-item>
                 <v-list-item-title>{{ t('info.about.values.items.excellence.title') }}</v-list-item-title>
                 <v-list-item-subtitle>{{ t('info.about.values.items.excellence.description') }}</v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+            
+            <h2 class="text-h5 mb-3 mt-6">{{ t('info.about.contact.title') }}</h2>
+            <p class="mb-4">
+              {{ t('info.about.contact.description') }}
+            </p>
+            
+            <v-list v-if="contactEmail || contactPhone || contactAddress">
+              <v-list-item v-if="contactEmail">
+                <template v-slot:prepend>
+                  <v-icon icon="tabler-mail" class="mr-2"></v-icon>
+                </template>
+                <v-list-item-title>{{ contactEmail }}</v-list-item-title>
+              </v-list-item>
+              
+              <v-list-item v-if="contactPhone">
+                <template v-slot:prepend>
+                  <v-icon icon="tabler-phone" class="mr-2"></v-icon>
+                </template>
+                <v-list-item-title>{{ contactPhone }}</v-list-item-title>
+              </v-list-item>
+              
+              <v-list-item v-if="contactAddress">
+                <template v-slot:prepend>
+                  <v-icon icon="tabler-map-pin" class="mr-2 mt-0"></v-icon>
+                </template>
+                <div>
+                  <div class="font-weight-bold">{{ t('info.about.contact.addressTitle') }}</div>
+                  <div class="text-wrap">{{ contactAddress }}</div>
+                </div>
               </v-list-item>
             </v-list>
           </div>
