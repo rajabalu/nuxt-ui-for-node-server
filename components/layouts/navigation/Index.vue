@@ -3,6 +3,7 @@ import Dashboard from "./Dashboard.vue";
 import LayoutAndPage from "./LayoutAndPage.vue";
 import UiComponents from "./UiComponents.vue";
 import Docs from "./Docs.vue";
+import Admin from "./Admin.vue";
 
 defineProps({
   isVertical: {
@@ -14,6 +15,7 @@ defineProps({
 
 <template>
   <v-list v-if="isVertical" class="vertical-nav-list">
+    <admin />
     <dashboard />
     <layout-and-page />
     <ui-components />
