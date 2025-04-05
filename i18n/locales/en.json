@@ -43,7 +43,8 @@
     "and": "and",
     "cancel": "Cancel",
     "languageChanged": "Language changed successfully",
-    "languageChangeError": "Failed to change language"
+    "languageChangeError": "Failed to change language",
+    "about": "About Us"
   },
   "footer": {
     "copyright": "All Rights Reserved",
@@ -158,6 +159,8 @@
   },
   "info": {
     "about": {
+      "title": "About Our Company",
+      "shortDescription": "Learn more about our mission, vision, and the team behind our platform.",
       "welcome": "Welcome to our platform! We are dedicated to providing an exceptional user experience with cutting-edge technology solutions.",
       "mission": "Our mission is to empower businesses and individuals with innovative tools that enhance productivity and streamline workflows.",
       "vision": {

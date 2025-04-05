@@ -44,7 +44,8 @@
     "and": "et",
     "cancel": "Annuler",
     "languageChanged": "Langue changée avec succès",
-    "languageChangeError": "Échec du changement de langue"
+    "languageChangeError": "Échec du changement de langue",
+    "about": "À propos de nous"
   },
   "footer": {
     "copyright": "Tous droits réservés",
@@ -150,6 +151,8 @@
   },
   "info": {
     "about": {
+      "title": "À propos de notre entreprise",
+      "shortDescription": "En savoir plus sur notre mission, notre vision et l'équipe derrière notre plateforme.",
       "welcome": "Bienvenue sur notre plateforme! Nous nous engageons à fournir une expérience utilisateur exceptionnelle avec des solutions technologiques de pointe.",
       "mission": "Notre mission est de donner aux entreprises et aux particuliers les moyens d'utiliser des outils innovants qui améliorent la productivité et simplifient les flux de travail.",
       "vision": {
