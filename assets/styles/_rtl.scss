@@ -14,6 +14,7 @@
     text-align: inherit;
   }
   
+  // Basic text alignment classes
   .text-start {
     text-align: right !important;
   }
@@ -30,6 +31,53 @@
     text-align: left !important;
   }
 
+  // General content elements - force RTL alignment for common content
+  p, h1, h2, h3, h4, h5, h6, span, div:not(.v-expansion-panel-text__wrapper):not(.d-flex):not(.text-center) {
+    text-align: right;
+  }
+  
+  // Fix for numbered and bulleted lists
+  ul, ol {
+    text-align: right;
+    padding-right: 20px;
+    padding-left: 0;
+  }
+  
+  // Special treatment for numbered lists in content pages
+  ol {
+    li {
+      display: block;
+      position: relative;
+      padding-right: 5px;
+    }
+  }
+  
+  // Fix for ordered lists with numbers
+  ol > li {
+    position: relative;
+    margin-bottom: 10px;
+    
+    &:before {
+      position: absolute;
+      right: -22px;
+    }
+  }
+  
+  // Extra fix for terms page and similar content
+  ol > li, ul > li {
+    text-align: right;
+    direction: rtl;
+  }
+  
+  li {
+    text-align: right;
+  }
+  
+  // Force all containers to respect RTL
+  .v-container, .v-row, .v-col, .v-card {
+    text-align: right;
+  }
+  
   /* =================== */
   /* 2. Margins & Padding */
   /* =================== */
@@ -154,6 +202,32 @@
     margin-right: 8px;
   }
   
+  // Fix for expansion panels in RTL mode
+  .v-expansion-panel-title {
+    flex-direction: row-reverse;
+    
+    .v-expansion-panel-title__icon {
+      margin-left: 0;
+      margin-right: auto;
+      transform: rotate(180deg);
+    }
+  }
+  
+  .v-expansion-panel-text__wrapper {
+    text-align: right;
+  }
+  
+  // Fix for card layouts in RTL mode
+  .v-card {
+    &__title, &__subtitle, &__text {
+      text-align: right;
+    }
+    
+    .text-center {
+      text-align: center !important;
+    }
+  }
+  
   // Settings specific UI elements
   .v-tabs--vertical .v-tab {
     text-align: right;
@@ -228,6 +302,70 @@
       }
     }
   }
+
+  /* =================== */
+  /* 8. Flex Containers */
+  /* =================== */
+  // Fix alignment for flex containers in RTL
+  .d-flex {
+    &.flex-row {
+      flex-direction: row-reverse !important;
+    }
+    
+    &.align-center, &.justify-center {
+      // Keep centered items in place
+      &.text-center {
+        text-align: center !important;
+      }
+    }
+  }
+
+  // Keep center alignment for flex columns
+  .flex-column {
+    &.align-center {
+      align-items: center !important;
+      text-align: inherit;
+    }
+  }
+
+  /* =================== */
+  /* 9. Content Elements */
+  /* =================== */
+  // Fix for numbered lists
+  ol {
+    counter-reset: item;
+    list-style-type: none;
+    padding-right: 20px !important;
+    
+    > li {
+      position: relative;
+      
+      &:before {
+        content: counters(item, ".") ". ";
+        counter-increment: item;
+        position: absolute;
+        right: -20px;
+      }
+    }
+  }
+
+  // Fix for nested content
+  .v-container, .v-row, .v-col {
+    * {
+      direction: inherit;
+    }
+  }
+
+  // Fix for text and paragraphs to properly respect RTL
+  p {
+    text-align: right !important;
+    direction: rtl !important;
+  }
+
+  // Force RTL on all content - this is necessary for proper text rendering
+  .v-application__wrap, .v-main {
+    direction: rtl;
+  }
 }
 
 /* Specific fixes for Vuetify's RTL support */
@@ -247,6 +385,30 @@
     .v-field--prepended {
       padding-right: 12px;
       padding-left: 0;
+    }
+    
+    // Ensure all content within the application has RTL direction
+    .v-main__wrap {
+      direction: rtl;
+      text-align: right;
+    }
+    
+    // Fix for all card content
+    .v-card {
+      &-title, &-text, &-subtitle, &__title, &__text, &__subtitle {
+        text-align: right !important;
+      }
+    }
+    
+    // Fix for v-divider spacing
+    .v-divider {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    
+    // Fix for all headings
+    h1, h2, h3, h4, h5, h6, .text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6 {
+      text-align: right !important;
     }
   }
 }
