@@ -154,6 +154,8 @@ export default defineNuxtConfig({
     '~/plugins/facebook-sdk.js',
     '~/plugins/google-sdk.js',
     '~/plugins/apple-sdk.js',
+    // RTL support plugin
+    '~/plugins/rtl-support.client.js',
     // Other plugins will be loaded automatically
   ],
   
