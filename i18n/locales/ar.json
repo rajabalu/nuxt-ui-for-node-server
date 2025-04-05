@@ -76,6 +76,10 @@
     "resetPasswordBtn": "إعادة تعيين كلمة المرور",
     "emailConfirmTitle": "تأكيد البريد الإلكتروني",
     "emailConfirmMetaDescription": "تحقق من عنوان بريدك الإلكتروني لإكمال تسجيلك.",
+    "continueWithFacebook": "المتابعة باستخدام فيسبوك",
+    "continueWithGoogle": "المتابعة باستخدام جوجل",
+    "continueWithApple": "المتابعة باستخدام آبل",
+    "orContinueWith": "أو المتابعة باستخدام",
     "emailVerification": {
       "verifying": "جاري التحقق من عنوان بريدك الإلكتروني...",
       "successTitle": "تم التحقق من البريد الإلكتروني بنجاح!",
@@ -111,9 +115,14 @@
       "invalidResetLink": "رابط إعادة التعيين غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.",
       "facebookLoginFailed": "فشل تسجيل الدخول باستخدام فيسبوك. يرجى المحاولة مرة أخرى.",
       "facebookLoginCancelled": "تم إلغاء تسجيل الدخول باستخدام فيسبوك.",
-      "facebookLoginError": "حدث خطأ أثناء تسجيل الدخول باستخدام فيسبوك."
-    },
-    "continueWithFacebook": "المتابعة باستخدام فيسبوك"
+      "facebookLoginError": "حدث خطأ أثناء تسجيل الدخول باستخدام فيسبوك.",
+      "googleLoginFailed": "فشل تسجيل الدخول باستخدام جوجل. يرجى المحاولة مرة أخرى.",
+      "googleLoginCancelled": "تم إلغاء تسجيل الدخول باستخدام جوجل.",
+      "googleLoginError": "حدث خطأ أثناء تسجيل الدخول باستخدام جوجل.",
+      "appleLoginFailed": "فشل تسجيل الدخول باستخدام آبل. يرجى المحاولة مرة أخرى.",
+      "appleLoginCancelled": "تم إلغاء تسجيل الدخول باستخدام آبل.",
+      "appleLoginError": "حدث خطأ أثناء تسجيل الدخول باستخدام آبل."
+    }
   },
   "settings": {
     "confirmPasswordChange": "تأكيد تغيير كلمة المرور",

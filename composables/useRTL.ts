@@ -1,5 +1,6 @@
 import { computed, ref, readonly, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { RTL_LANGUAGES, isRTLLanguage } from '@/utils/rtl-config';
 
 type FlexDirection = 'row' | 'row-reverse' | 'column' | 'column-reverse';
 
@@ -19,9 +20,6 @@ function createRTLUtils() {
   const isRTLRef = ref(false);
   const isInitializedRef = ref(false);
   
-  // List of RTL languages - can be expanded as needed
-  const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
-  
   // Function to initialize with i18n - can be called later when i18n is available
   const initWithI18n = () => {
     try {
@@ -33,14 +31,14 @@ function createRTLUtils() {
       
       const { locale } = useI18n();
       
-      // Update the isRTL value reactively based on locale
-      isRTLRef.value = rtlLanguages.includes(locale.value);
+      // Update the isRTL value reactively based on locale using centralized config
+      isRTLRef.value = isRTLLanguage(locale.value);
       isInitializedRef.value = true;
       
       // Watch for locale changes
       if (locale && 'value' in locale) {
         watch(locale, (newLocale) => {
-          isRTLRef.value = rtlLanguages.includes(newLocale);
+          isRTLRef.value = isRTLLanguage(newLocale);
         });
       }
       
@@ -58,11 +56,12 @@ function createRTLUtils() {
   // Try again after a delay if not initialized (for plugins)
   if (!isInitializedRef.value && typeof window !== 'undefined') {
     nextTick(() => {
-      setTimeout(() => {
+      // Use requestAnimationFrame instead of setTimeout for better timing
+      requestAnimationFrame(() => {
         if (!isInitializedRef.value) {
           initWithI18n();
         }
-      }, 100);
+      });
     });
   }
   
@@ -90,8 +89,8 @@ function createRTLUtils() {
   
   // Computed dynamic classes that can be used with v-bind
   const rtlClasses = computed(() => ({
-    'rtl-enabled': isRTL.value,
-    'ltr-enabled': !isRTL.value
+    'rtl': isRTL.value,
+    'ltr': !isRTL.value
   }));
   
   // Function to conditionally flip a CSS property based on RTL

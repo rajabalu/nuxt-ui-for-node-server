@@ -14,6 +14,7 @@ import { forceLoadMessages, applyRTLDirection, getLocalizedPath } from '@/utils/
 import { useNuxtApp } from '#app';
 import { useRouter } from 'vue-router';
 import { useTheme } from 'vuetify';
+import { useRTL } from '@/composables/useRTL';
 
 // Initialize user preferences store
 const userPreferencesStore = useUserPreferences();
@@ -22,13 +23,14 @@ const { locale } = useI18n();
 const nuxtApp = useNuxtApp();
 const router = useRouter();
 const theme = useTheme();
+const rtlUtils = useRTL();
 
 // Watch for changes in the locale and update everything accordingly
 watch(locale, async (newLocale) => {
   if (!newLocale) return;
   
   try {
-    // Apply RTL settings
+    // Apply RTL settings using the centralized function
     applyRTLDirection(newLocale);
     
     // Force i18n to reload the messages

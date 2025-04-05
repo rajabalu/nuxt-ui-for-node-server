@@ -1,5 +1,6 @@
 import { watch } from 'vue';
 import { useRTL } from '~/composables/useRTL';
+import { applyRTLToDocument } from '~/utils/rtl-config';
 
 // Define a type for the plugin with a _plugins property
 interface NuxtAppWithPlugins {
@@ -33,9 +34,8 @@ export default defineNuxtPlugin({
       // Create the RTL utilities
       const rtlUtils = useRTL();
       
-      // Add a global mixin - deferred to avoid Vue setup context issues
-      // Use setTimeout to defer mixin addition
-      setTimeout(() => {
+      // Add a global mixin - use nextTick instead of setTimeout for better timing
+      nuxtApp.hook('app:mounted', () => {
         try {
           app.vueApp.mixin({
             computed: {
@@ -48,16 +48,22 @@ export default defineNuxtPlugin({
         } catch (err) {
           console.warn('[rtl-support] Error adding RTL mixin:', err);
         }
-      }, 0);
+      });
       
       // Apply RTL-specific CSS classes to the document when in RTL mode
       if (typeof window !== 'undefined') {
+        // Initial application based on current locale
+        if (i18n && i18n.locale && i18n.locale.value) {
+          applyRTLToDocument(i18n.locale.value);
+        }
+        
+        // Watch for RTL changes
         watch(() => rtlUtils.isRTL.value, (isRTL) => {
           if (isRTL) {
-            document.documentElement.classList.add('rtl-mode');
+            document.documentElement.classList.add('rtl');
             document.documentElement.dir = 'rtl';
           } else {
-            document.documentElement.classList.remove('rtl-mode');
+            document.documentElement.classList.remove('rtl');
             document.documentElement.dir = 'ltr';
           }
         }, { immediate: true });

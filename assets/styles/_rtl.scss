@@ -296,4 +296,117 @@
   &:dir(rtl) {
     flex-direction: row-reverse !important;
   }
+}
+
+/**
+ * RTL Support Stylesheet
+ * Provides utility CSS variables and classes for RTL support
+ */
+
+:root {
+  // Directional variables for consistent RTL/LTR support
+  --start-direction: left;
+  --end-direction: right;
+  --text-align-start: left;
+  --text-align-end: right;
+  --float-start: left;
+  --float-end: right;
+  --origin-start: left;
+  --origin-end: right;
+  --border-start: border-left;
+  --border-end: border-right;
+  --margin-start: margin-left;
+  --margin-end: margin-right;
+  --padding-start: padding-left;
+  --padding-end: padding-right;
+  --translate-direction: 1; // 1 for LTR, -1 for RTL
+  --flex-direction: row;
+}
+
+// RTL mode - flip all directional variables
+html.rtl, body.rtl, .rtl {
+  --start-direction: right;
+  --end-direction: left;
+  --text-align-start: right;
+  --text-align-end: left;
+  --float-start: right;
+  --float-end: left;
+  --origin-start: right;
+  --origin-end: left;
+  --border-start: border-right;
+  --border-end: border-left;
+  --margin-start: margin-right;
+  --margin-end: margin-left;
+  --padding-start: padding-right;
+  --padding-end: padding-left;
+  --translate-direction: -1;
+  --flex-direction: row-reverse;
+}
+
+// RTL Utility Classes
+.text-start {
+  text-align: var(--text-align-start) !important;
+}
+
+.text-end {
+  text-align: var(--text-align-end) !important;
+}
+
+.float-start {
+  float: var(--float-start) !important;
+}
+
+.float-end {
+  float: var(--float-end) !important;
+}
+
+.margin-start {
+  margin-left: 0;
+  margin-right: 0;
+  margin-inline-start: var(--start-direction) !important;
+}
+
+.margin-end {
+  margin-left: 0;
+  margin-right: 0;
+  margin-inline-end: var(--end-direction) !important;
+}
+
+.padding-start {
+  padding-left: 0;
+  padding-right: 0;
+  padding-inline-start: var(--start-direction) !important;
+}
+
+.padding-end {
+  padding-left: 0;
+  padding-right: 0;
+  padding-inline-end: var(--end-direction) !important;
+}
+
+.flex-row {
+  flex-direction: var(--flex-direction) !important;
+}
+
+// Fix for Vuetify components in RTL mode
+.rtl {
+  .v-btn__prepend {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+  
+  .v-btn__append {
+    margin-left: 0;
+    margin-right: 8px;
+  }
+  
+  .v-list-item__prepend {
+    margin-right: 0;
+    margin-left: 16px;
+  }
+  
+  .v-list-item__append {
+    margin-left: 0;
+    margin-right: 16px;
+  }
 } 

@@ -1,6 +1,7 @@
 /**
  * Helper utilities for i18n translation loading and management
  */
+import { isRTLLanguage, applyRTLToDocument } from './rtl-config';
 
 /**
  * Force loads translation messages for a specific locale
@@ -92,19 +93,11 @@ export const forceLoadMessages = async (i18n, locale) => {
 
 /**
  * Apply RTL direction settings for languages that require it
+ * Now using the centralized RTL configuration
  */
 export const applyRTLDirection = (locale) => {
-  const isRTL = locale === 'ar';
-  document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-  document.documentElement.lang = locale;
-  
-  if (isRTL) {
-    document.body.classList.add('rtl');
-  } else {
-    document.body.classList.remove('rtl');
-  }
-  
-  return isRTL;
+  // Use the centralized function from rtl-config.js
+  return applyRTLToDocument(locale);
 };
 
 /**
@@ -175,5 +168,5 @@ export const getLocalizedPath = (path, locale) => {
   
   // For non-default locales, add the prefix
   const localePath = path.startsWith('/') ? path : `/${path}`;
-  return `/${locale}${localePath}`;
+  return `/${locale}${localePath}`; 
 }; 
