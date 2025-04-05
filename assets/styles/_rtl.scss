@@ -1,10 +1,27 @@
-/* 
- * RTL (Right-to-Left) Support Styles
- * These styles will be applied when the html element has dir="rtl"
+/**
+ * Comprehensive RTL Support System
+ * This provides a systematic approach to RTL styling throughout the application
+ * The approach uses both class-based and attribute-based selectors
  */
 
+/* Base RTL Support - Applied when dir="rtl" attribute is set */
 [dir="rtl"] {
-  // Text alignment
+  /* =================== */
+  /* 1. Text Directionality */
+  /* =================== */
+  * {
+    // Default direction for all elements
+    text-align: inherit;
+  }
+  
+  .text-start {
+    text-align: right !important;
+  }
+  
+  .text-end {
+    text-align: left !important;
+  }
+  
   .text-left {
     text-align: right !important;
   }
@@ -12,8 +29,41 @@
   .text-right {
     text-align: left !important;
   }
+
+  /* =================== */
+  /* 2. Margins & Padding */
+  /* =================== */
+  // Margin handling
+  .ms-auto {
+    margin-right: auto !important;
+    margin-left: initial !important;
+  }
   
-  // Margins and paddings
+  .me-auto {
+    margin-left: auto !important;
+    margin-right: initial !important;
+  }
+  
+  .me-1, .me-2, .me-3, .me-4, .me-5, .me-6, .me-7, .me-8, .me-9, .me-10, .me-11, .me-12, .me-auto {
+    margin-right: 0 !important;
+  }
+  
+  .ms-1, .ms-2, .ms-3, .ms-4, .ms-5, .ms-6, .ms-7, .ms-8, .ms-9, .ms-10, .ms-11, .ms-12, .ms-auto {
+    margin-left: 0 !important;
+  }
+  
+  // Create RTL-aware margin utilities (this is more robust than the old approach)
+  @each $size in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12) {
+    .me-#{$size} {
+      margin-left: #{$size * 4}px !important;
+    }
+    
+    .ms-#{$size} {
+      margin-right: #{$size * 4}px !important;
+    }
+  }
+  
+  // Legacy classes support
   .ml-auto {
     margin-left: unset !important;
     margin-right: auto !important;
@@ -23,23 +73,16 @@
     margin-right: unset !important;
     margin-left: auto !important;
   }
-  
-  .ms-auto {
-    margin-right: auto !important;
-    margin-left: unset !important;
-  }
-  
-  .me-auto {
-    margin-left: auto !important;
-    margin-right: unset !important;
-  }
-  
-  // Reverse flex direction
+
+  /* =================== */
+  /* 3. Layout Direction */
+  /* =================== */
+  // Flex direction
   .flex-row {
     flex-direction: row-reverse !important;
   }
   
-  // Overwrite float classes
+  // Float utilities
   .float-start {
     float: right !important;
   }
@@ -48,24 +91,16 @@
     float: left !important;
   }
   
-  // Overwrite Vuetify's left/right components if needed
-  .v-list-item__prepend {
-    margin-left: 16px;
-    margin-right: 0;
+  // Grid column ordering overrides
+  @for $i from 1 through 12 {
+    .order-#{$i} {
+      // Let component use the useRTL composable for ordering
+    }
   }
-  
-  // Icons in fields
-  .v-field__prepend-inner {
-    padding-left: 4px;
-    padding-right: 0;
-  }
-  
-  .v-field__append-inner {
-    padding-right: 4px;
-    padding-left: 0;
-  }
-  
-  // Borders
+
+  /* =================== */
+  /* 4. Borders & Outlines */
+  /* =================== */
   .border-start {
     border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
     border-left: none !important;
@@ -76,7 +111,39 @@
     border-right: none !important;
   }
   
-  // Reverse any other directional components as needed
+  .rounded-s {
+    border-top-right-radius: var(--v-rounded-border-radius) !important;
+    border-bottom-right-radius: var(--v-rounded-border-radius) !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+  
+  .rounded-e {
+    border-top-left-radius: var(--v-rounded-border-radius) !important;
+    border-bottom-left-radius: var(--v-rounded-border-radius) !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  /* =================== */
+  /* 5. Vuetify Components */
+  /* =================== */
+  // Vuetify component specifics
+  .v-list-item__prepend {
+    margin-left: 16px;
+    margin-right: 0;
+  }
+  
+  .v-field__prepend-inner {
+    padding-left: 4px;
+    padding-right: 0;
+  }
+  
+  .v-field__append-inner {
+    padding-right: 4px;
+    padding-left: 0;
+  }
+  
   .v-btn__prepend {
     margin-right: 0;
     margin-left: 8px;
@@ -87,12 +154,18 @@
     margin-right: 8px;
   }
   
-  // Forms
+  // Settings specific UI elements
+  .v-tabs--vertical .v-tab {
+    text-align: right;
+    justify-content: flex-start;
+  }
+  
+  // Form elements
   .v-label {
     text-align: right;
   }
   
-  // Text input fields
+  // Input fields (globally apply RTL to all inputs)
   input, 
   textarea,
   .v-field__input {
@@ -100,31 +173,64 @@
     direction: rtl !important;
   }
   
-  // Settings specific UI elements
-  .v-tabs--vertical .v-tab {
+  /* Settings page improvements */
+  .v-window-item {
     text-align: right;
-    justify-content: flex-start;
   }
   
+  /* Form label alignment */
+  .form-label {
+    text-align: right;
+    display: block;
+  }
+  
+  // Cards and containers
+  .v-card-title {
+    text-align: right;
+  }
+  
+  .v-card-text {
+    text-align: right;
+  }
+  
+  /* =================== */
+  /* 6. Navigation & Menus */
+  /* =================== */
   // User dropdown in TopBar
   .v-menu .v-list-item__prepend {
     margin-left: 12px;
     margin-right: 0;
   }
   
-  // Settings page improvements
-  .v-window-item {
-    text-align: right;
+  .v-list-item__prepend {
+    margin-right: 0 !important;
+    margin-left: 16px !important;
   }
   
-  // Form label alignment
-  .form-label {
-    text-align: right;
-    display: block;
+  .v-list-item__append {
+    margin-left: 0 !important;
+    margin-right: 16px !important;
+  }
+  
+  /* =================== */
+  /* 7. Icons & Badges */
+  /* =================== */
+  // Directional icons (automatic flipping)
+  .v-icon:not(.keep-direction) {
+    &:dir(rtl) {
+      &.mdi-chevron-left,
+      &.mdi-chevron-right,
+      &.mdi-arrow-left,
+      &.mdi-arrow-right,
+      &[class*="tabler-arrow-"],
+      &[class*="tabler-chevron-"] {
+        transform: scaleX(-1);
+      }
+    }
   }
 }
 
-// Specific fixes for Vuetify's RTL support
+/* Specific fixes for Vuetify's RTL support */
 .v-application {
   &[dir="rtl"] {
     // Handle any Vuetify-specific RTL issues here
@@ -132,33 +238,62 @@
       text-align: right;
     }
     
-    // Target input values directly
-    input, 
-    textarea,
-    .v-field__input,
-    .v-text-field input {
-      text-align: right !important;
+    // This ensures fields with append/prepend icons have correct spacing
+    .v-field--appended {
+      padding-left: 12px;
+      padding-right: 0;
     }
     
-    // Force icon direction for certain icons
-    .v-icon--flip-rtl {
-      transform: scaleX(-1);
+    .v-field--prepended {
+      padding-right: 12px;
+      padding-left: 0;
     }
   }
 }
 
-// Helper class for Arabic text styling if needed
-.arabic-text {
-  font-family: 'Tajawal', 'Roboto', sans-serif; // Add an Arabic-compatible font
+/* RTL Mode Class - Alternative to dir attribute */
+.rtl-mode {
+  direction: rtl;
+  
+  // Notifications and alerts
+  .notification-item,
+  .v-alert {
+    text-align: right;
+  }
+  
+  // Lists
+  ul, ol {
+    padding-right: 20px;
+    padding-left: 0;
+  }
 }
 
-// Special helper class for GlobalsTextField
-.rtl-text-field {
-  &[dir="rtl"] {
-    input,
-    textarea {
-      text-align: right !important;
-      direction: rtl !important;
-    }
+/* Helper class for Arabic text styling if needed */
+.arabic-text {
+  font-family: 'Tajawal', 'Roboto', sans-serif; // Add an Arabic-compatible font
+} 
+
+/* These utility classes can be applied directly in templates */
+.rtl-flip {
+  &:dir(rtl) {
+    transform: scaleX(-1);
+  }
+}
+
+.rtl-text-right {
+  &:dir(rtl) {
+    text-align: right !important;
+  }
+}
+
+.rtl-text-left {
+  &:dir(rtl) {
+    text-align: left !important;
+  }
+}
+
+.rtl-reverse {
+  &:dir(rtl) {
+    flex-direction: row-reverse !important;
   }
 } 

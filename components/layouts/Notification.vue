@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useNotifications } from '~/composables/useNotifications';
+import { useRTL } from '~/composables/useRTL';
 
 // Define Notification type locally if not available globally, based on API spec
 // This should ideally be in a central types file (e.g., ~/types/notification.ts)
@@ -23,6 +24,7 @@ interface Notification {
 }
 
 const { t } = useI18n();
+const { isRTL, rtlClasses, layoutDirection, flipProperty } = useRTL();
 
 const { 
   notifications, 
@@ -37,6 +39,13 @@ const {
 
 const selectedNotification = ref<Notification | null>(null);
 const dialogVisible = ref(false);
+
+// Compute menu location based on RTL state
+const menuLocation = computed(() => flipProperty('bottom end', 'bottom start'));
+const menuOrigin = computed(() => flipProperty('top right', 'top left'));
+
+// Create RTL-aware spacing classes
+const iconSpacing = computed(() => isRTL.value ? 'ms-2 me-1' : 'me-2 ms-1');
 
 const handleNotificationClick = (notification: Notification) => {
   selectedNotification.value = notification;
@@ -75,16 +84,16 @@ const handleLoadMore = () => {
     :close-on-content-click="false" 
     width="380" 
     max-height="450" 
-    location="bottom end" 
+    :location="menuLocation"
     offset="12px"
     transition="scale-transition"
-    origin="top right"
+    :origin="menuOrigin"
   >
     <template #activator="{ props: menuProps }">
       <v-tooltip location="bottom" :text="t('notifications.toggleMenu')">
         <template #activator="{ props: tooltipProps }">
           <icon-btn 
-            class="mr-2 ml-1" 
+            :class="iconSpacing"
             v-bind="{ ...menuProps, ...tooltipProps }" 
             :aria-label="t('notifications.toggleMenu')"
            >
@@ -109,7 +118,7 @@ const handleLoadMore = () => {
       style="height: 450px;" 
     >
       <div class="notification-card__header bg-surface rounded-t px-4 py-3 flex-shrink-0">
-        <div class="d-flex align-center justify-space-between">
+        <div class="d-flex align-center justify-space-between" :style="layoutDirection">
             <h4 class="text-h4">{{ t('notifications.title') }}</h4>
             <v-tooltip location="bottom" :text="t('common.refresh')">
               <template #activator="{ props }">
@@ -155,7 +164,7 @@ const handleLoadMore = () => {
                 <v-list-item-subtitle class="text-body-2 text-grey-darken-1 text-truncate">{{ item.message }}</v-list-item-subtitle>
                 
                  <template v-slot:append>
-                   <div class="d-flex ga-1 align-center">
+                   <div class="d-flex align-center ga-1" :style="layoutDirection">
                       <v-tooltip v-if="!item.isRead" location="top" :text="t('notifications.markAsRead')">
                         <template #activator="{ props }">
                           <icon-btn
@@ -167,29 +176,31 @@ const handleLoadMore = () => {
                           />
                         </template>
                       </v-tooltip>
-                       <v-tooltip v-if="item.isRead" location="top" :text="t('notifications.markAsUnread')">
-                          <template #activator="{ props }">
-                             <icon-btn
-                               size="x-small"
-                               icon="tabler-mail-opened"
-                               @click.stop="handleMarkAsUnread(item.id)"
-                               :aria-label="t('notifications.markAsUnread')"
-                               v-bind="props"
-                             />
-                          </template>
-                        </v-tooltip>
-                        <v-tooltip location="top" :text="t('common.delete')">
-                           <template #activator="{ props }">
-                              <icon-btn 
-                                size="x-small" 
-                                icon="tabler-trash" 
-                                color="error"
-                                @click.stop="handleDelete(item.id)"
-                                :aria-label="t('common.delete')"
-                                v-bind="props"
-                              />
-                           </template>
-                        </v-tooltip>
+                      
+                      <v-tooltip v-if="item.isRead" location="top" :text="t('notifications.markAsUnread')">
+                        <template #activator="{ props }">
+                          <icon-btn
+                            size="x-small"
+                            icon="tabler-mail-opened"
+                            @click.stop="handleMarkAsUnread(item.id)"
+                            :aria-label="t('notifications.markAsUnread')"
+                            v-bind="props"
+                          />
+                        </template>
+                      </v-tooltip>
+                      
+                      <v-tooltip location="top" :text="t('common.delete')">
+                        <template #activator="{ props }">
+                          <icon-btn 
+                            size="x-small" 
+                            icon="tabler-trash" 
+                            color="error"
+                            @click.stop="handleDelete(item.id)"
+                            :aria-label="t('common.delete')"
+                            v-bind="props"
+                          />
+                        </template>
+                      </v-tooltip>
                    </div>
                   </template>
               </v-list-item>
@@ -216,7 +227,7 @@ const handleLoadMore = () => {
 
   <v-dialog v-model="dialogVisible" max-width="600" scrollable>
     <v-card v-if="selectedNotification" rounded="lg">
-      <v-card-title class="d-flex justify-space-between align-center text-h6 pa-4">
+      <v-card-title class="d-flex justify-space-between align-center text-h6 pa-4" :style="layoutDirection">
         <span>{{ selectedNotification.notificationType || t('notifications.detailsTitle') }}</span>
          <v-tooltip location="bottom" :text="t('common.close')">
           <template #activator="{ props }">
@@ -266,9 +277,17 @@ const handleLoadMore = () => {
 
 <style scoped lang="scss">
 .notification-card {
+  // Let global RTL styles handle most of the styling
 }
 
-.notification-item:hover {
-  background-color: rgba(var(--v-theme-on-surface), 0.04);
+.notification-item {
+  &:hover {
+    background-color: rgba(var(--v-theme-on-surface), 0.04);
+  }
+  
+  // Additional RTL-specific styles can be added here if needed
+  [dir="rtl"] & {
+    // RTL-specific notification item styles if needed
+  }
 }
 </style>
