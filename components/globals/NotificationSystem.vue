@@ -24,52 +24,15 @@
           ></v-btn>
         </div>
       </div>
-      
-      <!-- Debug element to show notification count -->
-      <div v-if="showDebug" class="notification-debug">
-        <div>Notification Count: {{ notifications.length }}</div>
-        <div v-for="notification in notifications" :key="notification.id">
-          ID: {{ notification.id }} - {{ notification.message }}
-        </div>
-      </div>
     </div>
   </Teleport>
 </template>
 
 <script setup>
 import { useNotification } from '@/composables/useNotification';
-import { watch, onMounted, ref } from 'vue';
-
-// Create component identifier for debugging
-const componentId = Date.now();
-console.log(`NotificationSystem component created: ${componentId}`);
 
 // Get the shared notification state
-const { notifications, remove, test } = useNotification();
-
-// Only show debug panel in development mode
-const showDebug = ref(process.env.NODE_ENV === 'development');
-
-// Debug notification system
-onMounted(() => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`🔍 [Component ${componentId}] NotificationSystem mounted, notifications:`, notifications.value);
-    console.log(`📍 [Component ${componentId}] Container element:`, document.getElementById('notification-system-container'));
-  }
-});
-
-// Watch for changes to notifications array
-watch(notifications, (newVal) => {
-  console.log(`📊 [Component ${componentId}] Notifications updated, length:`, newVal.length);
-  for (const notification of newVal) {
-    console.log(`  - [Component ${componentId}] Notification:`, notification.id, notification.type, notification.message);
-  }
-  
-  setTimeout(() => {
-    console.log(`📍 [Component ${componentId}] Container after update:`, document.getElementById('notification-system-container'));
-    console.log(`📍 [Component ${componentId}] Notification count in DOM:`, document.querySelectorAll('.notification-system-item').length);
-  }, 0);
-}, { deep: true });
+const { notifications, remove } = useNotification();
 
 // Map notification types to Vuetify colors
 const typeToColor = {
@@ -93,7 +56,7 @@ const typeToIcon = {
   position: fixed !important;
   top: 16px !important;
   right: 16px !important;
-  z-index: 999999 !important; /* Extremely high z-index */
+  z-index: 999999 !important; 
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
@@ -102,7 +65,6 @@ const typeToIcon = {
   pointer-events: auto !important;
 }
 
-/* Added !important to all styles to ensure they override Vuetify */
 .notification-system-item {
   border-radius: 8px !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
@@ -145,19 +107,5 @@ const typeToIcon = {
   flex-shrink: 0 !important;
   margin-left: 8px !important;
   color: white !important;
-}
-
-/* Debug panel */
-.notification-debug {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-  color: white !important;
-  padding: 8px !important;
-  border-radius: 4px !important;
-  margin-top: 20px !important;
-  font-family: monospace !important;
-  font-size: 12px !important;
-  width: 100% !important;
-  position: relative !important;
-  z-index: 9999999 !important; /* Even higher z-index */
 }
 </style> 

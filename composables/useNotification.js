@@ -1,16 +1,11 @@
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 // Create a single instance that will be shared across all component imports
 const notifications = ref([]);
 
-// Add debug ID to track composable instances
-const instanceId = Date.now();
-console.log(`Creating notification composable instance: ${instanceId}`);
-
 export function useNotification() {
   // Add a notification
   const addNotification = (notification) => {
-    console.log(`[Instance ${instanceId}] Adding notification:`, notification);
     const id = Date.now();
     const newNotification = {
       id,
@@ -20,7 +15,6 @@ export function useNotification() {
     };
     
     notifications.value.push(newNotification);
-    console.log(`[Instance ${instanceId}] Current notifications:`, notifications.value);
     
     // Auto-hide after timeout
     if (notification.timeout !== 0) { // Allow persistent notifications with timeout: 0
@@ -34,7 +28,6 @@ export function useNotification() {
   
   // Remove a notification
   const removeNotification = (id) => {
-    console.log(`[Instance ${instanceId}] Removing notification:`, id);
     const index = notifications.value.findIndex(n => n.id === id);
     if (index !== -1) {
       // Set show to false to trigger animation
@@ -43,7 +36,6 @@ export function useNotification() {
       // Remove from array after animation completes
       setTimeout(() => {
         notifications.value = notifications.value.filter(n => n.id !== id);
-        console.log(`[Instance ${instanceId}] Notifications after removal:`, notifications.value);
       }, 500);
     }
   };
@@ -106,26 +98,14 @@ export function useNotification() {
     notifications.value = [];
   };
   
-  // Simple test function to verify system is working
+  // Test function for development (will be removed in production)
   const test = () => {
-    console.log(`[Instance ${instanceId}] 🔔 RUNNING NOTIFICATION TEST`);
-    const id1 = success('Success notification test');
-    console.log(`[Instance ${instanceId}] Success notification added with ID:`, id1);
+    if (process.env.NODE_ENV !== 'development') return;
     
-    setTimeout(() => {
-      const id2 = info('Info notification test');
-      console.log(`[Instance ${instanceId}] Info notification added with ID:`, id2);
-    }, 500);
-    
-    setTimeout(() => {
-      const id3 = warning('Warning notification test');
-      console.log(`[Instance ${instanceId}] Warning notification added with ID:`, id3);
-    }, 1000);
-    
-    setTimeout(() => {
-      const id4 = error('Error notification test');
-      console.log(`[Instance ${instanceId}] Error notification added with ID:`, id4);
-    }, 1500);
+    success('Success notification test');
+    setTimeout(() => info('Info notification test'), 500);
+    setTimeout(() => warning('Warning notification test'), 1000);
+    setTimeout(() => error('Error notification test'), 1500);
   };
   
   return {

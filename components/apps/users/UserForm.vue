@@ -51,12 +51,6 @@ const formTitle = computed(() => isEditMode.value ? t('users.edit_user', 'Edit U
 
 // Load user data if in edit mode
 onMounted(async () => {
-  // Test notification system directly from component
-  $notification.error('Test error from UserForm', { 
-    title: 'User Form Test',
-    timeout: 5000
-  });
-  
   loadRoles();
   loadStatuses();
   
@@ -142,11 +136,6 @@ const loadUser = async () => {
     formData.value.role = roles.value[0];
     formData.value.status = statuses.value[0];
     formData.value.password = '';
-    
-    $notification.info('Using mock data for testing', {
-      title: 'Development Mode',
-      timeout: 4000
-    });
   } finally {
     isLoading.value = false;
   }
@@ -195,14 +184,11 @@ const saveUser = async () => {
       };
     }
     
-    console.log('Sending payload:', payload);
-    
     // Handle create vs update differently
     let response;
     if (isEditMode.value) {
       // For update, use direct fetch for more control
       const updateUrl = `${api.getBaseUrl()}users/${props.userId}`;
-      console.log('Update URL:', updateUrl);
       
       const fetchResponse = await fetch(updateUrl, {
         method: 'PATCH',
@@ -263,9 +249,6 @@ const saveUser = async () => {
         timeout: 5000
       }
     );
-    
-    // Navigate back to users list
-    router.push('/users');
   } catch (error) {
     // Only show generic error if a specific one wasn't already shown
     if (!error.message.includes('Update failed:') && !error.message.includes('Error:')) {
@@ -400,7 +383,7 @@ const cancelForm = () => {
               :disabled="isSaving" 
               @click="cancelForm"
             >
-              {{ $t('common.cancel', 'Cancel') }}
+              {{ $t('common.close', 'Close') }}
             </v-btn>
             <v-btn 
               color="primary" 

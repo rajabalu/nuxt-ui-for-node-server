@@ -14,12 +14,6 @@ onMounted(async () => {
   try {
     // Test both with and without /api/v1 prefix to see which works
     const response = await api.get('users');
-    console.log('API Test Response:', response);
-    if (response.success) {
-      notification.success(`API call successful. Found ${Array.isArray(response.data) ? response.data.length : 0} users.`);
-    } else {
-      notification.error(`API call failed: ${response.error}`);
-    }
   } catch (error) {
     console.error('Error testing API:', error);
     notification.error(`API test error: ${error.message}`);
@@ -96,10 +90,12 @@ const config = {
 };
 
 // Initial sort
-const initialSort = {
-  key: 'createdAt',
-  direction: 'desc'
-};
+const initialSort = [
+  {
+    key: 'createdAt',
+    order: 'desc'
+  }
+];
 </script>
 
 <template>
