@@ -15,15 +15,16 @@
 .avatar-placeholder {
   height: 100%;
   padding: 24px;
-  color: white;
+  color: rgba(var(--v-theme-on-surface), 0.9);
   position: sticky;
   top: 0;
+  background-color: rgb(var(--v-theme-surface-variant), 0.9);
   
   .avatar-circle {
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background-color: #6366F1;
+    background-color: rgb(var(--v-theme-primary));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37,5 +38,10 @@
     line-height: 1.5;
     opacity: 0.8;
   }
+}
+
+// Dark theme adjustments
+.v-theme--dark .avatar-placeholder {
+  background-color: white
 }
 </style>

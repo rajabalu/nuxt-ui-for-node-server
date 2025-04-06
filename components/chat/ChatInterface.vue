@@ -19,6 +19,27 @@
       <div class="chat-input-container">
         <v-card class="chat-input-card" elevation="0">
           <v-row no-gutters align="center">
+            <!-- File Upload Button -->
+            <v-col cols="auto" class="pr-1">
+              <v-btn
+                icon
+                variant="text"
+                color="primary"
+                class="mx-1"
+                aria-label="Attach file"
+                @click="triggerFileInput"
+              >
+                <v-icon>mdi-paperclip</v-icon>
+              </v-btn>
+              <input
+                ref="fileInput"
+                type="file"
+                hidden
+                @change="handleFileUpload"
+              />
+            </v-col>
+
+            <!-- Text Input -->
             <v-col class="pr-2">
               <v-textarea
                 v-model="inputMessage"
@@ -34,6 +55,7 @@
               ></v-textarea>
             </v-col>
   
+            <!-- Voice and Send Buttons -->
             <v-col cols="auto" class="d-flex align-center">
               <v-btn
                 icon
@@ -81,6 +103,26 @@
   const inputMessage = ref('');
   const chatHistoryRef = ref(null);
   const scrollAnchorRef = ref(null);
+  const fileInput = ref(null);
+  
+  // File upload handlers
+  const triggerFileInput = () => {
+    fileInput.value.click();
+  };
+
+  const handleFileUpload = (event) => {
+    const files = event.target.files;
+    if (files.length > 0) {
+      // Handle the uploaded file here
+      console.log('Selected file:', files[0]);
+      // You can add file validation and upload logic here
+      // Example: validateFile(files[0]);
+      // Example: uploadFile(files[0]);
+      
+      // Clear the input after handling
+      event.target.value = '';
+    }
+  };
   
   // Auto-scroll to bottom
   const scrollToBottom = async () => {
@@ -192,6 +234,10 @@
         color: rgba(var(--v-theme-on-surface), 0.5) !important;
       }
     }
+  }
+
+  .chat-input-card .v-row {
+    gap: 4px;
   }
   
   .send-button {

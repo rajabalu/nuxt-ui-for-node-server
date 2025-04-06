@@ -32,7 +32,6 @@ useHead({ title: 'Welcome!' });
   top: 0;
   height: 100vh;
   border-right: 1px solid rgba(var(--v-theme-on-surface), 0.12);
-  background-color: #424242;
   overflow-y: auto;
   z-index: 2;
 }
