@@ -176,72 +176,36 @@ const handleAppleLogin = async () => {
   <v-card elevation="4">
     <v-card-item class="pa-6">
       <h5 class="text-h5 text-center mb-4">{{ t('auth.signUpTitle') }}</h5>
-      <v-alert 
-        v-if="showAlert" 
-        :type="alertType" 
-        closable 
-        @click:close="showAlert = false" 
-        class="mb-4"
-        :icon="alertType === 'error' ? 'tabler-alert-triangle' : 'tabler-circle-check'"
-      >
+      <v-alert v-if="showAlert" :type="alertType" closable @click:close="showAlert = false" class="mb-4"
+        :icon="alertType === 'error' ? 'tabler-alert-triangle' : 'tabler-circle-check'">
         {{ alertMessage }}
       </v-alert>
 
       <v-form ref="refVForm" @submit.prevent="onSubmit">
-          <GlobalsTextField
-            v-model="firstName"
-            :label="t('common.firstName')"
-            :placeholder="t('auth.firstNamePlaceholder')"
-            :rules="[requiredValidator, alphaValidator]"
-            :error-messages="errors.firstName"
-          />
+        <GlobalsTextField v-model="firstName" :label="t('common.firstName')"
+          :placeholder="t('auth.firstNamePlaceholder')" :rules="[requiredValidator, alphaValidator]"
+          :error-messages="errors.firstName" />
 
-          <GlobalsTextField
-            v-model="lastName"
-            :label="t('common.lastName')"
-            :placeholder="t('auth.lastNamePlaceholder')"
-            :rules="[requiredValidator, alphaValidator]"
-            :error-messages="errors.lastName"
-          />
+        <GlobalsTextField v-model="lastName" :label="t('common.lastName')" :placeholder="t('auth.lastNamePlaceholder')"
+          :rules="[requiredValidator, alphaValidator]" :error-messages="errors.lastName" />
 
-        <GlobalsTextField
-          v-model="email"
-          :label="t('common.email')"
-          type="email"
-          :placeholder="t('auth.emailPlaceholder')"
-          :rules="[requiredValidator, emailValidator]"
-          :error-messages="errors.email"
-          class="mb-3"
-        />
+        <GlobalsTextField v-model="email" :label="t('common.email')" type="email"
+          :placeholder="t('auth.emailPlaceholder')" :rules="[requiredValidator, emailValidator]"
+          :error-messages="errors.email" class="mb-3" />
 
-        <GlobalsTextField
-          v-model="password"
-          :label="t('common.password')"
-          :placeholder="t('auth.passwordPlaceholder')"
-          :rules="[requiredValidator, passwordValidator]"
-          type="password"
-          :error-messages="errors.password"
-          class="mb-3"
-        />
+        <GlobalsTextField v-model="password" :label="t('common.password')" :placeholder="t('auth.passwordPlaceholder')"
+          :rules="[requiredValidator, passwordValidator]" type="password" :error-messages="errors.password"
+          class="mb-3" />
 
-        <GlobalsTextField
-          v-model="confirmPassword"
-          :label="t('common.confirmPassword')"
+        <GlobalsTextField v-model="confirmPassword" :label="t('common.confirmPassword')"
           :placeholder="t('auth.passwordPlaceholder')"
           :rules="[requiredValidator, confirmedValidator(confirmPassword, password)]"
-          :type="isPasswordVisible ? 'text' : 'password'"
-          :error-messages="errors.confirmPassword"
+          :type="isPasswordVisible ? 'text' : 'password'" :error-messages="errors.confirmPassword"
           :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-          @click:append-inner="isPasswordVisible = !isPasswordVisible"
-          class="mb-3"
-        />
+          @click:append-inner="isPasswordVisible = !isPasswordVisible" class="mb-3" />
 
-        <v-checkbox
-          v-model="policyCheck"
-          class="mb-4"
-          :rules="[requiredValidator]"
-          :error-messages="errors.policyCheck"
-        >
+        <v-checkbox v-model="policyCheck" class="mb-4" :rules="[requiredValidator]"
+          :error-messages="errors.policyCheck">
           <template #label>
             <p class="text-body-1">
               {{ t('auth.agreeTo') }}
@@ -256,56 +220,41 @@ const handleAppleLogin = async () => {
           </template>
         </v-checkbox>
 
-        <v-btn type="submit" block :loading="isLoading" class="mb-3"> 
-          {{ t('auth.createFreeAccountBtn') }} 
+        <v-btn type="submit" block :loading="isLoading" class="mb-3">
+          {{ t('auth.createFreeAccountBtn') }}
         </v-btn>
-        
+
         <!-- Social Login Buttons -->
         <p class="text-center text-body-2 text-medium-emphasis my-2">{{ t('auth.orContinueWith') }}</p>
-        
+
         <!-- Facebook Login Button -->
-        <v-btn 
-          block 
-          color="#4267B2" 
-          class="mb-3"
-          :loading="facebookLoading"
-          :disabled="facebookLoading || isLoading || googleLoading || appleLoading"
-          @click="handleFacebookLogin" 
-        >
+        <v-btn block color="#4267B2" class="mb-3" :loading="facebookLoading"
+          :disabled="facebookLoading || isLoading || googleLoading || appleLoading" @click="handleFacebookLogin">
           <v-icon start icon="tabler-brand-facebook" class="mr-2"></v-icon>
           {{ t('auth.continueWithFacebook', 'Continue with Facebook') }}
         </v-btn>
-        
+
         <!-- Google Login Button -->
-        <v-btn 
-          block 
-          variant="outlined"
-          class="mb-3"
-          :loading="googleLoading"
-          :disabled="googleLoading || isLoading || facebookLoading || appleLoading"
-          @click="handleGoogleLogin" 
-        >
-          <v-icon start icon="tabler-brand-google" color="#DB4437" class="mr-2"></v-icon>
+        <v-btn block variant="outlined" class="mb-3" :loading="googleLoading"
+          :disabled="googleLoading || isLoading || facebookLoading || appleLoading" @click="handleGoogleLogin"
+          style="border-radius: 8px;">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20"
+            class="mr-2" />
           {{ t('auth.continueWithGoogle', 'Continue with Google') }}
         </v-btn>
-        
+
         <!-- Apple Login Button -->
-        <v-btn 
-          block 
-          variant="outlined"
-          color="black" 
-          class="mb-3"
-          :loading="appleLoading"
-          :disabled="appleLoading || isLoading || facebookLoading || googleLoading"
-          @click="handleAppleLogin" 
-        >
-          <v-icon start icon="tabler-brand-apple" class="mr-2"></v-icon>
+        <v-btn block variant="outlined" class="mb-3" :loading="appleLoading"
+          :disabled="appleLoading || isLoading || googleLoading || facebookLoading" @click="handleAppleLogin"
+          style="border-width: 2px; border-color: #000000;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" width="20"
+            class="mr-2" />
           {{ t('auth.continueWithApple', 'Continue with Apple') }}
         </v-btn>
-        
+
         <div class="mt-4 d-flex align-center justify-space-between ga-2 flex-wrap">
           <NuxtLink :to="getLocalizedPath('/sign-in', locale.value)" class="font-weight-5 text-primary">
-             {{ t('auth.alreadyMember') }}
+            {{ t('auth.alreadyMember') }}
           </NuxtLink>
           <NuxtLink :to="getLocalizedPath('/forget-password', locale.value)" class="font-weight-5">
             {{ t('auth.forgotPasswordLink') }}
