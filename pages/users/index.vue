@@ -59,22 +59,22 @@ const resolveStatusVariant = (status) => {
   if (status === 1)
     return {
       color: 'primary',
-      text: 'Current'
+      text: 'Active'
     }
   else if (status === 2)
     return {
       color: 'success',
-      text: 'Professional'
+      text: 'Inactive'
     }
   else if (status === 3)
     return {
       color: 'error',
-      text: 'Rejected'
+      text: 'Pending'
     }
   else if (status === 4)
     return {
       color: 'warning',
-      text: 'Resigned'
+      text: 'Suspended'
     }
   else
     return {
