@@ -15,6 +15,18 @@ export const useApi = () => {
                    'http://localhost:8000/api/v1/';
 
   const apiRequest = async (endpoint, options = {}) => {
+    // Before making any request, check if token needs refreshing
+    if (authStore.token && authStore.isTokenExpired && endpoint !== 'auth/refresh') {
+      // Don't attempt to refresh if we're already refreshing to avoid loops
+      console.log('Token expired, refreshing...');
+      const refreshResult = await authStore.refreshTokens();
+      if (!refreshResult.success) {
+        console.error('Token refresh failed:', refreshResult.error);
+        authStore.logout();
+        return { success: false, error: 'Session expired. Please login again.' };
+      }
+    }
+    
     const url = `${BASE_URL}${endpoint}`;
     
     // Prepare headers

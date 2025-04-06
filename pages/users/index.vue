@@ -19,11 +19,7 @@ const loading = ref(true);
 // Fetch data
 onMounted(async () => {
   try {
-    // Ensure we have a valid token
-    if (!authStore.isAuthenticated) {
-      await authStore.refreshToken();
-    }
-    
+    // No need to check tokens here anymore - it's handled globally by the API interceptor
     const response = await api.get('users');
     users.value = response.data || [];
   } catch (error) {
