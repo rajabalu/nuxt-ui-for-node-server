@@ -179,12 +179,44 @@ const handleBulkDelete = async () => {
   if (!selectedItems.value || selectedItems.value.length === 0) return;
   
   try {
-    // Process each selected item
-    const deletePromises = selectedItems.value.map(item => 
-      api.delete(apiConfig.delete.replace(':id', item.id))
-    );
+    console.log('Selected items for deletion:', selectedItems.value);
     
-    await Promise.all(deletePromises);
+    // Process deletions one by one sequentially, as server can only handle one at a time
+    for (const item of selectedItems.value) {
+      console.log('Processing item for deletion:', item);
+      
+      // Handle different item types - could be an ID directly or an object
+      let id;
+      
+      if (typeof item === 'number' || typeof item === 'string') {
+        // Item is directly the ID
+        id = item;
+      } else if (item && typeof item === 'object') {
+        // Item is an object, try to extract ID
+        id = item.id || (item.raw && item.raw.id);
+      } else {
+        console.error('Invalid item structure:', item);
+        continue; // Skip this item and move to next
+      }
+      
+      if (!id) {
+        console.error('Could not find ID in item:', item);
+        continue; // Skip this item and move to next
+      }
+      
+      console.log(`Deleting user with ID: ${id}`);
+      
+      // Delete one user at a time
+      const deleteEndpoint = apiConfig.delete.replace(':id', id);
+      const result = await api.delete(deleteEndpoint);
+      
+      if (!result.success) {
+        console.error(`Failed to delete user ${id}:`, result.error);
+        notification.error(`Failed to delete user ID ${id}: ${result.error || 'Unknown error'}`);
+      }
+    }
+    
+    // Show success message
     notification.success('Users deleted successfully');
     
     // Refresh the list
@@ -193,7 +225,8 @@ const handleBulkDelete = async () => {
     deleteDialog.value = false;
     selectedItems.value = [];
   } catch (error) {
-    notification.error('Error deleting users');
+    console.error('Error in bulk delete:', error);
+    notification.error('Error deleting users: ' + (error.message || error));
   }
 };
 </script>
