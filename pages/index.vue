@@ -2,7 +2,7 @@
   <v-container fluid class="pa-0 fill-height d-flex flex-column">
     <v-row no-gutters class="flex-grow-1" style="min-height: 0">
       <!-- Left column: Avatar area (30%) -->
-      <v-col cols="12" md="4" lg="3" class="avatar-container d-none d-md-flex">
+      <v-col cols="12" md="4" lg="3" class="avatar-container d-none d-md-block">
         <AvatarPlaceholder />
       </v-col>
 
@@ -26,14 +26,14 @@ definePageMeta({
 
 // Page title
 useHead({
-  title: 'Chat Assistant'
+  title: 'Welcome!'
 });
 </script>
 
 <style lang="scss" scoped>
 .avatar-container {
   border-right: 1px solid rgba(var(--v-theme-on-surface), 0.12);
-  background-color: rgb(var(--v-theme-surface-variant));
+  background-color: #424242; // Darker background matching screenshot
   overflow: hidden;
   position: relative;
 }

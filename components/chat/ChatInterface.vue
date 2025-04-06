@@ -19,28 +19,13 @@
   
       <!-- Chat input area (fixed at bottom) -->
       <div class="chat-input-container pa-3">
-        <v-card class="chat-input-card" elevation="3">
+        <v-card class="chat-input-card" elevation="0">
           <v-row no-gutters align="center">
-            <!-- File upload button -->
-            <v-col cols="auto" class="pl-2">
-              <v-btn
-                icon
-                color="primary"
-                variant="text"
-                :aria-label="$t('chat.uploadFile')"
-              >
-                <v-icon>mdi-attachment</v-icon>
-                <v-tooltip activator="parent" location="top">
-                  {{ $t('chat.uploadFile') }}
-                </v-tooltip>
-              </v-btn>
-            </v-col>
-  
             <!-- Text input -->
             <v-col>
               <v-textarea
                 v-model="inputMessage"
-                :placeholder="$t('chat.typeMessage')"
+                placeholder="Type a message..."
                 auto-grow
                 rows="1"
                 row-height="20"
@@ -57,30 +42,26 @@
             <v-col cols="auto">
               <v-btn
                 icon
-                color="primary"
+                color="#6366F1"
                 variant="text"
-                :aria-label="$t('chat.voiceInput')"
+                aria-label="Voice input"
+                class="mx-1"
               >
                 <v-icon>mdi-microphone</v-icon>
-                <v-tooltip activator="parent" location="top">
-                  {{ $t('chat.voiceInput') }}
-                </v-tooltip>
               </v-btn>
             </v-col>
   
             <!-- Send button -->
-            <v-col cols="auto" class="pr-2">
+            <v-col cols="auto">
               <v-btn
                 icon
-                color="primary"
+                color="white"
                 :disabled="!inputMessage.trim()"
                 @click="sendMessage"
-                :aria-label="$t('chat.send')"
+                aria-label="Send message"
+                class="send-button"
               >
-                <v-icon>mdi-send</v-icon>
-                <v-tooltip activator="parent" location="top">
-                  {{ $t('chat.send') }}
-                </v-tooltip>
+                <v-icon>mdi-arrow-right</v-icon>
               </v-btn>
             </v-col>
           </v-row>
@@ -95,7 +76,7 @@
   
   // Define the chat messages
   const messages = ref([
-    { isUser: false, content: 'Hello! How can I help you today?', timestamp: new Date(), status: 'delivered' },
+    { isUser: false, content: 'Hello! How can I help you today?', timestamp: new Date('2023-04-14T05:42:00'), status: 'delivered' },
   ]);
   
   // Input message binding
@@ -178,8 +159,9 @@
   }
   
   .chat-input-card {
-    border-radius: 24px;
-    background-color: rgb(var(--v-theme-surface-variant));
+    border-radius: 100px;
+    background-color: #303030; // Dark input background
+    padding: 4px;
   }
   
   .chat-textarea {
@@ -187,5 +169,18 @@
       padding-top: 8px !important;
       padding-bottom: 8px !important;
     }
+    
+    :deep(.v-field) {
+      color: white;
+    }
+    
+    :deep(textarea::placeholder) {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+  
+  .send-button {
+    background-color: #6366F1 !important; // Purple send button
+    margin-right: 4px;
   }
   </style>
