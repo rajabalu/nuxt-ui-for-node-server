@@ -1,6 +1,7 @@
 {
   "signOut": "Déconnexion",
   "settingsMenu": "Paramètres",
+  "strategiesMenu": "Stratégies",
   "guestUser": "Utilisateur invité",
   "resetPassword": "Réinitialiser le mot de passe",
   "noAccount": "Vous n'avez pas de compte?",
