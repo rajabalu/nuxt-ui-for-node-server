@@ -1,6 +1,6 @@
 <script setup>
 import Admin from "./Admin.vue";
-import Conversation from "./Conversation.vue";
+import Strategy from "./Strategy.vue";
 defineProps({
   isVertical: {
     type: Boolean,
@@ -12,7 +12,7 @@ defineProps({
 <template>
   <v-list v-if="isVertical" class="vertical-nav-list">
     <admin />
-    <conversation />
+    <strategy />
   </v-list>
 </template>
 
