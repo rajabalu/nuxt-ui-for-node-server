@@ -47,6 +47,16 @@
     "about": "About Us",
     "welcome": "Welcome!"
   },
+  "chat": {
+    "typeMessage": "Type a message...",
+    "send": "Send Message",
+    "uploadFile": "Upload File",
+    "voiceInput": "Voice Input"
+  },
+  "avatar": {
+    "title": "3D Assistant Avatar",
+    "description": "Interactive 3D avatar will be displayed here. The avatar will react to your conversations and provide a more immersive experience."
+  },
   "footer": {
     "copyright": "All Rights Reserved",
     "help": "Help",
