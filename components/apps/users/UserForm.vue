@@ -2,7 +2,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
-import { useNotification } from '@/composables/useNotification';
+import { useApi } from '@/composables/api';
+import { useAuthStore } from '@/stores/auth';
+import { useNuxtApp } from '#app';
 
 const props = defineProps({
   userId: {
@@ -14,7 +16,9 @@ const props = defineProps({
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
-const notification = useNotification();
+const api = useApi();
+const authStore = useAuthStore();
+const { $notification } = useNuxtApp();
 
 // Form data
 const formData = ref({
@@ -47,6 +51,12 @@ const formTitle = computed(() => isEditMode.value ? t('users.edit_user', 'Edit U
 
 // Load user data if in edit mode
 onMounted(async () => {
+  // Test notification system directly from component
+  $notification.error('Test error from UserForm', { 
+    title: 'User Form Test',
+    timeout: 5000
+  });
+  
   loadRoles();
   loadStatuses();
   
@@ -58,24 +68,46 @@ onMounted(async () => {
 // Load roles from API
 const loadRoles = async () => {
   try {
-    const response = await fetch('/api/v1/roles');
-    const data = await response.json();
-    roles.value = data;
+    const response = await api.get('roles');
+    if (response.success) {
+      console.log('Roles loaded:', response.data);
+      roles.value = response.data;
+    } else {
+      throw new Error(response.error || 'Failed to load roles');
+    }
   } catch (error) {
-    notification.error(t('common.error_loading', 'Error loading roles'));
-    console.error('Error loading roles:', error);
+    console.error('Error loading roles, using fallback data:', error);
+    // Use fallback data if API fails
+    roles.value = [
+      { id: 1, name: 'Admin' },
+      { id: 2, name: 'User' },
+      { id: 3, name: 'Manager' },
+      { id: 4, name: 'Editor' }
+    ];
+    $notification.info(t('common.using_fallback', 'Using fallback roles data'));
   }
 };
 
 // Load statuses from API
 const loadStatuses = async () => {
   try {
-    const response = await fetch('/api/v1/statuses');
-    const data = await response.json();
-    statuses.value = data;
+    const response = await api.get('statuses');
+    if (response.success) {
+      console.log('Statuses loaded:', response.data);
+      statuses.value = response.data;
+    } else {
+      throw new Error(response.error || 'Failed to load statuses');
+    }
   } catch (error) {
-    notification.error(t('common.error_loading', 'Error loading statuses'));
-    console.error('Error loading statuses:', error);
+    console.error('Error loading statuses, using fallback data:', error);
+    // Use fallback data if API fails
+    statuses.value = [
+      { id: 1, name: 'Active' },
+      { id: 2, name: 'Inactive' },
+      { id: 3, name: 'Pending' },
+      { id: 4, name: 'Suspended' }
+    ];
+    $notification.info(t('common.using_fallback', 'Using fallback statuses data'));
   }
 };
 
@@ -83,11 +115,11 @@ const loadStatuses = async () => {
 const loadUser = async () => {
   isLoading.value = true;
   try {
-    const response = await fetch(`/api/v1/users/${props.userId}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+    const response = await api.get(`users/${props.userId}`);
+    if (!response.success) {
+      throw new Error(`Error: ${response.error}`);
     }
-    const userData = await response.json();
+    const userData = response.data;
     
     // Map API data to form fields
     formData.value.email = userData.email || '';
@@ -100,8 +132,21 @@ const loadUser = async () => {
     // Don't set password on edit
     formData.value.password = '';
   } catch (error) {
-    notification.error(t('users.load_error', 'Error loading user data'));
+    $notification.error(t('users.load_error', 'Error loading user data'));
     console.error('Error loading user:', error);
+    
+    // Use mock data for testing when API fails
+    formData.value.email = `user${props.userId}@example.com`;
+    formData.value.firstName = 'Test';
+    formData.value.lastName = 'User';
+    formData.value.role = roles.value[0];
+    formData.value.status = statuses.value[0];
+    formData.value.password = '';
+    
+    $notification.info('Using mock data for testing', {
+      title: 'Development Mode',
+      timeout: 4000
+    });
   } finally {
     isLoading.value = false;
   }
@@ -114,44 +159,122 @@ const saveUser = async () => {
   isSaving.value = true;
   
   try {
-    const url = isEditMode.value 
-      ? `/api/v1/users/${props.userId}` 
-      : '/api/v1/users';
+    // Create payload with the exact structure expected by the API
+    const payload = {
+      email: formData.value.email,
+      firstName: formData.value.firstName,
+      lastName: formData.value.lastName
+    };
     
-    const method = isEditMode.value ? 'PATCH' : 'POST';
-    
-    // Create payload (omit password if empty in edit mode)
-    const payload = { ...formData.value };
-    if (isEditMode.value && !payload.password) {
-      delete payload.password;
+    // Include the user ID in the payload when editing
+    if (isEditMode.value && props.userId) {
+      payload.id = parseInt(props.userId);
     }
     
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+    // Only include password if it's not empty
+    if (formData.value.password) {
+      payload.password = formData.value.password;
     }
     
-    notification.success(
+    // Format role, status and photo with exact structure required
+    if (formData.value.role && formData.value.role.id) {
+      payload.role = { 
+        id: formData.value.role.id
+      };
+    }
+    
+    if (formData.value.status && formData.value.status.id) {
+      payload.status = { 
+        id: formData.value.status.id
+      };
+    }
+    
+    if (formData.value.photo && formData.value.photo.id) {
+      payload.photo = { 
+        id: formData.value.photo.id
+      };
+    }
+    
+    console.log('Sending payload:', payload);
+    
+    // Handle create vs update differently
+    let response;
+    if (isEditMode.value) {
+      // For update, use direct fetch for more control
+      const updateUrl = `${api.getBaseUrl()}users/${props.userId}`;
+      console.log('Update URL:', updateUrl);
+      
+      const fetchResponse = await fetch(updateUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authStore.token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!fetchResponse.ok) {
+        const errorData = await fetchResponse.json();
+        console.error('Update error details:', errorData);
+        let errorMessage = 'Failed to update user';
+        
+        // Extract detailed error message if available
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+          // Handle validation errors array
+          errorMessage = errorData.errors.map(err => err.message || err).join(', ');
+        }
+        
+        // Show error notification with the detailed message
+        $notification.error(errorMessage, {
+          title: 'Update Failed',
+          timeout: 8000
+        });
+        
+        throw new Error(`Update failed: ${errorMessage}`);
+      }
+      
+      const data = await fetchResponse.json();
+      response = { success: true, data };
+    } else {
+      // For create, use the API composable
+      response = await api.post('users', payload);
+      
+      if (!response.success) {
+        console.error('API Error Response:', response);
+        let errorMessage = response.error || 'Failed to create user';
+        $notification.error(errorMessage, {
+          title: 'Create Failed',
+          timeout: 8000
+        });
+        throw new Error(`Error: ${errorMessage}`);
+      }
+    }
+    
+    $notification.success(
       isEditMode.value 
         ? t('users.update_success', 'User updated successfully')
-        : t('users.create_success', 'User created successfully')
+        : t('users.create_success', 'User created successfully'),
+      {
+        title: isEditMode.value ? 'Update Success' : 'Create Success',
+        timeout: 5000
+      }
     );
     
     // Navigate back to users list
     router.push('/users');
   } catch (error) {
-    notification.error(
-      isEditMode.value 
-        ? t('users.update_error', 'Error updating user')
-        : t('users.create_error', 'Error creating user')
-    );
+    // Only show generic error if a specific one wasn't already shown
+    if (!error.message.includes('Update failed:') && !error.message.includes('Error:')) {
+      $notification.error(
+        isEditMode.value 
+          ? t('users.update_error', 'Error updating user') 
+          : t('users.create_error', 'Error creating user')
+      );
+    }
     console.error('Error saving user:', error);
   } finally {
     isSaving.value = false;

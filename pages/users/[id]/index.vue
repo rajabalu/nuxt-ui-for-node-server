@@ -3,11 +3,13 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useNotification } from '@/composables/useNotification';
+import { useApi } from '@/composables/api';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const notification = useNotification();
+const api = useApi();
 
 const userId = route.params.id;
 const user = ref(null);
@@ -25,11 +27,11 @@ onMounted(async () => {
 const loadUser = async () => {
   isLoading.value = true;
   try {
-    const response = await fetch(`/api/v1/users/${userId}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+    const response = await api.get(`users/${userId}`);
+    if (!response.success) {
+      throw new Error(`Error: ${response.error}`);
     }
-    user.value = await response.json();
+    user.value = response.data;
   } catch (error) {
     notification.error(t('users.load_error', 'Error loading user data'));
     console.error('Error loading user:', error);
@@ -44,12 +46,10 @@ const handleEdit = () => {
 
 const handleDelete = async () => {
   try {
-    const response = await fetch(`/api/v1/users/${userId}`, {
-      method: 'DELETE'
-    });
+    const response = await api.delete(`users/${userId}`);
     
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+    if (!response.success) {
+      throw new Error(`Error: ${response.error}`);
     }
     
     notification.success(t('users.delete_success', 'User deleted successfully'));

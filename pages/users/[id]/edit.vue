@@ -1,6 +1,7 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import UserForm from '@/components/apps/users/UserForm.vue';
 
 const route = useRoute();
 const { t } = useI18n();
@@ -13,5 +14,5 @@ definePageMeta({
 </script>
 
 <template>
-  <AppsUsersUserForm :user-id="userId" />
+  <UserForm :user-id="userId" />
 </template> 

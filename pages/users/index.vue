@@ -38,8 +38,8 @@ const columns = ref([
     type: 'select',
     editable: true,
     options: [
-      { text: t('roles.admin', 'Admin'), value: { id: 1, name: 'admin' } },
-      { text: t('roles.user', 'User'), value: { id: 2, name: 'user' } }
+      { text: t('roles.admin', 'Admin'), value: 1 },
+      { text: t('roles.user', 'User'), value: 2 }
     ]
   },
   { 
@@ -48,8 +48,8 @@ const columns = ref([
     type: 'select',
     editable: true,
     options: [
-      { text: t('statuses.active', 'Active'), value: { id: 1, name: 'active' } },
-      { text: t('statuses.inactive', 'Inactive'), value: { id: 2, name: 'inactive' } }
+      { text: t('statuses.active', 'Active'), value: 1 },
+      { text: t('statuses.inactive', 'Inactive'), value: 2 }
     ]
   },
   { key: 'createdAt', title: t('common.createdAt', 'Created Date'), type: 'date' }
@@ -59,7 +59,8 @@ const columns = ref([
 const apiConfig = {
   list: 'users', // Without leading slash to work with BASE_URL that has trailing slash
   delete: 'users/:id',
-  edit: '/users/:id/edit' // This is a frontend route, not API
+  edit: '/users/:id/edit', // This is a frontend route, not API
+  create: '/users/create' // Add explicit create path
 };
 
 // Filters configuration

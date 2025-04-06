@@ -1,5 +1,6 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
+import UserForm from '@/components/apps/users/UserForm.vue';
 
 const { t } = useI18n();
 
@@ -10,5 +11,5 @@ definePageMeta({
 </script>
 
 <template>
-  <AppsUsersUserForm />
+  <UserForm />
 </template> 
