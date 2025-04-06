@@ -1,6 +1,6 @@
 <template>
     <div class="chat-interface d-flex flex-column">
-      <!-- Chat history area (scrollable) -->
+      <!-- Chat Messages Area -->
       <div ref="chatHistoryRef" class="chat-history flex-grow-1">
         <v-slide-y-transition group>
           <ChatMessage
@@ -12,17 +12,14 @@
             :status="message.status"
           />
         </v-slide-y-transition>
-  
-        <!-- Auto-scroll anchor -->
         <div ref="scrollAnchorRef"></div>
       </div>
   
-      <!-- Chat input area (fixed at bottom) -->
-      <div class="chat-input-container pa-3">
+      <!-- Chat Input Area -->
+      <div class="chat-input-container">
         <v-card class="chat-input-card" elevation="0">
           <v-row no-gutters align="center">
-            <!-- Text input -->
-            <v-col>
+            <v-col class="pr-2">
               <v-textarea
                 v-model="inputMessage"
                 placeholder="Type a message..."
@@ -30,38 +27,34 @@
                 rows="1"
                 row-height="20"
                 max-rows="5"
-                hide-details
                 variant="plain"
-                density="comfortable"
-                class="chat-textarea px-2"
+                hide-details
                 @keydown.enter.prevent="onEnterPress"
+                class="chat-textarea"
               ></v-textarea>
             </v-col>
   
-            <!-- Voice input button -->
-            <v-col cols="auto">
+            <v-col cols="auto" class="d-flex align-center">
               <v-btn
                 icon
-                color="#6366F1"
                 variant="text"
-                aria-label="Voice input"
+                color="primary"
                 class="mx-1"
+                aria-label="Voice input"
               >
                 <v-icon>mdi-microphone</v-icon>
               </v-btn>
-            </v-col>
   
-            <!-- Send button -->
-            <v-col cols="auto">
               <v-btn
                 icon
-                color="white"
+                variant="flat"
+                color="primary"
                 :disabled="!inputMessage.trim()"
                 @click="sendMessage"
-                aria-label="Send message"
                 class="send-button"
+                aria-label="Send message"
               >
-                <v-icon>mdi-arrow-right</v-icon>
+                <v-icon>mdi-send</v-icon>
               </v-btn>
             </v-col>
           </v-row>
@@ -74,17 +67,22 @@
   import { ref, onMounted, nextTick, watch } from 'vue';
   import ChatMessage from '~/components/chat/ChatMessage.vue';
   
-  // Define the chat messages
+  // Message data
   const messages = ref([
-    { isUser: false, content: 'Hello! How can I help you today?', timestamp: new Date('2023-04-14T05:42:00'), status: 'delivered' },
+    { 
+      isUser: false, 
+      content: 'Hello! How can I help you today?', 
+      timestamp: new Date('2023-04-14T05:42:00'), 
+      status: 'delivered' 
+    },
   ]);
   
-  // Input message binding
+  // Reactive references
   const inputMessage = ref('');
   const chatHistoryRef = ref(null);
   const scrollAnchorRef = ref(null);
   
-  // Scroll to bottom of chat
+  // Auto-scroll to bottom
   const scrollToBottom = async () => {
     await nextTick();
     if (scrollAnchorRef.value) {
@@ -92,50 +90,49 @@
     }
   };
   
-  // Send message function
+  // Send message handler
   const sendMessage = async () => {
     if (!inputMessage.value.trim()) return;
-    
+  
     // Add user message
     messages.value.push({
       isUser: true,
-      content: inputMessage.value,
+      content: inputMessage.value.trim(),
       timestamp: new Date(),
       status: 'sent'
     });
-    
+  
     // Clear input
     inputMessage.value = '';
-    
+  
     // Scroll to bottom
     await scrollToBottom();
-    
-    // Simulate assistant response (replace with actual API call)
-    setTimeout(() => {
+  
+    // Simulate AI response
+    setTimeout(async () => {
       messages.value.push({
         isUser: false,
         content: 'I received your message. This is a placeholder response.',
         timestamp: new Date(),
         status: 'delivered'
       });
-      scrollToBottom();
+      await scrollToBottom();
     }, 1000);
   };
   
-  // Handle Enter key
+  // Enter key handler
   const onEnterPress = (event) => {
-    // Allow new line with Shift+Enter
     if (!event.shiftKey) {
       sendMessage();
     }
   };
   
-  // Watch messages to auto-scroll on new messages
+  // Watch for new messages
   watch(messages, () => {
     scrollToBottom();
   }, { deep: true });
   
-  // Initial scroll to bottom on mount
+  // Initial scroll on mount
   onMounted(() => {
     scrollToBottom();
   });
@@ -148,39 +145,73 @@
   }
   
   .chat-history {
-    padding: 16px;
     overflow-y: auto;
     scroll-behavior: smooth;
+    padding: 16px 16px 0 16px;
+    
+    // Scrollbar styling
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+  
+    &::-webkit-scrollbar-track {
+      background: rgba(var(--v-theme-on-surface), 0.1);
+    }
+  
+    &::-webkit-scrollbar-thumb {
+      background: rgba(var(--v-theme-on-surface), 0.3);
+      border-radius: 4px;
+    }
   }
   
   .chat-input-container {
     border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
-    background-color: rgb(var(--v-theme-surface));
-  }
+    padding: 16px;
+    background: rgb(var(--v-theme-surface));
   
-  .chat-input-card {
-    border-radius: 100px;
-    background-color: #303030; // Dark input background
-    padding: 4px;
+    .chat-input-card {
+      background: rgba(var(--v-theme-on-surface), 0.05);
+      border-radius: 28px;
+      padding: 4px 12px;
+    }
   }
   
   .chat-textarea {
     :deep(.v-field__field) {
       padding-top: 8px !important;
       padding-bottom: 8px !important;
+      min-height: 48px;
     }
-    
-    :deep(.v-field) {
-      color: white;
-    }
-    
-    :deep(textarea::placeholder) {
-      color: rgba(255, 255, 255, 0.7);
+  
+    :deep(textarea) {
+      color: rgba(var(--v-theme-on-surface), 0.9);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      
+      &::placeholder {
+        color: rgba(var(--v-theme-on-surface), 0.5) !important;
+      }
     }
   }
   
   .send-button {
-    background-color: #6366F1 !important; // Purple send button
-    margin-right: 4px;
+    :deep(.v-btn__overlay) {
+      opacity: 0.1 !important;
+    }
+    
+    &:not(:disabled) {
+      box-shadow: 0 3px 12px rgba(99, 102, 241, 0.2);
+    }
+  }
+  
+  // Dark theme adjustments
+  .v-theme--dark {
+    .chat-input-card {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .chat-textarea :deep(textarea) {
+      color: rgba(255, 255, 255, 0.9);
+    }
   }
   </style>
