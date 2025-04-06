@@ -45,7 +45,8 @@
     "cancel": "Annuler",
     "languageChanged": "Langue changée avec succès",
     "languageChangeError": "Échec du changement de langue",
-    "about": "À propos de nous"
+    "about": "À propos de nous",
+    "welcome": "Bienvenue !"
   },
   "footer": {
     "copyright": "Tous droits réservés",

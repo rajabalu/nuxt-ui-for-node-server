@@ -44,7 +44,8 @@
     "cancel": "Cancel",
     "languageChanged": "Language changed successfully",
     "languageChangeError": "Failed to change language",
-    "about": "About Us"
+    "about": "About Us",
+    "welcome": "Welcome!"
   },
   "footer": {
     "copyright": "All Rights Reserved",

@@ -7,7 +7,7 @@ import { useI18n } from "vue-i18n";
 import { useAuthStore } from '@/stores/auth';
 import { themeConfig } from '@/composables/theme';
 import { watch, computed, onMounted, ref } from 'vue';
-import { useNuxtApp } from '#app';
+import { useNuxtApp, useRoute, useHead } from '#app';
 import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
 import { useUserPreferences } from '@/stores/userPreferences';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
@@ -16,6 +16,7 @@ const theme = themeConfig();
 const { themeHeaderHeight, themeSidebarWidth, smallDisplay, themeChangeMode } = theme;
 const themeName = computed(() => theme.themeName.value);
 const nuxtApp = useNuxtApp();
+const route = useRoute();
 
 const globalStore = useGlobal();
 const { locale, t } = useI18n();
@@ -25,6 +26,50 @@ const userPreferencesStore = useUserPreferences();
 // Debug computed properties
 const currentLocale = computed(() => locale.value);
 const homePath = computed(() => getLocalizedPath('/', locale.value));
+
+// Page title handling
+const pageTitle = computed(() => {
+  // Get route name or path
+  const routeName = route.name?.toString() || '';
+  const routePath = route.path;
+  
+  // Extract title from route name or path
+  let title = '';
+  
+  if (routeName === 'index') {
+    title = t('common.welcome', 'Welcome!');
+  } else if (routePath.includes('/users')) {
+    if (routePath.includes('/edit')) {
+      title = t('users.edit', 'Edit User');
+    } else if (routePath.includes('/create')) {
+      title = t('users.create', 'Create User');
+    } else {
+      title = t('users.title', 'Users');
+    }
+  } else {
+    // Get the last segment of the path as a fallback
+    const segments = routePath.split('/').filter(Boolean);
+    if (segments.length > 0) {
+      const lastSegment = segments[segments.length - 1];
+      // Convert to title case and translate if possible
+      title = t(`routes.${lastSegment}`, lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/-/g, ' '));
+    } else {
+      title = t('common.welcome', 'Welcome!');
+    }
+  }
+  
+  return title;
+});
+
+// Full document title with app name
+const documentTitle = computed(() => {
+  return `AutoCortex - ${pageTitle.value}`;
+});
+
+// Set document title
+useHead({
+  title: documentTitle,
+});
 
 // Use the new preferences helper
 const preferencesHelper = useUserPreferencesHelper();
@@ -89,7 +134,6 @@ if (smallDisplay.value) {
 
 <template>
   <v-app-bar :height="themeHeaderHeight" class="app-header" fixed>
-    <h1 class="text-h4 mb-4">{{ $t('users.management', 'User Management') }}</h1>
     <template #prepend>
       <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-item-center mr-3">
         <NuxtLink :to="homePath" class="d-flex">
@@ -114,6 +158,7 @@ if (smallDisplay.value) {
       >
         <v-icon size="25" icon="tabler-menu-2" />
       </icon-btn>
+      <h1 class="text-h3 ml-4 mb-0 font-weight-medium">{{ pageTitle }}</h1>
     </template>
 
     <template #append>

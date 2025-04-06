@@ -45,7 +45,8 @@
     "cancel": "إلغاء",
     "languageChanged": "تم تغيير اللغة بنجاح",
     "languageChangeError": "فشل في تغيير اللغة",
-    "about": "عن الشركة"
+    "about": "عن الشركة",
+    "welcome": "مرحباً!"
   },
   "footer": {
     "copyright": "جميع الحقوق محفوظة",
