@@ -1,56 +1,8 @@
 <template>
   <div class="crud-list">
-    <!-- Bulk action bar - shows when items are selected -->
-    <v-row v-if="selectedItems.length > 0" class="mb-2">
-      <v-col>
-        <v-chip class="mr-2">{{ selectedItems.length }} {{ $t('common.items_selected', 'items selected') }}</v-chip>
-        <v-btn 
-          color="error" 
-          class="ml-2" 
-          prepend-icon="tabler-trash" 
-          @click="confirmBulkDelete"
-          :loading="bulkDeleteLoading"
-        >
-          {{ $t('common.delete_selected', 'Delete Selected') }}
-        </v-btn>
-        <v-btn 
-          color="warning" 
-          class="ml-2" 
-          prepend-icon="tabler-edit" 
-          @click="openBulkEditDialog"
-        >
-          {{ $t('common.edit_selected', 'Edit Selected') }}
-        </v-btn>
-      </v-col>
-    </v-row>
-    
     <!-- Filter and actions bar -->
     <v-row class="mb-2">
-      <!-- Search input -->
-      <v-col cols="12" sm="4">
-        <v-text-field
-          v-model="search"
-          :placeholder="$t('common.search', 'Search')"
-          prepend-inner-icon="tabler-search"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="mb-2"
-          @update:model-value="handleSearch"
-        ></v-text-field>
-      </v-col>
-      
-      <!-- Filter button -->
-      <v-col cols="12" sm="auto">
-        <v-btn
-          variant="outlined"
-          color="secondary"
-          prepend-icon="tabler-filter"
-          @click="showFilters = !showFilters"
-        >
-          {{ showFilters ? $t('common.hide_filters', 'Hide Filters') : $t('common.show_filters', 'Show Filters') }}
-        </v-btn>
-      </v-col>
+      <!-- Search input removed -->
       
       <v-spacer></v-spacer>
       
@@ -136,95 +88,6 @@
       </v-col>
     </v-row>
     
-    <!-- Filter panel -->
-    <v-expand-transition>
-      <div v-if="showFilters" class="mb-4">
-        <v-card class="pa-4">
-          <v-row>
-            <v-col v-for="filter in availableFilters" :key="filter.key" cols="12" sm="6" md="4" lg="3">
-              <!-- Text filter -->
-              <template v-if="filter.type === 'text'">
-                <v-text-field
-                  v-model="activeFilters[filter.key]"
-                  :label="filter.label"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  class="mb-2"
-                ></v-text-field>
-              </template>
-              
-              <!-- Select filter -->
-              <template v-else-if="filter.type === 'select'">
-                <v-select
-                  v-model="activeFilters[filter.key]"
-                  :label="filter.label"
-                  :items="filter.options"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  class="mb-2"
-                ></v-select>
-              </template>
-              
-              <!-- Date filter -->
-              <template v-else-if="filter.type === 'date'">
-                <v-menu>
-                  <template v-slot:activator="{ props: dateProps }">
-                    <v-text-field
-                      v-model="activeFilters[filter.key]"
-                      :label="filter.label"
-                      v-bind="dateProps"
-                      prepend-inner-icon="tabler-calendar"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      class="mb-2"
-                      readonly
-                    ></v-text-field>
-                  </template>
-                  <v-date-picker
-                    v-model="activeFilters[filter.key]"
-                    @update:model-value="dateMenu = false"
-                  ></v-date-picker>
-                </v-menu>
-              </template>
-              
-              <!-- Boolean filter -->
-              <template v-else-if="filter.type === 'boolean'">
-                <v-switch
-                  v-model="activeFilters[filter.key]"
-                  :label="filter.label"
-                  hide-details
-                  density="compact"
-                  class="mb-2"
-                ></v-switch>
-              </template>
-            </v-col>
-          </v-row>
-          
-          <v-row class="mt-2">
-            <v-col class="d-flex justify-end">
-              <v-btn
-                color="secondary"
-                variant="text"
-                @click="resetFilters"
-              >
-                {{ $t('common.reset', 'Reset') }}
-              </v-btn>
-              <v-btn
-                color="primary"
-                class="ml-2"
-                @click="applyFilters"
-              >
-                {{ $t('common.apply_filters', 'Apply Filters') }}
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card>
-      </div>
-    </v-expand-transition>
-
     <!-- Desktop view with data table -->
     <template v-if="!isMobile">
       <v-data-table
@@ -523,11 +386,6 @@ const props = defineProps({
     type: Array,
     required: true
   },
-  // Filter configuration
-  filters: {
-    type: Array,
-    default: () => []
-  },
   // CRUD permissions and configuration
   config: {
     type: Object,
@@ -575,7 +433,6 @@ const emit = defineEmits([
 const isMobile = computed(() => mobile.value);
 const items = ref([]);
 const loading = ref(false);
-const search = ref('');
 const itemsPerPage = ref(10);
 const sortBy = ref(props.initialSort);
 const pagination = ref({
@@ -590,9 +447,6 @@ const bulkDeleteDialog = ref(false);
 const bulkDeleteLoading = ref(false);
 const selectedItems = ref([]);
 const editingRow = ref(null);
-const showFilters = ref(false);
-const activeFilters = ref({});
-const dateMenu = ref(false);
 const bulkEditDialog = ref(false);
 const bulkEditLoading = ref(false);
 const bulkEditData = ref({});
@@ -612,7 +466,7 @@ const userPreferences = useLocalStorage(storageKey, {
 
 // Cache key based on current params
 const cacheKey = computed(() => {
-  return `${props.apiConfig.list}-${pagination.value.page}-${pagination.value.limit}-${search.value}-${JSON.stringify(sortBy.value)}-${JSON.stringify(activeFilters.value)}`;
+  return `${props.apiConfig.list}-${pagination.value.page}-${pagination.value.limit}-${JSON.stringify(sortBy.value)}`;
 });
 
 // Computed properties
@@ -640,14 +494,6 @@ const editableColumns = computed(() => {
   return props.columns.filter(col => col.editable && col.key !== 'actions');
 });
 
-// Available filters with i18n support
-const availableFilters = computed(() => {
-  return props.filters.map(filter => ({
-    ...filter,
-    label: filter.i18n ? t(filter.i18n) : filter.label
-  }));
-});
-
 // Columns to show in mobile view
 const visibleMobileColumns = computed(() => {
   // Show fewer columns on mobile
@@ -661,17 +507,6 @@ const crudOps = useCrudOperations(props.apiConfig, {
 });
 
 // Methods
-
-// Debounced search function
-const debouncedSearch = debounce(() => {
-  pagination.value.page = 1; // Reset to first page on search
-  fetchData();
-}, 300);
-
-// Handle search input
-const handleSearch = () => {
-  debouncedSearch();
-};
 
 // Handle column visibility toggle
 const toggleColumnVisibility = (column) => {
@@ -706,17 +541,6 @@ const handleTableOptionsChange = (options) => {
   fetchData();
 };
 
-// Reset filters
-const resetFilters = () => {
-  activeFilters.value = {};
-};
-
-// Apply filters
-const applyFilters = () => {
-  pagination.value.page = 1; // Reset to first page when filtering
-  fetchData();
-};
-
 // Start inline editing
 const startInlineEdit = (item) => {
   // Clone the item to avoid directly modifying the original
@@ -737,12 +561,12 @@ const saveInlineEdit = async () => {
         items.value[index] = result.data;
       }
       
-      notification.success($t('common.item_updated', 'Item updated successfully'));
+      notification.success(t('common.item_updated', 'Item updated successfully'));
       emit('item-edited', result.data);
       editingRow.value = null;
     }
   } catch (error) {
-    notification.error($t('common.update_failed', 'Update failed: {0}', [error.message]));
+    notification.error(t('common.update_failed', 'Update failed: {0}', [error.message]));
   }
 };
 
@@ -754,7 +578,7 @@ const cancelInlineEdit = () => {
 // Confirm bulk delete
 const confirmBulkDelete = () => {
   if (selectedItems.value.length === 0) {
-    notification.warning($t('common.no_items_selected', 'No items selected'));
+    notification.warning(t('common.no_items_selected', 'No items selected'));
     return;
   }
   
@@ -813,13 +637,13 @@ const doBulkDelete = async () => {
     
     // Show result notification
     if (results.failed === 0) {
-      notification.success($t('common.items_deleted', '{0} items deleted successfully', [results.success]));
+      notification.success(t('common.items_deleted', '{0} items deleted successfully', [results.success]));
     } else if (results.success > 0) {
       notification.warning(
-        $t('common.bulk_delete_partial', 'Deleted {0} items, {1} failed', [results.success, results.failed])
+        t('common.bulk_delete_partial', 'Deleted {0} items, {1} failed', [results.success, results.failed])
       );
     } else {
-      notification.error($t('common.bulk_delete_failed', 'Failed to delete any items'));
+      notification.error(t('common.bulk_delete_failed', 'Failed to delete any items'));
     }
     
     // Clear selection
@@ -849,7 +673,7 @@ const doBulkDelete = async () => {
       fetchData();
     }
   } catch (error) {
-    notification.error($t('common.delete_failed', 'Delete failed: {0}', [error.message]));
+    notification.error(t('common.delete_failed', 'Delete failed: {0}', [error.message]));
   } finally {
     bulkDeleteLoading.value = false;
   }
@@ -858,7 +682,7 @@ const doBulkDelete = async () => {
 // Open bulk edit dialog
 const openBulkEditDialog = () => {
   if (selectedItems.value.length === 0) {
-    notification.warning($t('common.no_items_selected', 'No items selected'));
+    notification.warning(t('common.no_items_selected', 'No items selected'));
     return;
   }
   
@@ -900,7 +724,7 @@ const applyBulkEdit = async () => {
   });
   
   if (!hasUpdates) {
-    notification.warning($t('common.no_changes', 'No changes to apply'));
+    notification.warning(t('common.no_changes', 'No changes to apply'));
     return;
   }
   
@@ -933,11 +757,11 @@ const applyBulkEdit = async () => {
     if (results.success > 0) {
       if (results.failed > 0) {
         notification.warning(
-          $t('common.bulk_edit_partial', 'Updated {0} items, {1} failed', [results.success, results.failed])
+          t('common.bulk_edit_partial', 'Updated {0} items, {1} failed', [results.success, results.failed])
         );
       } else {
         notification.success(
-          $t('common.bulk_edit_success', 'Successfully updated {0} items', [results.success])
+          t('common.bulk_edit_success', 'Successfully updated {0} items', [results.success])
         );
       }
       
@@ -951,10 +775,10 @@ const applyBulkEdit = async () => {
       fetchData();
       bulkEditDialog.value = false;
     } else {
-      notification.error($t('common.bulk_edit_failed', 'Failed to update any items'));
+      notification.error(t('common.bulk_edit_failed', 'Failed to update any items'));
     }
   } catch (error) {
-    notification.error($t('common.update_failed', 'Update failed: {0}', [error.message]));
+    notification.error(t('common.update_failed', 'Update failed: {0}', [error.message]));
   } finally {
     bulkEditLoading.value = false;
   }
@@ -982,17 +806,6 @@ const exportData = async (format) => {
       params.append('sortBy', sort.key);
       params.append('sortOrder', sort.order);
     }
-    
-    if (search.value) {
-      params.append('search', search.value);
-    }
-    
-    // Add filter parameters
-    Object.entries(activeFilters.value).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(`filter[${key}]`, value);
-      }
-    });
     
     let endpoint;
     if (props.apiConfig.export) {
@@ -1043,12 +856,12 @@ const exportData = async (format) => {
           break;
       }
       
-      notification.success($t('common.export_success', 'Data exported successfully as {0}', [format.toUpperCase()]));
+      notification.success(t('common.export_success', 'Data exported successfully as {0}', [format.toUpperCase()]));
     } else {
-      notification.error($t('common.export_failed', 'Error exporting data: {0}', [response.error]));
+      notification.error(t('common.export_failed', 'Error exporting data: {0}', [response.error]));
     }
   } catch (error) {
-    notification.error($t('common.export_failed', 'Export failed: {0}', [error.message]));
+    notification.error(t('common.export_failed', 'Export failed: {0}', [error.message]));
   } finally {
     loading.value = false;
   }
@@ -1083,19 +896,8 @@ const fetchData = async (retryCount = 0) => {
       params.sortOrder = sort.order;
     }
     
-    // Add search parameter if available
-    if (search.value) {
-      params.search = search.value;
-    }
-    
-    // Add filter parameters
-    Object.entries(activeFilters.value).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params[`filter[${key}]`] = value;
-      }
-    });
-    
     // Use CRUD operations to fetch data
+    console.log('Sending params to API:', params);
     const result = await crudOps.fetchData(params);
     
     if (!result.error) {
@@ -1191,7 +993,7 @@ const confirmDelete = async () => {
     if (result.success) {
       // Remove from local list
       items.value = items.value.filter(item => item.id !== itemToDelete.value.id);
-      notification.success($t('common.item_deleted', 'Item deleted successfully'));
+      notification.success(t('common.item_deleted', 'Item deleted successfully'));
       emit('item-deleted', itemToDelete.value);
       deleteDialog.value = false;
       
@@ -1199,7 +1001,7 @@ const confirmDelete = async () => {
       cache.clear(props.apiConfig.list);
     }
   } catch (error) {
-    notification.error($t('common.delete_failed', 'Delete failed: {0}', [error.message]));
+    notification.error(t('common.delete_failed', 'Delete failed: {0}', [error.message]));
   } finally {
     deleteLoading.value = false;
   }

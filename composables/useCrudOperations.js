@@ -24,11 +24,21 @@ export function useCrudOperations(apiConfig, options = {}) {
     
     try {
       // Build query params
-      const queryParams = new URLSearchParams({
-        page: pagination.value.page.toString(),
-        limit: pagination.value.limit.toString(),
-        ...params
+      const queryParams = new URLSearchParams();
+      
+      // Add pagination parameters
+      queryParams.append('page', pagination.value.page.toString());
+      queryParams.append('limit', pagination.value.limit.toString());
+      
+      // Add all other parameters from params object
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString());
+        }
       });
+      
+      // Log query parameters for debugging
+      console.log('Query parameters:', Object.fromEntries(queryParams.entries()));
       
       // Ensure endpoint doesn't start with / if BASE_URL ends with /
       let endpoint = apiConfig.list;
