@@ -34,6 +34,7 @@ useHead({ title: 'Welcome!' });
   border-right: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   overflow-y: auto;
   z-index: 2;
+  background-color: rgb(var(--v-theme-surface));
 }
 
 .chat-container {

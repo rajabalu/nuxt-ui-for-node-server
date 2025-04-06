@@ -18,7 +18,6 @@
   color: rgba(var(--v-theme-on-surface), 0.9);
   position: sticky;
   top: 0;
-  background-color: rgb(var(--v-theme-surface-variant), 0.9);
   
   .avatar-circle {
     width: 120px;
