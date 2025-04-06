@@ -78,7 +78,6 @@ const loadRoles = async () => {
       { id: 3, name: 'Manager' },
       { id: 4, name: 'Editor' }
     ];
-    $notification.info(t('common.using_fallback', 'Using fallback roles data'));
   }
 };
 
@@ -101,7 +100,6 @@ const loadStatuses = async () => {
       { id: 3, name: 'Pending' },
       { id: 4, name: 'Suspended' }
     ];
-    $notification.info(t('common.using_fallback', 'Using fallback statuses data'));
   }
 };
 
@@ -274,8 +272,6 @@ const cancelForm = () => {
   <v-container>
     <v-row>
       <v-col cols="12">
-        <h1 class="text-h4 mb-4">{{ formTitle }}</h1>
-        
         <v-card>
           <v-card-text>
             <v-form ref="form">
@@ -286,6 +282,7 @@ const cancelForm = () => {
                     v-model="formData.email"
                     :label="$t('users.email', 'Email')"
                     type="email"
+                    autocomplete="off"
                     required
                     :rules="[
                       v => !!v || $t('validation.required', 'This field is required'),
@@ -305,6 +302,7 @@ const cancelForm = () => {
                       v => (isEditMode && v === '') ? true : (!!v && v.length >= 8) || $t('validation.password', 'Password must be at least 8 characters')
                     ]"
                     variant="outlined"
+                    autocomplete="off"
                     :placeholder="isEditMode ? $t('users.leave_blank', 'Leave blank to keep current password') : ''"
                     :append-inner-icon="showPassword ? 'tabler-eye-off' : 'tabler-eye'"
                     @click:append-inner="showPassword = !showPassword"
@@ -379,7 +377,7 @@ const cancelForm = () => {
             <v-spacer></v-spacer>
             <v-btn 
               color="secondary" 
-              variant="outlined" 
+              variant="elevated"
               :disabled="isSaving" 
               @click="cancelForm"
             >
@@ -387,6 +385,7 @@ const cancelForm = () => {
             </v-btn>
             <v-btn 
               color="primary" 
+              variant="elevated"
               :loading="isSaving" 
               @click="saveUser"
             >

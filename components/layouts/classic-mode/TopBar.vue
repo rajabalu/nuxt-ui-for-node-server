@@ -89,6 +89,7 @@ if (smallDisplay.value) {
 
 <template>
   <v-app-bar :height="themeHeaderHeight" class="app-header" fixed>
+    <h1 class="text-h4 mb-4">{{ $t('users.management', 'User Management') }}</h1>
     <template #prepend>
       <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-item-center mr-3">
         <NuxtLink :to="homePath" class="d-flex">

@@ -33,17 +33,6 @@
               {{ $t('common.export', 'Export') }}
             </v-btn>
           </template>
-          <v-list>
-            <v-list-item @click="exportData('csv')">
-              <v-list-item-title>{{ $t('common.export_csv', 'Export as CSV') }}</v-list-item-title>
-            </v-list-item>
-            <v-list-item @click="exportData('excel')">
-              <v-list-item-title>{{ $t('common.export_excel', 'Export as Excel') }}</v-list-item-title>
-            </v-list-item>
-            <v-list-item @click="exportData('json')">
-              <v-list-item-title>{{ $t('common.export_json', 'Export as JSON') }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
         </v-menu>
       </v-col>
       
