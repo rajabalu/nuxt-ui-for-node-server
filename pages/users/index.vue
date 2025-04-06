@@ -1,14 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useApi } from '@/composables/api';
 import { useNotification } from '@/composables/useNotification';
 import { useFormatters } from '@/composables/formatters';
+import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
 const api = useApi();
 const notification = useNotification();
 const { avatarText } = useFormatters();
+const authStore = useAuthStore();
 
 // Data from API
 const users = ref([]);
@@ -17,15 +19,24 @@ const loading = ref(true);
 // Fetch data
 onMounted(async () => {
   try {
+    // Ensure we have a valid token
+    if (!authStore.isAuthenticated) {
+      await authStore.refreshToken();
+    }
+    
     const response = await api.get('users');
-    users.value = response.data;
+    users.value = response.data || [];
   } catch (error) {
     console.error('Error fetching users:', error);
-    notification.error(`API error: ${error.message}`);
+    notification.error(`API error: ${error.message || 'Failed to fetch users'}`);
+    users.value = []; // Ensure users is always an array even on error
   } finally {
     loading.value = false;
   }
 });
+
+// Computed property for pagination total
+const totalItems = computed(() => users.value?.length || 0);
 
 // Table headers
 const headers = [
@@ -86,11 +97,13 @@ const deleteDialog = ref(false);
 
 // Calculate full name for display
 const getFullName = (item) => {
+  if (!item) return '';
   return `${item.firstName || ''} ${item.lastName || ''}`.trim();
 };
 
 // Get position or role for display
 const getPosition = (item) => {
+  if (!item) return '';
   return item.position || (item.role ? item.role.name : '');
 };
 
@@ -158,8 +171,8 @@ const handleRowClick = (item) => {
 
 // Confirm bulk delete
 const confirmBulkDelete = () => {
-  if (selectedItems.value.length === 0) {
-    notification.info(t('users.no_selection', 'Please select items to delete'));
+  if (!selectedItems.value || selectedItems.value.length === 0) {
+    notification.info('Please select items to delete');
     return;
   }
   deleteDialog.value = true;
@@ -167,7 +180,7 @@ const confirmBulkDelete = () => {
 
 // Delete selected users
 const handleBulkDelete = async () => {
-  if (selectedItems.value.length === 0) return;
+  if (!selectedItems.value || selectedItems.value.length === 0) return;
   
   try {
     // Process each selected item
@@ -176,15 +189,15 @@ const handleBulkDelete = async () => {
     );
     
     await Promise.all(deletePromises);
-    notification.success(t('users.delete_success', 'Users deleted successfully'));
+    notification.success('Users deleted successfully');
     
     // Refresh the list
     const response = await api.get(apiConfig.list);
-    users.value = response.data;
+    users.value = response.data || [];
     deleteDialog.value = false;
     selectedItems.value = [];
   } catch (error) {
-    notification.error(t('users.delete_error', 'Error deleting users'));
+    notification.error('Error deleting users');
   }
 };
 </script>
@@ -208,7 +221,7 @@ const handleBulkDelete = async () => {
             color="error"
             variant="outlined"
             prepend-icon="tabler-trash"
-            :disabled="selectedItems.length === 0"
+            :disabled="!selectedItems || selectedItems.length === 0"
             @click="confirmBulkDelete"
             class="mr-2"
           >
@@ -221,7 +234,7 @@ const handleBulkDelete = async () => {
       <v-data-table
         v-model="selectedItems"
         :headers="headers"
-        :items="users"
+        :items="users || []"
         :items-per-page="itemsPerPage"
         :loading="loading"
         show-select
@@ -231,7 +244,7 @@ const handleBulkDelete = async () => {
         <template #item.firstName="{ item }">
           <div class="d-flex align-center">
             <v-avatar
-              size="32"
+              size="48"
               :color="item.photo && item.photo.path ? '' : 'primary'"
               :class="item.photo && item.photo.path ? '' : 'v-avatar-light-bg primary--text'"
               :variant="!(item.photo && item.photo.path) ? 'tonal' : undefined"
@@ -242,7 +255,7 @@ const handleBulkDelete = async () => {
             <div class="d-flex flex-column ms-3">
               <span 
                 class="d-block font-weight-medium text-high-emphasis cursor-pointer"
-                @click="navigateTo(apiConfig.edit.replace(':id', item.id))"
+                @click="item && item.id ? navigateTo(apiConfig.edit.replace(':id', item.id)) : null"
               >
                 {{ getFullName(item) }}
               </span>
@@ -253,23 +266,25 @@ const handleBulkDelete = async () => {
 
         <!-- Email column -->
         <template #item.email="{ item }">
-          {{ item.email }}
+          {{ item ? item.email : '' }}
         </template>
         
         <!-- Date column -->
         <template #item.createdAt="{ item }">
-          {{ formatDate(item.createdAt) }}
+          {{ item ? formatDate(item.createdAt) : '' }}
         </template>
         
         <!-- Status chip -->
         <template #item.status.name="{ item }">
           <v-chip
+            v-if="item && item.status"
             :color="resolveStatusVariant(item.status ? item.status.id : 5).color"
             class="font-weight-medium"
             size="small"
           >
             {{ resolveStatusVariant(item.status ? item.status.id : 5).text }}
           </v-chip>
+          <span v-else></span>
         </template>
         
         <!-- Pagination at the bottom -->
@@ -288,7 +303,7 @@ const handleBulkDelete = async () => {
             ></v-select>
             <v-pagination
               v-model="page"
-              :length="Math.ceil(users.length / itemsPerPage)"
+              :length="Math.ceil(totalItems / itemsPerPage)"
               :total-visible="5"
             ></v-pagination>
           </div>
@@ -301,7 +316,7 @@ const handleBulkDelete = async () => {
       <v-card>
         <v-card-title>{{ $t('common.confirm_delete', 'Confirm Delete') }}</v-card-title>
         <v-card-text>
-          {{ selectedItems.length > 1 
+          {{ selectedItems && selectedItems.length > 1 
             ? $t('common.delete_multiple_confirmation', 'Are you sure you want to delete the selected items?') 
             : $t('common.delete_confirmation', 'Are you sure you want to delete this item?') 
           }}
