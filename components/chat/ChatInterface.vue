@@ -263,7 +263,7 @@
         const responseData = response.data;
         
         // Add user message to UI if needed
-        if (responseData.userMessage) {
+        if (responseData.userMessage && responseData.userMessage.content?.trim()) {
           const userMessage = {
             id: responseData.userMessage.id,
             isUser: true,
@@ -288,7 +288,7 @@
         }
         
         // Process and display AI response if available
-        if (responseData.aiResponse) {
+        if (responseData.aiResponse && responseData.aiResponse.content?.trim()) {
           const aiMessage = {
             id: responseData.aiResponse.id,
             isUser: false,

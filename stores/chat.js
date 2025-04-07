@@ -208,36 +208,29 @@ export const useChatStore = defineStore('chat', {
       try {
         const api = useApi();
         let targetConversationId = conversationId;
-        
+    
         // If no conversation ID, create a new one
         if (!targetConversationId) {
           const createResult = await this.createConversation();
-          
           if (!createResult.success) {
             notification.error(createResult.error || 'Failed to create conversation');
             return createResult;
           }
-          
           targetConversationId = createResult.data.id;
         }
-        
+    
         // Prepare message data
         const messageData = {
           content: content || '',
           sender: 'user'
         };
-        
-        // Add file if provided
-        if (fileId) {
-          messageData.file = { id: fileId };
-        }
-        
+    
         // Send message
         const response = await api.post(
           `conversations/${targetConversationId}/messages`, 
           messageData
         );
-        
+    
         if (response.success && response.data) {
           // Add message to UI if we're in the same conversation
           if (this.currentConversationId === targetConversationId) {
@@ -259,17 +252,20 @@ export const useChatStore = defineStore('chat', {
             
             this.messages.push(newMessage);
           }
-          
+    
+          // Call handleAiResponse to get the AI's response
+          await this.handleAiResponse(targetConversationId);
+    
           // Clear uploaded file after sending
           this.uploadedFile = null;
-          
+    
           return { 
             success: true, 
             data: response.data,
             conversationId: targetConversationId
           };
         }
-        
+    
         notification.error(response.error || 'Failed to send message');
         return { 
           success: false, 
@@ -309,16 +305,25 @@ export const useChatStore = defineStore('chat', {
             }
           };
         } else {
-          // Real API call - adjust as needed for your actual API
+          // Real API call - but don't trigger if already waiting for response
+          if (this.isSendingMessage) {
+            return { success: false, error: 'Already processing a message' };
+          }
+          
+          this.isSendingMessage = true;
+          
           aiResponse = await api.post(`conversations/${conversationId}/messages`, {
-            content: 'I received your message. This is a placeholder response.',
-            sender: 'assistant'
+            content: null,  // Use null instead of empty string
+            sender: 'assistant',
+            isAssistantRequest: true  // Flag to indicate this is specifically an AI request
           });
+          
+          this.isSendingMessage = false;
         }
         
         if (aiResponse.success && aiResponse.data) {
-          // Add AI message to UI if we're in the same conversation
-          if (this.currentConversationId === conversationId) {
+          // Add AI message to UI if we're in the same conversation and message has content
+          if (this.currentConversationId === conversationId && aiResponse.data.content?.trim()) {
             const aiMessage = {
               id: aiResponse.data.id,
               isUser: false,
@@ -338,7 +343,13 @@ export const useChatStore = defineStore('chat', {
       } catch (error) {
         console.error('Error with AI response:', error);
         return { success: false, error: 'An error occurred with the AI response' };
+      } finally {
+        this.isSendingMessage = false;
       }
+    },
+
+    clearMessages() {
+      this.messages = [];
     },
     
     // Delete a conversation

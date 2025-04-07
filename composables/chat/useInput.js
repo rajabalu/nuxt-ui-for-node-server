@@ -46,16 +46,20 @@ export const useInput = (options = {}) => {
     if (!content && !fileId) return;
     
     try {
+      // Set message sending flag
+      chatStore.isSendingMessage = true;
+      
+      // Clear the input before sending to prevent duplicates
+      const messageToSend = content;
+      inputMessage.value = '';
+      
       const result = await chatStore.sendMessage(
         conversationId.value, 
-        content,
+        messageToSend,
         fileId
       );
       
       if (result.success) {
-        // Reset input
-        inputMessage.value = '';
-        
         // Scroll to bottom
         if (scrollToBottom) {
           await scrollToBottom();
@@ -65,11 +69,13 @@ export const useInput = (options = {}) => {
         if (!conversationId.value && result.conversationId) {
           router.push(`/strategies/${result.conversationId}`);
         } else {
-          // Simulate AI response for existing conversation
+          // Wait a moment before triggering AI response to avoid overlapping requests
           setTimeout(async () => {
-            await chatStore.handleAiResponse(result.conversationId || conversationId.value);
-            if (scrollToBottom) {
-              await scrollToBottom();
+            if (!chatStore.isSendingMessage) {
+              await chatStore.handleAiResponse(result.conversationId || conversationId.value);
+              if (scrollToBottom) {
+                await scrollToBottom();
+              }
             }
           }, 1000);
         }
@@ -79,6 +85,8 @@ export const useInput = (options = {}) => {
     } catch (error) {
       console.error('Error sending message:', error);
       notification.error('An error occurred while sending your message');
+    } finally {
+      chatStore.isSendingMessage = false;
     }
   };
   

@@ -27,13 +27,19 @@
 
 <script setup>
 import { useRouter } from '#app';
+import { computed } from 'vue';
 
 const router = useRouter();
 
 const navigateToNewStrategy = () => {
   // Navigate to index page to start a new strategy
+  chatStore.clearMessages();
   router.push('/');
 };
+
+const isButtonDisabled = computed(() => {
+  return !inputMessage.value.trim() && !uploadedFile.value; // Disable if both are empty
+});
 </script>
 
 <style lang="scss" scoped>
