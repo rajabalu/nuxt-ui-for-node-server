@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { useApi } from '~/composables/api';
 import { useNotification } from '~/composables/useNotification';
 import { useNuxtApp } from '#app';
+import { mapApiMessagesToUiFormat, mapApiMessageToUiFormat, generateMessageId } from '~/utils/chat';
 
 // Helper function to map API messages to local format
 const mapApiMessagesToLocalFormat = (apiMessages = []) => {
@@ -34,7 +35,8 @@ export const useChatStore = defineStore('chat', {
     messagesPerPage: 50,
     uploadedFile: null,
     isUploading: false,
-    isSendingMessage: false
+    isSendingMessage: false,
+    pendingMessages: {}, // Track messages being sent with their IDs
   }),
   
   getters: {
@@ -72,54 +74,61 @@ export const useChatStore = defineStore('chat', {
     async fetchMessages(conversationId, page = 1) {
       if (!conversationId) return { success: false, error: 'No conversation ID provided' };
       
-      const isInitialLoad = page === 1;
-      
-      if (isInitialLoad) {
-        this.isLoadingMessages = true;
-        this.messages = []; // Clear existing messages for new conversation
-      } else {
-        this.isLoadingMoreMessages = true;
-      }
-      
       try {
+        // Set loading state
+        if (page === 1) {
+          this.isLoadingMessages = true;
+        } else {
+          this.isLoadingMoreMessages = true;
+        }
+        
+        // Update current page
+        this.currentPage = page;
+        
         const api = useApi();
-        const response = await api.get(
-          `conversations/${conversationId}/messages?page=${page}&limit=${this.messagesPerPage}`
-        );
+        const response = await api.get(`conversations/${conversationId}/messages`, {
+          params: {
+            page,
+            limit: this.messagesPerPage
+          }
+        });
         
         if (response.success && response.data) {
-          // Process API response data
-          const newMessages = mapApiMessagesToLocalFormat(response.data.data || []);
+          // Handle different response structures
+          const apiMessages = Array.isArray(response.data) 
+            ? response.data 
+            : (response.data?.data || []);
           
-          if (isInitialLoad) {
-            // For initial load, set messages directly (newest first from API)
-            this.messages = newMessages.reverse(); // Reverse to show oldest first
+          // Use our utility function to map messages
+          const mappedMessages = mapApiMessagesToUiFormat(apiMessages);
+          
+          // For first page, replace messages; otherwise, prepend
+          if (page === 1) {
+            this.messages = mappedMessages;
           } else {
-            // For pagination, add to beginning (older messages at top)
-            this.messages = [...newMessages.reverse(), ...this.messages];
+            // Add only new messages to avoid duplicates
+            const existingIds = new Set(this.messages.map(m => m.id));
+            const newMessages = mappedMessages.filter(m => !existingIds.has(m.id));
+            this.messages = [...newMessages, ...this.messages];
           }
           
-          // Update pagination state
-          this.hasMoreMessages = response.data.hasNextPage || false;
-          this.currentPage = page;
-          this.currentConversationId = conversationId;
+          // Check if there are more messages to load
+          this.hasMoreMessages = Array.isArray(apiMessages) && apiMessages.length >= this.messagesPerPage;
           
-          return { success: true };
-        } 
+          return { success: true, data: mappedMessages };
+        }
         
-        return { 
-          success: false, 
-          error: response.error || 'Failed to load messages' 
-        };
+        return { success: false, error: response.error || 'Failed to load messages' };
       } catch (error) {
         console.error('Error loading messages:', error);
-        return { 
-          success: false, 
-          error: 'An error occurred while loading messages' 
-        };
+        return { success: false, error: 'An error occurred while loading messages' };
       } finally {
-        this.isLoadingMessages = false;
-        this.isLoadingMoreMessages = false;
+        // Reset loading states
+        if (page === 1) {
+          this.isLoadingMessages = false;
+        } else {
+          this.isLoadingMoreMessages = false;
+        }
       }
     },
     
@@ -211,159 +220,120 @@ export const useChatStore = defineStore('chat', {
       }
     },
     
-    // Send a message in a conversation
-    async sendMessage(conversationId, content, fileId = null) {
-      console.log('[Send Message] Starting sendMessage with:', { 
-        hasConversationId: !!conversationId, 
-        contentLength: content?.length,
-        hasFileId: !!fileId 
-      });
-
-      // Prevent sending blank messages
-      if (!content && !fileId) {
-        console.log('[Send Message] Rejected: No content or file provided');
-        return {
-          success: false,
-          error: 'Cannot send empty message'
-        };
+    // Set the sending state for a specific message
+    setMessageSendingState(messageId, isSending) {
+      if (isSending) {
+        this.pendingMessages[messageId] = true;
+      } else {
+        delete this.pendingMessages[messageId];
       }
+      
+      // Update the global sending flag based on whether any messages are pending
+      this.isSendingMessage = Object.keys(this.pendingMessages).length > 0;
+    },
 
-      console.log('[Send Message] Setting isSendingMessage flag to true');
-      this.isSendingMessage = true;
-      const notification = useNotification();
+    // Send a message with improved tracking
+    async sendMessage(conversationId, content, fileId = null) {
+      // Generate a unique ID for this message sending operation
+      const messageId = generateMessageId();
       
       try {
-        const api = useApi();
+        // Set message as pending
+        this.setMessageSendingState(messageId, true);
+        
         let targetConversationId = conversationId;
-    
+        
         // If no conversation ID, create a new one
         if (!targetConversationId) {
-          console.log('[Send Message] No conversation ID, creating new conversation');
           const createResult = await this.createConversation();
+          
           if (!createResult.success) {
-            console.error('[Send Message] Failed to create conversation:', createResult.error);
-            notification.error(createResult.error || 'Failed to create conversation');
-            return createResult;
+            return { success: false, error: createResult.error || 'Failed to create conversation' };
           }
+          
           targetConversationId = createResult.data.id;
-          console.log('[Send Message] New conversation created with ID:', targetConversationId);
-        } else {
-          console.log('[Send Message] Using existing conversation ID:', targetConversationId);
         }
-    
+        
         // Prepare message data
         const messageData = {
           content: content || '',
           sender: 'user'
         };
         
-        console.log('[Send Message] Prepared message data:', messageData);
-    
-        // Send message
-        console.log('[Send Message] Sending message to API endpoint:', `conversations/${targetConversationId}/messages`);
+        // Add file if provided
+        if (fileId) {
+          messageData.file = { id: fileId };
+        }
+        
+        // Reset uploaded file after sending
+        if (fileId) {
+          this.clearUploadedFile();
+        }
+        
+        // Send the message
+        const api = useApi();
         const response = await api.post(
           `conversations/${targetConversationId}/messages`, 
           messageData
         );
-        console.log('[Send Message] API response received:', { 
-          success: response.success, 
-          hasData: !!response.data,
-          hasUserMessage: !!response.data?.userMessage,
-          hasAiResponse: !!response.data?.aiResponse
-        });
         
         // Make sure the currentConversationId is set to the target conversation
         // This ensures messages are displayed in the UI
         if (this.currentConversationId !== targetConversationId) {
-          console.log('[Send Message] Updating currentConversationId to match target:', targetConversationId);
           this.currentConversationId = targetConversationId;
         }
-    
+        
         if (response.success && response.data) {
           // Handle the combined response format from the server
           const responseData = response.data;
           
-          // Process user message
-          if (responseData.userMessage && responseData.userMessage.content) {
-            console.log('[Send Message] Processing user message from response');
-            const userMessage = {
-              id: responseData.userMessage.id,
-              isUser: true,
-              content: responseData.userMessage.content || '',
-              timestamp: new Date(responseData.userMessage.createdAt),
-              status: 'delivered',
-              file: responseData.userMessage.file ? {
-                id: responseData.userMessage.file.id,
-                name: responseData.userMessage.file.filename,
-                path: responseData.userMessage.file.path,
-                url: responseData.userMessage.file.path,
-                type: responseData.userMessage.file.mimetype,
-                size: 0
-              } : null
-            };
+          // Process user message using our utility functions
+          if (responseData.userMessage) {
+            const userMessage = mapApiMessageToUiFormat(responseData.userMessage);
             
-            console.log('[Send Message] Adding user message to UI:', userMessage.id);
-            
-            // Check if this message is already in our list before adding
-            const userExists = this.messages.some(m => m.id === userMessage.id);
-            if (!userExists) {
-              this.messages.push(userMessage);
-              console.log('[Send Message] User message added to messages array');
-            } else {
-              console.log('[Send Message] User message already exists in array, skipping');
+            if (userMessage) {
+              // Check if this message is already in our list before adding
+              const userExists = this.messages.some(m => m.id === userMessage.id);
+              if (!userExists) {
+                this.messages.push(userMessage);
+              }
             }
           }
           
-          // Process AI response directly from the same call
-          if (responseData.aiResponse && responseData.aiResponse.content) {
-            console.log('[Send Message] Processing AI response from the same API call');
-            const aiMessage = {
-              id: responseData.aiResponse.id,
-              isUser: false,
-              content: responseData.aiResponse.content || '',
-              timestamp: new Date(responseData.aiResponse.createdAt),
-              status: 'delivered',
-              file: null
-            };
+          // Process AI response using our utility functions
+          if (responseData.aiResponse) {
+            const aiMessage = mapApiMessageToUiFormat(responseData.aiResponse);
             
-            console.log('[Send Message] Adding AI response to UI:', aiMessage.id);
-            
-            // Check if this message is already in our list before adding
-            const aiExists = this.messages.some(m => m.id === aiMessage.id);
-            if (!aiExists) {
-              this.messages.push(aiMessage);
-              console.log('[Send Message] AI message added to messages array');
-            } else {
-              console.log('[Send Message] AI message already exists in array, skipping');
+            if (aiMessage) {
+              // Check if this message is already in our list before adding
+              const aiExists = this.messages.some(m => m.id === aiMessage.id);
+              if (!aiExists) {
+                this.messages.push(aiMessage);
+              }
             }
           }
-    
-          // Clear uploaded file after sending
-          this.uploadedFile = null;
-    
+          
+          // Return success with conversation ID for navigation
           return { 
             success: true, 
             data: response.data,
             conversationId: targetConversationId
           };
         }
-    
-        console.error('[Send Message] Failed to send message:', response.error);
-        notification.error(response.error || 'Failed to send message');
+        
         return { 
           success: false, 
-          error: response.error || 'Failed to send message' 
+          error: response.error || 'Failed to send message'
         };
       } catch (error) {
-        console.error('[Send Message] Error sending message:', error);
-        notification.error('An error occurred while sending your message');
+        console.error('Error sending message:', error);
         return { 
           success: false, 
-          error: 'An error occurred while sending the message' 
+          error: 'An error occurred while sending your message'
         };
       } finally {
-        console.log('[Send Message] Completed message sending, setting isSendingMessage to false');
-        this.isSendingMessage = false;
+        // Always clear the sending state for this message
+        this.setMessageSendingState(messageId, false);
       }
     },
     

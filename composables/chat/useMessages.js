@@ -1,5 +1,6 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useChatStore } from '~/stores/chat';
+import { useNotification } from '~/composables/useNotification';
 
 /**
  * Composable for handling chat messages and scrolling
@@ -14,6 +15,7 @@ export const useMessages = (options = {}) => {
   
   // Get the chat store
   const chatStore = useChatStore();
+  const notification = useNotification();
   
   // Computed properties from the store
   const messages = computed(() => {
@@ -34,26 +36,44 @@ export const useMessages = (options = {}) => {
     
     // Ensure the current conversation ID is set in the store
     if (chatStore.currentConversationId !== conversationId.value) {
-      console.log('[useMessages] Updating current conversation ID in store:', conversationId.value);
       chatStore.currentConversationId = conversationId.value;
     }
     
-    const result = await chatStore.fetchMessages(conversationId.value, page);
-    
-    if (result.success && page === 1) {
-      // Scroll to bottom after initial load
-      await nextTick();
-      scrollToBottom();
+    try {
+      const result = await chatStore.fetchMessages(conversationId.value, page);
+      
+      if (result.success && page === 1) {
+        // Scroll to bottom after initial load
+        await nextTick();
+        scrollToBottom();
+      } else if (!result.success) {
+        // Handle error with notification
+        notification.error(result.error || 'Failed to load messages');
+      }
+      
+      return result;
+    } catch (error) {
+      notification.error('An error occurred while loading messages');
+      return { success: false, error: 'An error occurred while loading messages' };
     }
-    
-    return result;
   };
   
   /**
    * Load more messages (infinite scrolling)
    */
   const loadMoreMessages = async () => {
-    return chatStore.loadMoreMessages();
+    try {
+      const result = await chatStore.loadMoreMessages();
+      
+      if (!result.success) {
+        notification.error(result.error || 'Failed to load more messages');
+      }
+      
+      return result;
+    } catch (error) {
+      notification.error('An error occurred while loading more messages');
+      return { success: false, error: 'An error occurred while loading more messages' };
+    }
   };
   
   /**
@@ -86,7 +106,6 @@ export const useMessages = (options = {}) => {
   // Watch for new messages in the store and scroll to bottom
   watch(() => messages.value.length, (newLength, oldLength) => {
     if (newLength > oldLength) {
-      console.log('[useMessages] New messages detected, scrolling to bottom');
       nextTick(() => {
         scrollToBottom();
       });

@@ -42,13 +42,12 @@ export const useFileUpload = () => {
         notification.error(result.error || 'File upload failed');
       }
     } catch (error) {
-      console.error('File upload error:', error);
       notification.error('An error occurred while uploading the file');
-    }
-    
-    // Reset the input to allow uploading the same file again
-    if (event.target) {
-      event.target.value = '';
+    } finally {
+      // Reset the input to allow uploading the same file again
+      if (event.target) {
+        event.target.value = '';
+      }
     }
   };
   
