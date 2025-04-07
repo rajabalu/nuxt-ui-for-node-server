@@ -169,12 +169,14 @@
   const sortedMessages = computed(() => {
     if (!messages.value || messages.value.length === 0) return [];
     
-    // Create a copy to avoid mutating the original array
-    return [...messages.value].sort((a, b) => {
-      const timeA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
-      const timeB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
-      return timeA - timeB; // Ascending order (oldest to newest)
-    });
+    // Filter out messages with undefined content and then sort
+    return [...messages.value]
+      .filter(msg => msg.content !== undefined)
+      .sort((a, b) => {
+        const timeA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
+        const timeB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
+        return timeA - timeB; // Ascending order (oldest to newest)
+      });
   });
   
   // File upload handling
@@ -208,6 +210,12 @@
     
     // Check if we have content or file to send
     if (!content && !fileId) return;
+    
+    // Extra validation to ensure we're not sending blank content
+    if (content === '' && !fileId) {
+      inputMessage.value = '';
+      return;
+    }
     
     try {
       // Start sending - using our API directly to get the full response

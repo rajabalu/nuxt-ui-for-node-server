@@ -56,7 +56,7 @@ const props = defineProps({
   },
   content: {
     type: String,
-    required: true
+    default: ''
   },
   timestamp: {
     type: Date,

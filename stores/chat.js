@@ -7,7 +7,7 @@ const mapApiMessagesToLocalFormat = (apiMessages = []) => {
   return apiMessages.map(msg => ({
     id: msg.id,
     isUser: msg.sender === 'user',
-    content: msg.content || '',
+    content: msg.content || '',  // Ensure content is never undefined
     timestamp: new Date(msg.createdAt),
     status: 'delivered',
     file: msg.file ? {
@@ -202,6 +202,14 @@ export const useChatStore = defineStore('chat', {
     
     // Send a message in a conversation
     async sendMessage(conversationId, content, fileId = null) {
+      // Prevent sending blank messages
+      if (!content && !fileId) {
+        return {
+          success: false,
+          error: 'Cannot send empty message'
+        };
+      }
+
       this.isSendingMessage = true;
       const notification = useNotification();
       
@@ -233,11 +241,11 @@ export const useChatStore = defineStore('chat', {
     
         if (response.success && response.data) {
           // Add message to UI if we're in the same conversation
-          if (this.currentConversationId === targetConversationId) {
+          if (this.currentConversationId === targetConversationId && response.data.content) {
             const newMessage = {
               id: response.data.id,
               isUser: true,
-              content: response.data.content,
+              content: response.data.content || '',  // Ensure content is never undefined
               timestamp: new Date(response.data.createdAt),
               status: 'delivered',
               file: response.data.file ? {
@@ -315,7 +323,8 @@ export const useChatStore = defineStore('chat', {
           aiResponse = await api.post(`conversations/${conversationId}/messages`, {
             content: null,  // Use null instead of empty string
             sender: 'assistant',
-            isAssistantRequest: true  // Flag to indicate this is specifically an AI request
+            isAssistantRequest: true,  // Flag to indicate this is specifically an AI request
+            type: 'ai_response'  // Add an explicit type for the backend to identify
           });
           
           this.isSendingMessage = false;

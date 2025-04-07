@@ -28,9 +28,10 @@
 <script setup>
 import { useRouter } from '#app';
 import { computed } from 'vue';
+import { useChatStore } from '~/stores/chat';
 
 const router = useRouter();
-
+const chatStore = useChatStore();
 const navigateToNewStrategy = () => {
   // Navigate to index page to start a new strategy
   chatStore.clearMessages();

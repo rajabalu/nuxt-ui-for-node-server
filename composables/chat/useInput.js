@@ -45,6 +45,12 @@ export const useInput = (options = {}) => {
     // Check if we have content or file to send
     if (!content && !fileId) return;
     
+    // Additional check for empty string
+    if (content === '' && !fileId) {
+      inputMessage.value = '';
+      return;
+    }
+    
     try {
       // Set message sending flag
       chatStore.isSendingMessage = true;

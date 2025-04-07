@@ -16,7 +16,12 @@ export const useMessages = (options = {}) => {
   const chatStore = useChatStore();
   
   // Computed properties from the store
-  const messages = computed(() => chatStore.messages);
+  const messages = computed(() => {
+    // Filter out messages with undefined content
+    return chatStore.messages.filter(message => 
+      message && message.content !== undefined && message.content !== null
+    );
+  });
   const isLoadingMessages = computed(() => chatStore.isLoadingMessages);
   const isLoadingMoreMessages = computed(() => chatStore.isLoadingMoreMessages);
   const hasMoreMessages = computed(() => chatStore.hasMoreMessages);
