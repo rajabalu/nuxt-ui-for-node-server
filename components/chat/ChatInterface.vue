@@ -19,7 +19,7 @@
         
         <v-slide-y-transition group>
           <ChatMessage
-            v-for="(message, index) in messages"
+            v-for="(message, index) in sortedMessages"
             :key="message.id || index"
             :is-user="message.isUser"
             :content="message.content"
@@ -100,7 +100,7 @@
                 variant="flat"
                 color="primary"
                 :disabled="isButtonDisabled"
-                @click="sendMessage"
+                @click="sendMessageWithAiResponse"
                 class="send-button"
                 aria-label="Send message"
                 :loading="isSendingMessage"
@@ -115,11 +115,14 @@
   </template>
   
   <script setup>
-  import { ref, computed, watchEffect } from 'vue';
+  import { ref, computed, watchEffect, nextTick } from 'vue';
   import { useNuxtApp } from '#app';
+  import { useRouter } from 'vue-router';
   import ChatMessage from '~/components/chat/ChatMessage.vue';
   import { useMessages, useFileUpload, useInput } from '~/composables/chat';
   import { useChatStore } from '~/stores/chat';
+  import { useApi } from '~/composables/api';
+  import { useNotification } from '~/composables/useNotification';
   
   // Accept conversation ID as a prop
   const props = defineProps({
@@ -136,6 +139,9 @@
   // Get emitter from Nuxt plugin
   const nuxtApp = useNuxtApp();
   const emitter = nuxtApp.$emitter;
+  const api = useApi();
+  const notification = useNotification();
+  const router = useRouter();
   
   // Initialize conversation ID from prop
   const conversationId = computed(() => props.conversationId);
@@ -157,6 +163,18 @@
     conversationId,
     chatHistoryRef,
     scrollAnchorRef
+  });
+  
+  // Sort messages by timestamp to ensure latest messages are at the bottom
+  const sortedMessages = computed(() => {
+    if (!messages.value || messages.value.length === 0) return [];
+    
+    // Create a copy to avoid mutating the original array
+    return [...messages.value].sort((a, b) => {
+      const timeA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
+      const timeB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
+      return timeA - timeB; // Ascending order (oldest to newest)
+    });
   });
   
   // File upload handling
@@ -181,10 +199,145 @@
     scrollToBottom
   });
   
+  // New function to send a message and wait for AI response
+  const sendMessageWithAiResponse = async () => {
+    if (isButtonDisabled.value) return;
+    
+    const content = inputMessage.value.trim();
+    const fileId = uploadedFile.value?.id;
+    
+    // Check if we have content or file to send
+    if (!content && !fileId) return;
+    
+    try {
+      // Start sending - using our API directly to get the full response
+      chatStore.isSendingMessage = true;
+      
+      let targetConversationId = conversationId.value;
+      
+      // If no conversation ID, create a new one
+      if (!targetConversationId) {
+        const createResult = await chatStore.createConversation();
+        
+        if (!createResult.success) {
+          notification.error(createResult.error || 'Failed to create conversation');
+          return;
+        }
+        
+        targetConversationId = createResult.data.id;
+      }
+      
+      // Prepare message data
+      const messageData = {
+        content: content || '',
+        sender: 'user'
+      };
+      
+      // Add file if provided
+      if (fileId) {
+        messageData.file = { id: fileId };
+      }
+      
+      // Clear the input first to provide immediate feedback
+      inputMessage.value = '';
+      
+      // Clear uploaded file after sending
+      if (fileId) {
+        clearUploadedFile();
+      }
+      
+      // Send message and get the full response with AI response
+      const response = await api.post(
+        `conversations/${targetConversationId}/messages`, 
+        messageData
+      );
+      
+      if (response.success && response.data) {
+        // If we're in a new conversation, navigate to it
+        if (!conversationId.value && targetConversationId) {
+          // Use the router to navigate
+          router.push(`/strategies/${targetConversationId}`);
+        }
+        
+        // Process the response which should contain both user message and AI response
+        const responseData = response.data;
+        
+        // Add user message to UI if needed
+        if (responseData.userMessage) {
+          const userMessage = {
+            id: responseData.userMessage.id,
+            isUser: true,
+            content: responseData.userMessage.content,
+            timestamp: new Date(responseData.userMessage.createdAt),
+            status: 'delivered',
+            file: responseData.userMessage.file ? {
+              id: responseData.userMessage.file.id,
+              name: responseData.userMessage.file.filename,
+              path: responseData.userMessage.file.path,
+              url: responseData.userMessage.file.path,
+              type: responseData.userMessage.file.mimetype,
+              size: 0
+            } : null
+          };
+          
+          // Check if this message is already in our list before adding
+          const exists = messages.value.some(m => m.id === userMessage.id);
+          if (!exists) {
+            messages.value.push(userMessage);
+          }
+        }
+        
+        // Process and display AI response if available
+        if (responseData.aiResponse) {
+          const aiMessage = {
+            id: responseData.aiResponse.id,
+            isUser: false,
+            content: responseData.aiResponse.content,
+            timestamp: new Date(responseData.aiResponse.createdAt),
+            status: 'delivered',
+            file: null
+          };
+          
+          // Check if this message is already in our list before adding
+          const exists = messages.value.some(m => m.id === aiMessage.id);
+          if (!exists) {
+            messages.value.push(aiMessage);
+          }
+        }
+        
+        // Scroll to bottom after adding messages
+        await nextTick();
+        scrollToBottom();
+        
+        // Trigger event to refresh strategies list
+        if (emitter && typeof emitter.emit === 'function') {
+          emitter.emit('refresh-strategies');
+        }
+      } else {
+        notification.error(response.error || 'Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      notification.error('An error occurred while sending your message');
+    } finally {
+      chatStore.isSendingMessage = false;
+    }
+  };
+  
   // Watch for conversation ID changes to load messages
   watchEffect(() => {
     if (conversationId.value) {
       loadMessages(1);
+    }
+  });
+  
+  // Watch for new messages to scroll to bottom
+  watchEffect(() => {
+    if (messages.value && messages.value.length > 0) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
   });
   

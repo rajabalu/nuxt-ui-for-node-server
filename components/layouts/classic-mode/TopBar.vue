@@ -7,16 +7,19 @@ import { useI18n } from "vue-i18n";
 import { useAuthStore } from '@/stores/auth';
 import { themeConfig } from '@/composables/theme';
 import { watch, computed, onMounted, ref } from 'vue';
-import { useNuxtApp, useRoute, useHead } from '#app';
+import { useNuxtApp, useRoute, useRouter, useHead } from '#app';
 import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
 import { useUserPreferences } from '@/stores/userPreferences';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
+import { useChatStore } from '@/stores/chat';
 
 const theme = themeConfig();
 const { themeHeaderHeight, themeSidebarWidth, smallDisplay, themeChangeMode } = theme;
 const themeName = computed(() => theme.themeName.value);
 const nuxtApp = useNuxtApp();
 const route = useRoute();
+const router = useRouter();
+const chatStore = useChatStore();
 
 const globalStore = useGlobal();
 const { locale, t } = useI18n();
@@ -27,8 +30,33 @@ const userPreferencesStore = useUserPreferences();
 const currentLocale = computed(() => locale.value);
 const homePath = computed(() => getLocalizedPath('/', locale.value));
 
+// For conversation tracking
+const currentConversationTitle = ref('');
+
 // Page title handling
 const pageTitle = computed(() => {
+  // Check if viewing a strategy/conversation
+  if (route.path.includes('/strategies/')) {
+    const conversationId = route.params.id;
+    
+    // If we have a stored title for the current conversation, use it
+    if (currentConversationTitle.value) {
+      return currentConversationTitle.value;
+    }
+    
+    // Otherwise try to find it in the chat store
+    if (chatStore.conversations) {
+      const conversation = chatStore.conversations.find(c => c.id === conversationId);
+      if (conversation && conversation.title) {
+        currentConversationTitle.value = conversation.title;
+        return conversation.title;
+      }
+    }
+    
+    // Fallback to generic title
+    return t('strategies.viewing', 'Viewing Conversation');
+  }
+  
   // Get route name or path
   const routeName = route.name?.toString() || '';
   const routePath = route.path;
@@ -46,6 +74,8 @@ const pageTitle = computed(() => {
     } else {
       title = t('users.title', 'Users');
     }
+  } else if (routePath.includes('/strategies')) {
+    title = t('strategies.title', 'Conversations');
   } else {
     // Get the last segment of the path as a fallback
     const segments = routePath.split('/').filter(Boolean);
@@ -60,6 +90,33 @@ const pageTitle = computed(() => {
   
   return title;
 });
+
+// Watch for route changes to update conversation title when needed
+watch(() => route.params.id, async (newId) => {
+  if (newId && route.path.includes('/strategies/')) {
+    // Clear previous title
+    currentConversationTitle.value = '';
+    
+    // Try to find conversation title directly from chatStore
+    if (chatStore.conversations) {
+      const conversation = chatStore.conversations.find(c => c.id === newId);
+      if (conversation && conversation.title) {
+        currentConversationTitle.value = conversation.title;
+      }
+    }
+  }
+}, { immediate: true });
+
+// Watch for chat store conversations changes to update the title
+watch(() => chatStore.conversations, () => {
+  const conversationId = route.params.id;
+  if (conversationId && route.path.includes('/strategies/')) {
+    const conversation = chatStore.conversations?.find(c => c.id === conversationId);
+    if (conversation && conversation.title) {
+      currentConversationTitle.value = conversation.title;
+    }
+  }
+}, { deep: true });
 
 // Full document title with app name
 const documentTitle = computed(() => {
