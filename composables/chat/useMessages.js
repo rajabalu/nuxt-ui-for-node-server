@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useChatStore } from '~/stores/chat';
 
 /**
@@ -31,6 +31,12 @@ export const useMessages = (options = {}) => {
    */
   const loadMessages = async (page = 1) => {
     if (!conversationId.value) return { success: false };
+    
+    // Ensure the current conversation ID is set in the store
+    if (chatStore.currentConversationId !== conversationId.value) {
+      console.log('[useMessages] Updating current conversation ID in store:', conversationId.value);
+      chatStore.currentConversationId = conversationId.value;
+    }
     
     const result = await chatStore.fetchMessages(conversationId.value, page);
     
@@ -76,6 +82,16 @@ export const useMessages = (options = {}) => {
       loadMoreMessages();
     }
   };
+  
+  // Watch for new messages in the store and scroll to bottom
+  watch(() => messages.value.length, (newLength, oldLength) => {
+    if (newLength > oldLength) {
+      console.log('[useMessages] New messages detected, scrolling to bottom');
+      nextTick(() => {
+        scrollToBottom();
+      });
+    }
+  });
   
   // Initialize scroll handler and clean up
   onMounted(() => {

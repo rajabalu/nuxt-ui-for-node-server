@@ -203,36 +203,58 @@
   
   // New function to send a message and wait for AI response
   const sendMessageWithAiResponse = async () => {
+    console.log('[ChatInterface] sendMessageWithAiResponse called, button disabled:', isButtonDisabled.value);
     if (isButtonDisabled.value) return;
     
     const content = inputMessage.value.trim();
     const fileId = uploadedFile.value?.id;
     
+    console.log('[ChatInterface] Message content:', {
+      length: content?.length,
+      hasFile: !!fileId
+    });
+    
     // Check if we have content or file to send
-    if (!content && !fileId) return;
+    if (!content && !fileId) {
+      console.log('[ChatInterface] No content or file, returning early');
+      return;
+    }
     
     // Extra validation to ensure we're not sending blank content
     if (content === '' && !fileId) {
+      console.log('[ChatInterface] Empty content and no file, clearing input and returning');
       inputMessage.value = '';
       return;
     }
     
+    // Prevent duplicate submissions
+    if (chatStore.isSendingMessage) {
+      console.log('[ChatInterface] Already sending a message, preventing duplicate submission');
+      console.log('[ChatInterface] Store state:', { isSendingMessage: chatStore.isSendingMessage });
+      return;
+    }
+    
     try {
+      console.log('[ChatInterface] Starting message send process with direct AI response');
       // Start sending - using our API directly to get the full response
       chatStore.isSendingMessage = true;
       
       let targetConversationId = conversationId.value;
+      console.log('[ChatInterface] Initial conversation ID:', targetConversationId);
       
       // If no conversation ID, create a new one
       if (!targetConversationId) {
+        console.log('[ChatInterface] No conversation ID, creating new conversation');
         const createResult = await chatStore.createConversation();
         
         if (!createResult.success) {
+          console.error('[ChatInterface] Failed to create conversation:', createResult.error);
           notification.error(createResult.error || 'Failed to create conversation');
           return;
         }
         
         targetConversationId = createResult.data.id;
+        console.log('[ChatInterface] New conversation created with ID:', targetConversationId);
       }
       
       // Prepare message data
@@ -244,7 +266,10 @@
       // Add file if provided
       if (fileId) {
         messageData.file = { id: fileId };
+        console.log('[ChatInterface] Added file to message data:', fileId);
       }
+      
+      console.log('[ChatInterface] Prepared message data:', messageData);
       
       // Clear the input first to provide immediate feedback
       inputMessage.value = '';
@@ -252,19 +277,46 @@
       // Clear uploaded file after sending
       if (fileId) {
         clearUploadedFile();
+        console.log('[ChatInterface] Cleared uploaded file');
       }
       
+      // Use a timeout for the API call to avoid potential server timeouts on slow responses
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out')), 30000)
+      );
+      
+      console.log('[ChatInterface] Sending message to API endpoint:', `conversations/${targetConversationId}/messages`);
+      
       // Send message and get the full response with AI response
-      const response = await api.post(
+      const responsePromise = api.post(
         `conversations/${targetConversationId}/messages`, 
         messageData
       );
       
+      // Race the response against the timeout
+      const response = await Promise.race([responsePromise, timeoutPromise]);
+      
+      console.log('[ChatInterface] API response received:', {
+        success: response.success,
+        hasData: !!response.data,
+        hasUserMessage: !!response.data?.userMessage,
+        hasAiResponse: !!response.data?.aiResponse
+      });
+      
       if (response.success && response.data) {
         // If we're in a new conversation, navigate to it
         if (!conversationId.value && targetConversationId) {
+          console.log('[ChatInterface] Navigating to new conversation:', targetConversationId);
           // Use the router to navigate
           router.push(`/strategies/${targetConversationId}`);
+          
+          // Make sure we emit the event for a new conversation
+          if (emitter && typeof emitter.emit === 'function') {
+            console.log('[ChatInterface] Emitting refresh events for new conversation');
+            // Emit both events to ensure all listeners catch it
+            emitter.emit('strategy-created');
+            emitter.emit('refresh-strategies');
+          }
         }
         
         // Process the response which should contain both user message and AI response
@@ -272,6 +324,11 @@
         
         // Add user message to UI if needed
         if (responseData.userMessage && responseData.userMessage.content?.trim()) {
+          console.log('[ChatInterface] Adding user message to UI:', {
+            id: responseData.userMessage.id,
+            content: responseData.userMessage.content?.substring(0, 20) + '...'
+          });
+          
           const userMessage = {
             id: responseData.userMessage.id,
             isUser: true,
@@ -292,11 +349,21 @@
           const exists = messages.value.some(m => m.id === userMessage.id);
           if (!exists) {
             messages.value.push(userMessage);
+            console.log('[ChatInterface] User message added to messages array');
+          } else {
+            console.log('[ChatInterface] User message already exists, skipping');
           }
+        } else {
+          console.log('[ChatInterface] No valid user message in response');
         }
         
         // Process and display AI response if available
         if (responseData.aiResponse && responseData.aiResponse.content?.trim()) {
+          console.log('[ChatInterface] Adding AI response to UI:', {
+            id: responseData.aiResponse.id,
+            content: responseData.aiResponse.content?.substring(0, 20) + '...'
+          });
+          
           const aiMessage = {
             id: responseData.aiResponse.id,
             isUser: false,
@@ -310,32 +377,58 @@
           const exists = messages.value.some(m => m.id === aiMessage.id);
           if (!exists) {
             messages.value.push(aiMessage);
+            console.log('[ChatInterface] AI message added to messages array');
+          } else {
+            console.log('[ChatInterface] AI message already exists, skipping');
           }
+        } else {
+          console.log('[ChatInterface] No valid AI response in response data');
         }
         
         // Scroll to bottom after adding messages
         await nextTick();
         scrollToBottom();
+        console.log('[ChatInterface] Scrolled to bottom after adding messages');
         
         // Trigger event to refresh strategies list
         if (emitter && typeof emitter.emit === 'function') {
+          console.log('[ChatInterface] Emitting refresh-strategies event');
           emitter.emit('refresh-strategies');
         }
       } else {
+        console.error('[ChatInterface] Failed to send message:', response.error);
         notification.error(response.error || 'Failed to send message');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      notification.error('An error occurred while sending your message');
+      console.error('[ChatInterface] Error in sendMessageWithAiResponse:', error);
+      
+      // Show different message for timeout errors
+      if (error.message === 'Request timed out') {
+        console.log('[ChatInterface] Request timed out');
+        notification.error('Your request is taking longer than expected. The response may appear shortly.');
+      } else {
+        notification.error('An error occurred while sending your message');
+      }
     } finally {
+      console.log('[ChatInterface] sendMessageWithAiResponse completed, resetting isSendingMessage flag');
       chatStore.isSendingMessage = false;
     }
   };
   
   // Watch for conversation ID changes to load messages
-  watchEffect(() => {
+  watchEffect(async () => {
     if (conversationId.value) {
-      loadMessages(1);
+      console.log('[ChatInterface] Conversation ID changed, loading messages:', conversationId.value);
+      
+      // Set the current conversation ID in the store to ensure proper context
+      chatStore.currentConversationId = conversationId.value;
+      
+      // Load messages for this conversation
+      await loadMessages(1);
+      
+      // Ensure we scroll to the bottom after loading
+      await nextTick();
+      scrollToBottom();
     }
   });
   

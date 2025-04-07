@@ -367,7 +367,6 @@ const onEmail = async () => {
         <!-- Basic Information Tab -->
         <v-window-item value="tab-1">
           <v-card-item>
-            <h4 class="text-h4 my-4">{{ t('settings.basicInformation') }}</h4>
             <v-form ref="refBassicForm" @submit.prevent="onBasic">
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
@@ -440,7 +439,6 @@ const onEmail = async () => {
         <!-- Change Email Tab -->
         <v-window-item value="tab-2">
           <v-card-item>
-            <h4 class="text-h4 mb-4">{{ t('common.email') }}</h4>
             <v-form ref="refEmailVForm" @submit.prevent="onEmail">
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
@@ -479,7 +477,6 @@ const onEmail = async () => {
         <!-- Change Password Tab -->
         <v-window-item value="tab-3">
           <v-card-item>
-            <h4 class="text-h4 mb-4">{{ t('settings.changeYourPassword') }}</h4>
             <v-form ref="refPasswordVForm" @submit.prevent="onPassword">
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">

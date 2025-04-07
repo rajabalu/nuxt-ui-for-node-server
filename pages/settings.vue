@@ -15,7 +15,6 @@ useSeoMeta({
 </script>
 <template>
   <v-container fluid :class="{ 'rtl-container': $i18n.locale === 'ar' }">
-    <GlobalsHeader :title="t('settingsMenu')" />
     <settings />
   </v-container>
 </template>

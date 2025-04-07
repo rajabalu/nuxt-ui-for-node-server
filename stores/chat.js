@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useApi } from '~/composables/api';
 import { useNotification } from '~/composables/useNotification';
+import { useNuxtApp } from '#app';
 
 // Helper function to map API messages to local format
 const mapApiMessagesToLocalFormat = (apiMessages = []) => {
@@ -176,6 +177,9 @@ export const useChatStore = defineStore('chat', {
     async createConversation(title) {
       try {
         const api = useApi();
+        const notification = useNotification();
+        const nuxtApp = useNuxtApp();
+        const emitter = nuxtApp?.$emitter;
         const formattedDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         
         const response = await api.post('conversations', {
@@ -184,6 +188,13 @@ export const useChatStore = defineStore('chat', {
         
         if (response.success && response.data) {
           await this.fetchConversations(); // Refresh the conversations list
+          
+          // Emit event to refresh strategies in navigation
+          if (emitter && typeof emitter.emit === 'function') {
+            emitter.emit('strategy-created');
+            emitter.emit('refresh-strategies');
+          }
+          
           return { success: true, data: response.data };
         }
         
@@ -202,14 +213,22 @@ export const useChatStore = defineStore('chat', {
     
     // Send a message in a conversation
     async sendMessage(conversationId, content, fileId = null) {
+      console.log('[Send Message] Starting sendMessage with:', { 
+        hasConversationId: !!conversationId, 
+        contentLength: content?.length,
+        hasFileId: !!fileId 
+      });
+
       // Prevent sending blank messages
       if (!content && !fileId) {
+        console.log('[Send Message] Rejected: No content or file provided');
         return {
           success: false,
           error: 'Cannot send empty message'
         };
       }
 
+      console.log('[Send Message] Setting isSendingMessage flag to true');
       this.isSendingMessage = true;
       const notification = useNotification();
       
@@ -219,12 +238,17 @@ export const useChatStore = defineStore('chat', {
     
         // If no conversation ID, create a new one
         if (!targetConversationId) {
+          console.log('[Send Message] No conversation ID, creating new conversation');
           const createResult = await this.createConversation();
           if (!createResult.success) {
+            console.error('[Send Message] Failed to create conversation:', createResult.error);
             notification.error(createResult.error || 'Failed to create conversation');
             return createResult;
           }
           targetConversationId = createResult.data.id;
+          console.log('[Send Message] New conversation created with ID:', targetConversationId);
+        } else {
+          console.log('[Send Message] Using existing conversation ID:', targetConversationId);
         }
     
         // Prepare message data
@@ -232,37 +256,87 @@ export const useChatStore = defineStore('chat', {
           content: content || '',
           sender: 'user'
         };
+        
+        console.log('[Send Message] Prepared message data:', messageData);
     
         // Send message
+        console.log('[Send Message] Sending message to API endpoint:', `conversations/${targetConversationId}/messages`);
         const response = await api.post(
           `conversations/${targetConversationId}/messages`, 
           messageData
         );
+        console.log('[Send Message] API response received:', { 
+          success: response.success, 
+          hasData: !!response.data,
+          hasUserMessage: !!response.data?.userMessage,
+          hasAiResponse: !!response.data?.aiResponse
+        });
+        
+        // Make sure the currentConversationId is set to the target conversation
+        // This ensures messages are displayed in the UI
+        if (this.currentConversationId !== targetConversationId) {
+          console.log('[Send Message] Updating currentConversationId to match target:', targetConversationId);
+          this.currentConversationId = targetConversationId;
+        }
     
         if (response.success && response.data) {
-          // Add message to UI if we're in the same conversation
-          if (this.currentConversationId === targetConversationId && response.data.content) {
-            const newMessage = {
-              id: response.data.id,
+          // Handle the combined response format from the server
+          const responseData = response.data;
+          
+          // Process user message
+          if (responseData.userMessage && responseData.userMessage.content) {
+            console.log('[Send Message] Processing user message from response');
+            const userMessage = {
+              id: responseData.userMessage.id,
               isUser: true,
-              content: response.data.content || '',  // Ensure content is never undefined
-              timestamp: new Date(response.data.createdAt),
+              content: responseData.userMessage.content || '',
+              timestamp: new Date(responseData.userMessage.createdAt),
               status: 'delivered',
-              file: response.data.file ? {
-                id: response.data.file.id,
-                name: response.data.file.filename,
-                path: response.data.file.path,
-                url: response.data.file.path,
-                type: response.data.file.mimetype,
+              file: responseData.userMessage.file ? {
+                id: responseData.userMessage.file.id,
+                name: responseData.userMessage.file.filename,
+                path: responseData.userMessage.file.path,
+                url: responseData.userMessage.file.path,
+                type: responseData.userMessage.file.mimetype,
                 size: 0
               } : null
             };
             
-            this.messages.push(newMessage);
+            console.log('[Send Message] Adding user message to UI:', userMessage.id);
+            
+            // Check if this message is already in our list before adding
+            const userExists = this.messages.some(m => m.id === userMessage.id);
+            if (!userExists) {
+              this.messages.push(userMessage);
+              console.log('[Send Message] User message added to messages array');
+            } else {
+              console.log('[Send Message] User message already exists in array, skipping');
+            }
           }
-    
-          // Call handleAiResponse to get the AI's response
-          await this.handleAiResponse(targetConversationId);
+          
+          // Process AI response directly from the same call
+          if (responseData.aiResponse && responseData.aiResponse.content) {
+            console.log('[Send Message] Processing AI response from the same API call');
+            const aiMessage = {
+              id: responseData.aiResponse.id,
+              isUser: false,
+              content: responseData.aiResponse.content || '',
+              timestamp: new Date(responseData.aiResponse.createdAt),
+              status: 'delivered',
+              file: null
+            };
+            
+            console.log('[Send Message] Adding AI response to UI:', aiMessage.id);
+            
+            // Check if this message is already in our list before adding
+            const aiExists = this.messages.some(m => m.id === aiMessage.id);
+            if (!aiExists) {
+              this.messages.push(aiMessage);
+              console.log('[Send Message] AI message added to messages array');
+            } else {
+              console.log('[Send Message] AI message already exists in array, skipping');
+            }
+          }
     
           // Clear uploaded file after sending
           this.uploadedFile = null;
@@ -274,86 +348,76 @@ export const useChatStore = defineStore('chat', {
           };
         }
     
+        console.error('[Send Message] Failed to send message:', response.error);
         notification.error(response.error || 'Failed to send message');
         return { 
           success: false, 
           error: response.error || 'Failed to send message' 
         };
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('[Send Message] Error sending message:', error);
         notification.error('An error occurred while sending your message');
         return { 
           success: false, 
           error: 'An error occurred while sending the message' 
         };
       } finally {
+        console.log('[Send Message] Completed message sending, setting isSendingMessage to false');
         this.isSendingMessage = false;
       }
     },
     
-    // Simulate or handle AI response
+    // Simulate or handle AI response (now only used for specific cases, not normal message flow)
     async handleAiResponse(conversationId, simulatedResponse = null) {
-      if (!conversationId) return;
+      // This function is now deprecated for normal message flow
+      if (!conversationId) {
+        console.log('[AI Response] No conversation ID provided');
+        return { success: false, info: 'No conversation ID provided' };
+      }
       
+      // Skip making API calls in normal flow - we're already handling AI responses in sendMessage
+      console.log('[AI Response] ⚠️ This function is deprecated and should not be called in normal message flow');
+      console.log('[AI Response] The server already returns both user and AI messages in a single response');
+      
+      if (!simulatedResponse) {
+        console.log('[AI Response] Skipping unnecessary API call to prevent 422 errors');
+        return { 
+          success: false, 
+          info: 'This function is not needed in normal message flow - responses are handled in sendMessage' 
+        };
+      }
+      
+      // Only continue for simulated responses
+      console.log('[AI Response] Using simulated response (for testing only)');
       try {
-        const api = useApi();
+        // For testing or demo purposes
+        const simulatedMessage = {
+          id: Date.now().toString(),
+          isUser: false,
+          content: simulatedResponse,
+          timestamp: new Date(),
+          status: 'delivered',
+          file: null
+        };
         
-        // If simulated response provided, use it, otherwise make real API call
-        let aiResponse;
-        
-        if (simulatedResponse) {
-          // For testing or demo purposes
-          aiResponse = {
-            success: true,
-            data: {
-              id: Date.now().toString(),
-              content: simulatedResponse,
-              createdAt: new Date().toISOString(),
-              sender: 'assistant'
-            }
-          };
-        } else {
-          // Real API call - but don't trigger if already waiting for response
-          if (this.isSendingMessage) {
-            return { success: false, error: 'Already processing a message' };
-          }
-          
-          this.isSendingMessage = true;
-          
-          aiResponse = await api.post(`conversations/${conversationId}/messages`, {
-            content: null,  // Use null instead of empty string
-            sender: 'assistant',
-            isAssistantRequest: true,  // Flag to indicate this is specifically an AI request
-            type: 'ai_response'  // Add an explicit type for the backend to identify
-          });
-          
-          this.isSendingMessage = false;
+        // Add to UI if needed
+        const exists = this.messages.some(m => m.id === simulatedMessage.id);
+        if (!exists) {
+          this.messages.push(simulatedMessage);
+          console.log('[AI Response] Added simulated message to UI');
         }
         
-        if (aiResponse.success && aiResponse.data) {
-          // Add AI message to UI if we're in the same conversation and message has content
-          if (this.currentConversationId === conversationId && aiResponse.data.content?.trim()) {
-            const aiMessage = {
-              id: aiResponse.data.id,
-              isUser: false,
-              content: aiResponse.data.content,
-              timestamp: new Date(aiResponse.data.createdAt),
-              status: 'delivered',
-              file: null
-            };
-            
-            this.messages.push(aiMessage);
-          }
-          
-          return { success: true, data: aiResponse.data };
-        }
-        
-        return { success: false, error: 'Failed to get AI response' };
+        return { 
+          success: true, 
+          data: { 
+            id: simulatedMessage.id, 
+            content: simulatedMessage.content, 
+            createdAt: simulatedMessage.timestamp 
+          } 
+        };
       } catch (error) {
-        console.error('Error with AI response:', error);
-        return { success: false, error: 'An error occurred with the AI response' };
-      } finally {
-        this.isSendingMessage = false;
+        console.error('[AI Response] Error handling simulated response:', error);
+        return { success: false, error: 'An error occurred with the simulated response' };
       }
     },
 
