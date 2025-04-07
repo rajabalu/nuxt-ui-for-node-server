@@ -119,6 +119,7 @@
   import ChatMessage from '~/components/chat/ChatMessage.vue';
   import { useApi } from '~/composables/api';
   import { useAuthStore } from '~/stores/auth';
+  import { useNuxtApp } from '#app';
   
   // Accept conversation ID as a prop
   const props = defineProps({
@@ -143,16 +144,9 @@
   const fileInput = ref(null);
   const api = useApi();
   
-  // Try to get the emitter with safe access
-  let emitter = null;
-  try {
-    const nuxtApp = useNuxtApp();
-    if (nuxtApp && nuxtApp.vueApp && nuxtApp.vueApp.config && nuxtApp.vueApp.config.globalProperties) {
-      emitter = nuxtApp.vueApp.config.globalProperties.$emitter;
-    }
-  } catch (err) {
-    console.warn('Error accessing emitter:', err);
-  }
+  // Get emitter from Nuxt plugin
+  const nuxtApp = useNuxtApp();
+  const emitter = nuxtApp.$emitter;
   
   const uploadedFile = ref(null);
   const isUploading = ref(false);
@@ -356,16 +350,109 @@
     
     if (!hasText && !hasFile) return;
   
-    // Need a valid conversation ID
-    if (!conversationId.value) {
-      console.error('No conversation ID available');
-      return;
-    }
-  
     // Prevent multiple sends
     isSendingMessage.value = true;
   
     try {
+      // If no conversation ID, create a new conversation first
+      if (!conversationId.value) {
+        try {
+          // Format the current date
+          const today = new Date();
+          const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+          
+          // Create new conversation
+          if (api && typeof api.post === 'function') {
+            const response = await api.post('conversations', {
+              title: `Strategy as on ${formattedDate}`
+            });
+            
+            if (response && response.success && response.data) {
+              // Store the conversation ID locally
+              const newConversationId = response.data.id;
+              
+              // Safely emit events to refresh strategy menu
+              if (emitter) {
+                console.log('Emitting strategy-created event for new conversation:', newConversationId);
+                // Emit events directly without try-catch and with simpler code
+                emitter.emit('strategy-created');
+                
+                // Emit a second refresh event with a slight delay to ensure it's processed
+                setTimeout(() => {
+                  if (emitter) {
+                    emitter.emit('refresh-strategies');
+                  }
+                }, 200);
+              }
+              
+              // Prepare to send message to the new conversation
+              const messageData = {
+                content: hasText ? inputMessage.value.trim() : '',
+                sender: 'user'
+              };
+              
+              // Add file if uploaded
+              if (hasFile && uploadedFile.value && uploadedFile.value.id) {
+                messageData.file = {
+                  id: uploadedFile.value.id
+                };
+              }
+              
+              // Send message to server with new conversation ID
+              const msgResponse = await api.post(`conversations/${newConversationId}/messages`, messageData);
+              
+              if (msgResponse && msgResponse.success && msgResponse.data) {
+                // Add message to UI
+                const newMessage = {
+                  id: msgResponse.data.id,
+                  isUser: true,
+                  content: msgResponse.data.content,
+                  timestamp: new Date(msgResponse.data.createdAt),
+                  status: 'delivered',
+                  file: msgResponse.data.file ? {
+                    id: msgResponse.data.file.id,
+                    name: msgResponse.data.file.filename,
+                    path: msgResponse.data.file.path,
+                    url: msgResponse.data.file.path,
+                    type: msgResponse.data.file.mimetype,
+                    size: 0
+                  } : null
+                };
+                
+                if (messages.value) {
+                  messages.value.push(newMessage);
+                }
+                
+                // Reset inputs
+                inputMessage.value = '';
+                uploadedFile.value = null;
+                
+                // Scroll to bottom
+                await scrollToBottom();
+                
+                // Navigate to the new conversation page to continue the chat
+                navigateTo(`/strategies/${newConversationId}`);
+                
+                // AI response will be handled on the new page after navigation
+              } else {
+                console.error('Failed to send message:', msgResponse?.error || 'Unknown error');
+                alert('Failed to send message. Please try again.');
+              }
+            } else {
+              console.error('Failed to create conversation:', response?.error || 'Unknown error');
+              alert('Failed to create conversation. Please try again.');
+            }
+          }
+        } catch (error) {
+          console.error('Error creating conversation:', error);
+          alert('Error creating conversation. Please try again.');
+        } finally {
+          isSendingMessage.value = false;
+        }
+        return; // Exit early after handling the new conversation case
+      }
+      
+      // Existing conversation case continues below
       // Prepare message data
       const messageData = {
         content: hasText ? inputMessage.value.trim() : '',

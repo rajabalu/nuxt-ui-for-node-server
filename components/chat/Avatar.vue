@@ -8,8 +8,33 @@
     <p class="text-center text-caption text-medium-emphasis px-5">
       Interactive 3D avatar will be displayed here. The avatar will react to your conversations.
     </p>
+    
+    <!-- New Strategy Button -->
+    <div class="text-center mt-6">
+      <v-btn
+        color="primary"
+        variant="elevated"
+        prepend-icon="mdi-plus"
+        @click="navigateToNewStrategy"
+        rounded="pill"
+        size="small"
+      >
+        New Strategy
+      </v-btn>
+    </div>
   </div>
 </template>
+
+<script setup>
+import { useRouter } from '#app';
+
+const router = useRouter();
+
+const navigateToNewStrategy = () => {
+  // Navigate to index page to start a new strategy
+  router.push('/');
+};
+</script>
 
 <style lang="scss" scoped>
 .avatar-placeholder {

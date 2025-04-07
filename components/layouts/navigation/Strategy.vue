@@ -1,102 +1,115 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
 import { useApi } from '@/composables/api';
+import { useNuxtApp } from '#app';
 
-defineProps({
-  menuType: {
-    type: String,
-    default: "vertical",
-  },
-});
-
-// Define strategies array that will hold our menu items
-const Strategies = ref([]);
-
+const drawer = ref(false);
 const loading = ref(false);
+const activeItem = ref(0);
+const Strategies = ref([]);
+const api = useApi();
 
-// Try to get the emitter through the provide/inject system first
+// Get emitter from Nuxt plugin
 const nuxtApp = useNuxtApp();
-// Access emitter through the provide system or global properties as fallback
-const providedEmitter = nuxtApp.$emitter;
-// If it's available through inject, use it; otherwise fall back to global properties
-const emitter = providedEmitter || nuxtApp.vueApp?.config?.globalProperties?.$emitter || null;
+const emitter = nuxtApp.$emitter;
 
-// Fetch strategies from the API and update the navigation menu
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString();
+};
+
+// Function to fetch strategies from API
 const fetchStrategies = async () => {
   loading.value = true;
-  
   try {
-    const api = useApi();
-    const response = await api.get('conversations?page=1&limit=5');
+    const response = await api.get('conversations');
     
-    if (response.success && response.data.data) {
-      // Map API response to menu items, truncating titles if needed
-      Strategies.value = response.data.data.map(item => ({
-        title: item.title.length > 30 ? item.title.substring(0, 30) + '...' : item.title,
+    if (response && response.success) {
+      // Check the actual structure of the response
+      console.log('API response structure:', response);
+      
+      // Get the array of conversations from the correct path
+      const conversations = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.data || []);
+      
+      // Map API response to menu items
+      Strategies.value = conversations.map(item => ({
+        id: item.id,
+        title: item.title && item.title.length > 30 ? item.title.substring(0, 27) + '...' : item.title || 'Untitled',
+        icon: 'mdi-message-outline',
         to: `/strategies/${item.id}`,
-        icon: "tabler-message"
+        subtitle: formatDate(item.createdAt)
       }));
-      console.log('Strategies menu updated:', Strategies.value);
+    } else {
+      console.error('Failed to load strategies:', response?.error || 'Unknown error');
+      Strategies.value = [];
     }
   } catch (error) {
-    console.error('Error fetching strategies for menu:', error);
+    console.error('Error fetching strategies:', error);
+    Strategies.value = [];
   } finally {
     loading.value = false;
   }
 };
 
-// Listen for strategy-created events and handle cleanup if emitter exists
-if (emitter) {
-  try {
-    // Set up event listeners
-    const setupEventListeners = () => {
-      emitter.on('strategy-created', fetchStrategies);
-      emitter.on('refresh-strategies', fetchStrategies);
-    };
-    
-    // Initial setup
-    setupEventListeners();
-    
-    // Clean up event listeners when component is unmounted
-    onBeforeUnmount(() => {
-      if (emitter) {
-        try {
-          emitter.off('strategy-created', fetchStrategies);
-          emitter.off('refresh-strategies', fetchStrategies);
-        } catch (err) {
-          console.warn('Error removing event listeners:', err);
-        }
-      }
-    });
-  } catch (err) {
-    console.warn('Error setting up event listeners:', err);
-  }
-}
-
-// Fetch strategies when component is mounted
+// Setup event listener
 onMounted(() => {
   fetchStrategies();
+  
+  // Listen for events to refresh strategies
+  if (emitter && typeof emitter.on === 'function') {
+    emitter.on('strategy-created', fetchStrategies);
+    emitter.on('refresh-strategies', fetchStrategies);
+  }
+});
+
+// Cleanup event listeners on component unmount
+onUnmounted(() => {
+  if (emitter && typeof emitter.off === 'function') {
+    emitter.off('strategy-created', fetchStrategies);
+    emitter.off('refresh-strategies', fetchStrategies);
+  }
+});
+
+// Expose drawer for parent components
+defineExpose({
+  drawer
 });
 </script>
 
 <template>
-  <template v-if="menuType === 'vertical'">
-    <v-list-group value="strategy" color="primary">
-      <template #activator="{ props }">
-        <v-list-item v-bind="props" title="Strategies" class="vertical-nav-list__item py-2">
-          <template #prepend>
-            <v-icon icon="tabler-message" color="primary" bold />
-          </template>
-        </v-list-item>
-      </template>
+  <div>
+    <v-navigation-drawer
+      v-model="drawer"
+      location="left"
+      temporary
+      class="rounded-r-xl border-r"
+      style="min-width:290px"
+    >
+      <v-list class="mt-2">
+        <template v-for="(item, index) in Strategies" :key="index">
+          <v-list-item
+            :to="item.to"
+            :active="index === activeItem"
+            @click="activeItem = index"
+            class="my-1 rounded-r-xl mx-1"
+          >
+            <template v-slot:prepend>
+              <v-icon :icon="item.icon"></v-icon>
+            </template>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-subtitle>{{ item.subtitle }}</v-list-item-subtitle>
+          </v-list-item>
+        </template>
+      </v-list>
+    </v-navigation-drawer>
+  </div>
+</template>
 
-      <v-list-item
-        v-for="item in Strategies"
-        :key="item.to"
-        class="vertical-nav-list__group"
-        :title="item.title"
-        :to="item.to"
-      />
-    </v-list-group>
-  </template>
-</template> 
+<style scoped>
+.v-navigation-drawer {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+</style> 
