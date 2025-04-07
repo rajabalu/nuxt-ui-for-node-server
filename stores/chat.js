@@ -339,6 +339,42 @@ export const useChatStore = defineStore('chat', {
         console.error('Error with AI response:', error);
         return { success: false, error: 'An error occurred with the AI response' };
       }
+    },
+    
+    // Delete a conversation
+    async deleteConversation(conversationId) {
+      if (!conversationId) return { success: false, error: 'No conversation ID provided' };
+      
+      try {
+        const api = useApi();
+        const notification = useNotification();
+        
+        const response = await api.delete(`conversations/${conversationId}`);
+        
+        if (response.success) {
+          // Remove from local state if present
+          this.conversations = this.conversations.filter(conv => conv.id !== conversationId);
+          
+          // Clear messages if we're viewing the deleted conversation
+          if (this.currentConversationId === conversationId) {
+            this.messages = [];
+            this.currentConversationId = null;
+          }
+          
+          return { success: true };
+        }
+        
+        return { 
+          success: false, 
+          error: response.error || 'Failed to delete conversation' 
+        };
+      } catch (error) {
+        console.error('Error deleting conversation:', error);
+        return { 
+          success: false, 
+          error: 'An error occurred while deleting the conversation' 
+        };
+      }
     }
   }
 }); 
