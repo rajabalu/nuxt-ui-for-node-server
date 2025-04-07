@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useApi } from '@/composables/api';
 
 defineProps({
@@ -13,6 +13,13 @@ defineProps({
 const Strategies = ref([]);
 
 const loading = ref(false);
+
+// Try to get the emitter through the provide/inject system first
+const nuxtApp = useNuxtApp();
+// Access emitter through the provide system or global properties as fallback
+const providedEmitter = nuxtApp.$emitter;
+// If it's available through inject, use it; otherwise fall back to global properties
+const emitter = providedEmitter || nuxtApp.vueApp?.config?.globalProperties?.$emitter || null;
 
 // Fetch strategies from the API and update the navigation menu
 const fetchStrategies = async () => {
@@ -29,6 +36,7 @@ const fetchStrategies = async () => {
         to: `strategies/${item.id}`,
         icon: "tabler-message"
       }));
+      console.log('Strategies menu updated:', Strategies.value);
     }
   } catch (error) {
     console.error('Error fetching strategies for menu:', error);
@@ -36,6 +44,34 @@ const fetchStrategies = async () => {
     loading.value = false;
   }
 };
+
+// Listen for strategy-created events and handle cleanup if emitter exists
+if (emitter) {
+  try {
+    // Set up event listeners
+    const setupEventListeners = () => {
+      emitter.on('strategy-created', fetchStrategies);
+      emitter.on('refresh-strategies', fetchStrategies);
+    };
+    
+    // Initial setup
+    setupEventListeners();
+    
+    // Clean up event listeners when component is unmounted
+    onBeforeUnmount(() => {
+      if (emitter) {
+        try {
+          emitter.off('strategy-created', fetchStrategies);
+          emitter.off('refresh-strategies', fetchStrategies);
+        } catch (err) {
+          console.warn('Error removing event listeners:', err);
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('Error setting up event listeners:', err);
+  }
+}
 
 // Fetch strategies when component is mounted
 onMounted(() => {

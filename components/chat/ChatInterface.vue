@@ -10,6 +10,7 @@
             :content="message.content"
             :timestamp="message.timestamp"
             :status="message.status"
+            :file="message.file"
           />
         </v-slide-y-transition>
         <div ref="scrollAnchorRef"></div>
@@ -28,6 +29,8 @@
                 class="mx-1"
                 aria-label="Attach file"
                 @click="triggerFileInput"
+                :disabled="isUploading"
+                :loading="isUploading"
               >
                 <v-icon>mdi-paperclip</v-icon>
               </v-btn>
@@ -63,6 +66,7 @@
                 color="primary"
                 class="mx-1"
                 aria-label="Voice input"
+                :disabled="isUploading"
               >
                 <v-icon>mdi-microphone</v-icon>
               </v-btn>
@@ -71,7 +75,7 @@
                 icon
                 variant="flat"
                 color="primary"
-                :disabled="!inputMessage.trim()"
+                :disabled="isButtonDisabled"
                 @click="sendMessage"
                 class="send-button"
                 aria-label="Send message"
@@ -86,8 +90,10 @@
   </template>
   
   <script setup>
-  import { ref, onMounted, nextTick, watch } from 'vue';
+  import { ref, onMounted, nextTick, watch, computed } from 'vue';
   import ChatMessage from '~/components/chat/ChatMessage.vue';
+  import { useApi } from '~/composables/api';
+  import { useAuthStore } from '~/stores/auth';
   
   // Message data
   const messages = ref([
@@ -104,67 +110,236 @@
   const chatHistoryRef = ref(null);
   const scrollAnchorRef = ref(null);
   const fileInput = ref(null);
+  const conversationId = ref(null);
+  const api = useApi();
+  
+  // Try to get the emitter with safe access
+  let emitter = null;
+  try {
+    const nuxtApp = useNuxtApp();
+    if (nuxtApp && nuxtApp.vueApp && nuxtApp.vueApp.config && nuxtApp.vueApp.config.globalProperties) {
+      emitter = nuxtApp.vueApp.config.globalProperties.$emitter;
+    }
+  } catch (err) {
+    console.warn('Error accessing emitter:', err);
+  }
+  
+  const uploadedFile = ref(null);
+  const isUploading = ref(false);
+  const authStore = useAuthStore();
+  
+  // Computed property for button disabled state to avoid null reference errors
+  const isButtonDisabled = computed(() => {
+    const hasInputText = inputMessage.value && inputMessage.value.trim && inputMessage.value.trim().length > 0;
+    const hasUploadedFile = uploadedFile.value !== null;
+    return (!hasInputText && !hasUploadedFile) || isUploading.value;
+  });
   
   // File upload handlers
   const triggerFileInput = () => {
-    fileInput.value.click();
+    if (fileInput.value) {
+      fileInput.value.click();
+    }
   };
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async (event) => {
+    if (!event || !event.target || !event.target.files) return;
+    
     const files = event.target.files;
     if (files.length > 0) {
-      // Handle the uploaded file here
-      console.log('Selected file:', files[0]);
-      // You can add file validation and upload logic here
-      // Example: validateFile(files[0]);
-      // Example: uploadFile(files[0]);
+      const file = files[0];
       
-      // Clear the input after handling
-      event.target.value = '';
+      // Show uploading state
+      isUploading.value = true;
+      
+      try {
+        // Get the configured base URL
+        const baseUrl = api && typeof api.getBaseUrl === 'function' ? api.getBaseUrl() : 'http://localhost:8000/api/v1/';
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Upload file using the server endpoint
+        const uploadUrl = `${baseUrl}files/upload`;
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authStore && authStore.token ? authStore.token : ''}`
+          },
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Upload failed with status: ${response.status}`);
+        }
+        
+        // Parse response JSON
+        const data = await response.json();
+        
+        // Extract the file ID and path
+        const fileId = data && data.file ? data.file.id : null;
+        const filePath = data && data.file ? data.file.path : null;
+        
+        if (!fileId) {
+          throw new Error('No file ID returned from server');
+        }
+        
+        // Store the uploaded file info
+        uploadedFile.value = {
+          id: fileId,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          path: filePath,
+          url: filePath || URL.createObjectURL(file)
+        };
+        
+        // Add file message to chat
+        if (messages.value) {
+          messages.value.push({
+            isUser: true,
+            content: `Uploaded file: ${file.name}`,
+            file: uploadedFile.value,
+            timestamp: new Date(),
+            status: 'sent'
+          });
+        }
+        
+        // Scroll to bottom after adding the file message
+        scrollToBottom();
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        
+        // Fallback to local file display if upload fails
+        uploadedFile.value = {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: URL.createObjectURL(file)
+        };
+        
+        // Add file message to chat with error indication
+        if (messages.value) {
+          messages.value.push({
+            isUser: true,
+            content: `File: ${file.name} (upload failed)`,
+            file: uploadedFile.value,
+            timestamp: new Date(),
+            status: 'error'
+          });
+        }
+        
+        // Scroll to bottom
+        scrollToBottom();
+      } finally {
+        // Clear the input and uploading state
+        if (event.target) {
+          event.target.value = '';
+        }
+        isUploading.value = false;
+      }
     }
   };
   
   // Auto-scroll to bottom
   const scrollToBottom = async () => {
-    await nextTick();
-    if (scrollAnchorRef.value) {
-      scrollAnchorRef.value.scrollIntoView({ behavior: 'smooth' });
+    try {
+      await nextTick();
+      if (scrollAnchorRef.value) {
+        scrollAnchorRef.value.scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch (err) {
+      console.warn('Error in scrollToBottom:', err);
     }
   };
   
   // Send message handler
   const sendMessage = async () => {
-    if (!inputMessage.value.trim()) return;
+    // Safe check for input value
+    const hasText = inputMessage.value && inputMessage.value.trim && inputMessage.value.trim().length > 0;
+    const hasFile = uploadedFile.value !== null;
+    
+    if (!hasText && !hasFile) return;
   
-    // Add user message
-    messages.value.push({
-      isUser: true,
-      content: inputMessage.value.trim(),
-      timestamp: new Date(),
-      status: 'sent'
-    });
+    // Add user message if there's text input
+    if (hasText && messages.value) {
+      messages.value.push({
+        isUser: true,
+        content: inputMessage.value.trim(),
+        timestamp: new Date(),
+        status: 'sent'
+      });
+    }
   
     // Clear input
+    const userMessage = hasText ? inputMessage.value.trim() : '';
     inputMessage.value = '';
   
     // Scroll to bottom
     await scrollToBottom();
   
+    // If this is a new conversation, create it on the server
+    if (!conversationId.value) {
+      try {
+        // Format the current date
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        // Create new conversation
+        if (api && typeof api.post === 'function') {
+          const response = await api.post('conversations', {
+            title: `Strategy as on ${formattedDate}`
+          });
+          
+          if (response && response.success && response.data) {
+            // Store the conversation ID
+            conversationId.value = response.data.id;
+            
+            // Safely emit events if emitter is available
+            if (emitter && typeof emitter.emit === 'function') {
+              // Try-catch to prevent any potential errors
+              try {
+                emitter.emit('strategy-created');
+                
+                // Emit a second refresh event with a slight delay to ensure it's processed
+                setTimeout(() => {
+                  if (emitter && typeof emitter.emit === 'function') {
+                    emitter.emit('refresh-strategies');
+                  }
+                }, 200);
+              } catch (err) {
+                console.warn('Error emitting event:', err);
+              }
+            } else {
+              console.warn('Event emitter not available or invalid');
+            }
+          } else {
+            console.error('Failed to create conversation:', response?.error || 'Unknown error');
+          }
+        }
+      } catch (error) {
+        console.error('Error creating conversation:', error);
+      }
+    }
+  
     // Simulate AI response
-    setTimeout(async () => {
-      messages.value.push({
-        isUser: false,
-        content: 'I received your message. This is a placeholder response.',
-        timestamp: new Date(),
-        status: 'delivered'
-      });
-      await scrollToBottom();
-    }, 1000);
+    if (messages.value) {
+      setTimeout(async () => {
+        messages.value.push({
+          isUser: false,
+          content: 'I received your message. This is a placeholder response.',
+          timestamp: new Date(),
+          status: 'delivered'
+        });
+        await scrollToBottom();
+      }, 1000);
+    }
   };
   
   // Enter key handler
   const onEnterPress = (event) => {
-    if (!event.shiftKey) {
+    if (event && !event.shiftKey) {
       sendMessage();
     }
   };

@@ -157,6 +157,7 @@ export default defineNuxtConfig({
     // RTL support plugin
     '~/plugins/rtl-support.client.js',
     // Other plugins will be loaded automatically
+    '~/plugins/event-bus.js'
   ],
   
   i18n: {

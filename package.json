@@ -34,6 +34,7 @@
     "apexcharts": "^4.0.0",
     "dropzone-vue": "^0.1.11",
     "lodash-es": "^4.17.21",
+    "mitt": "^3.0.1",
     "vite-plugin-vuetify": "^2.0.4",
     "vue-code-highlighter": "^1.1.2",
     "vue3-apexcharts": "^1.6.0"

@@ -16,6 +16,23 @@
         >
           <v-card-text :class="{'text-white': isUser}">
             {{ content }}
+            
+            <!-- File attachment if exists -->
+            <div v-if="file" class="file-attachment mt-2">
+              <v-btn
+                variant="outlined"
+                size="small"
+                :color="isUser ? 'white' : 'primary'"
+                class="file-button"
+                prepend-icon="mdi-file-document-outline"
+                @click="openFile"
+              >
+                {{ file.name }}
+              </v-btn>
+              <div class="text-caption mt-1" :class="{'text-white': isUser}">
+                {{ formatFileSize(file.size) }}
+              </div>
+            </div>
           </v-card-text>
         </v-card>
         
@@ -48,6 +65,10 @@ const props = defineProps({
   status: {
     type: String,
     default: 'sent' // sent, delivered, read
+  },
+  file: {
+    type: Object,
+    default: null
   }
 });
 
@@ -59,6 +80,19 @@ const formattedTime = computed(() => {
     minute: '2-digit'
   });
 });
+
+// Methods
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return bytes + ' B';
+  else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  else return (bytes / 1048576).toFixed(1) + ' MB';
+};
+
+const openFile = () => {
+  if (props.file && props.file.url) {
+    window.open(props.file.url, '_blank');
+  }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -143,5 +177,20 @@ const formattedTime = computed(() => {
   .message-time {
     color: rgba(255, 255, 255, 0.6);
   }
+}
+
+.file-attachment {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.file-button {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
