@@ -1,11 +1,26 @@
 <template>
     <div class="chat-interface d-flex flex-column">
+      <!-- Loading Indicator -->
+      <v-progress-linear v-if="isLoadingMessages" indeterminate></v-progress-linear>
+  
       <!-- Chat Messages Area -->
       <div ref="chatHistoryRef" class="chat-history flex-grow-1">
+        <!-- Loading More Messages Indicator -->
+        <div v-if="isLoadingMoreMessages" class="text-center pa-2">
+          <v-progress-circular indeterminate size="24" width="2" color="primary"></v-progress-circular>
+        </div>
+        
+        <!-- Load More Button (alternative to scroll) -->
+        <div v-if="hasMoreMessages && !isLoadingMoreMessages" class="text-center pa-2">
+          <v-btn variant="text" size="small" @click="loadMoreMessages" prepend-icon="mdi-refresh">
+            Load More
+          </v-btn>
+        </div>
+        
         <v-slide-y-transition group>
           <ChatMessage
             v-for="(message, index) in messages"
-            :key="index"
+            :key="message.id || index"
             :is-user="message.isUser"
             :content="message.content"
             :timestamp="message.timestamp"
@@ -19,6 +34,14 @@
       <!-- Chat Input Area -->
       <div class="chat-input-container">
         <v-card class="chat-input-card" elevation="0">
+          <!-- File Preview (if file is selected) -->
+          <div v-if="uploadedFile" class="pa-2">
+            <v-chip closable @click:close="uploadedFile = null" color="primary" variant="outlined">
+              <v-icon start>mdi-file</v-icon>
+              {{ uploadedFile.name }}
+            </v-chip>
+          </div>
+          
           <v-row no-gutters align="center">
             <!-- File Upload Button -->
             <v-col cols="auto" class="pr-1">
@@ -29,7 +52,7 @@
                 class="mx-1"
                 aria-label="Attach file"
                 @click="triggerFileInput"
-                :disabled="isUploading"
+                :disabled="isUploading || isSendingMessage"
                 :loading="isUploading"
               >
                 <v-icon>mdi-paperclip</v-icon>
@@ -41,7 +64,7 @@
                 @change="handleFileUpload"
               />
             </v-col>
-
+  
             <!-- Text Input -->
             <v-col class="pr-2">
               <v-textarea
@@ -55,6 +78,7 @@
                 hide-details
                 @keydown.enter.prevent="onEnterPress"
                 class="chat-textarea"
+                :disabled="isSendingMessage"
               ></v-textarea>
             </v-col>
   
@@ -66,7 +90,7 @@
                 color="primary"
                 class="mx-1"
                 aria-label="Voice input"
-                :disabled="isUploading"
+                :disabled="isUploading || isSendingMessage"
               >
                 <v-icon>mdi-microphone</v-icon>
               </v-btn>
@@ -79,6 +103,7 @@
                 @click="sendMessage"
                 class="send-button"
                 aria-label="Send message"
+                :loading="isSendingMessage"
               >
                 <v-icon>mdi-send</v-icon>
               </v-btn>
@@ -90,27 +115,32 @@
   </template>
   
   <script setup>
-  import { ref, onMounted, nextTick, watch, computed } from 'vue';
+  import { ref, onMounted, nextTick, watch, computed, onBeforeMount, watchEffect } from 'vue';
   import ChatMessage from '~/components/chat/ChatMessage.vue';
   import { useApi } from '~/composables/api';
   import { useAuthStore } from '~/stores/auth';
   
+  // Accept conversation ID as a prop
+  const props = defineProps({
+    conversationId: {
+      type: String,
+      default: null
+    }
+  });
+  
   // Message data
-  const messages = ref([
-    { 
-      isUser: false, 
-      content: 'Hello! How can I help you today?', 
-      timestamp: new Date('2023-04-14T05:42:00'), 
-      status: 'delivered' 
-    },
-  ]);
+  const messages = ref([]);
+  const isLoadingMessages = ref(false);
+  const isLoadingMoreMessages = ref(false);
+  const hasMoreMessages = ref(false);
+  const currentPage = ref(1);
+  const messagesPerPage = 50;
   
   // Reactive references
   const inputMessage = ref('');
   const chatHistoryRef = ref(null);
   const scrollAnchorRef = ref(null);
   const fileInput = ref(null);
-  const conversationId = ref(null);
   const api = useApi();
   
   // Try to get the emitter with safe access
@@ -127,14 +157,104 @@
   const uploadedFile = ref(null);
   const isUploading = ref(false);
   const authStore = useAuthStore();
+  const isSendingMessage = ref(false);
+  
+  // Initialize conversation ID from prop if provided
+  const conversationId = computed(() => props.conversationId);
   
   // Computed property for button disabled state to avoid null reference errors
   const isButtonDisabled = computed(() => {
     const hasInputText = inputMessage.value && inputMessage.value.trim && inputMessage.value.trim().length > 0;
     const hasUploadedFile = uploadedFile.value !== null;
-    return (!hasInputText && !hasUploadedFile) || isUploading.value;
+    return (!hasInputText && !hasUploadedFile) || isUploading.value || isSendingMessage.value;
   });
   
+  /**
+   * Load messages for the conversation
+   */
+  const loadMessages = async (page = 1) => {
+    if (!conversationId.value) return;
+
+    const isInitialLoad = page === 1;
+    if (isInitialLoad) {
+      isLoadingMessages.value = true;
+      messages.value = []; // Clear existing messages for new conversation
+    } else {
+      isLoadingMoreMessages.value = true;
+    }
+
+    try {
+      const response = await api.get(`conversations/${conversationId.value}/messages?page=${page}&limit=${messagesPerPage}`);
+
+      if (response.success && response.data) {
+        // Process API response data
+        const newMessages = (response.data.data || []).map(msg => ({
+          id: msg.id,
+          isUser: msg.sender === 'user',
+          content: msg.content || '',
+          timestamp: new Date(msg.createdAt),
+          status: 'delivered',
+          file: msg.file ? {
+            id: msg.file.id,
+            name: msg.file.filename,
+            path: msg.file.path,
+            url: msg.file.path,
+            type: msg.file.mimetype,
+            size: 0 // Size typically not included in responses
+          } : null
+        }));
+
+        if (isInitialLoad) {
+          // For initial load, set messages directly (newest first from API)
+          messages.value = newMessages.reverse(); // Reverse to show oldest first
+        } else {
+          // For pagination, add to beginning (older messages at top)
+          messages.value = [...newMessages.reverse(), ...messages.value];
+        }
+
+        // Update pagination state
+        hasMoreMessages.value = response.data.hasNextPage || false;
+        currentPage.value = page;
+        
+        // Scroll to bottom on initial load
+        if (isInitialLoad) {
+          await nextTick();
+          scrollToBottom();
+        }
+      } else {
+        console.error('Failed to load messages:', response?.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    } finally {
+      isLoadingMessages.value = false;
+      isLoadingMoreMessages.value = false;
+    }
+  };
+
+  /**
+   * Load more messages (infinite scrolling)
+   */
+  const loadMoreMessages = async () => {
+    if (hasMoreMessages.value && !isLoadingMoreMessages.value) {
+      await loadMessages(currentPage.value + 1);
+    }
+  };
+
+  /**
+   * Handle scroll event for infinite scrolling
+   */
+  const handleScroll = () => {
+    if (!chatHistoryRef.value) return;
+    
+    const { scrollTop } = chatHistoryRef.value;
+    
+    // If scrolled to top (or near top) and has more messages, load more
+    if (scrollTop < 50 && hasMoreMessages.value && !isLoadingMoreMessages.value) {
+      loadMoreMessages();
+    }
+  };
+
   // File upload handlers
   const triggerFileInput = () => {
     if (fileInput.value) {
@@ -195,43 +315,17 @@
           url: filePath || URL.createObjectURL(file)
         };
         
-        // Add file message to chat
-        if (messages.value) {
-          messages.value.push({
-            isUser: true,
-            content: `Uploaded file: ${file.name}`,
-            file: uploadedFile.value,
-            timestamp: new Date(),
-            status: 'sent'
-          });
-        }
-        
-        // Scroll to bottom after adding the file message
-        scrollToBottom();
+        // Show upload success indication but don't add message yet
+        // (message will be added when user sends it)
+        console.log('File uploaded successfully. Ready to send with message.');
       } catch (error) {
         console.error('Error uploading file:', error);
         
-        // Fallback to local file display if upload fails
-        uploadedFile.value = {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: URL.createObjectURL(file)
-        };
+        // Show error message to user
+        alert(`Failed to upload file: ${error.message}`);
         
-        // Add file message to chat with error indication
-        if (messages.value) {
-          messages.value.push({
-            isUser: true,
-            content: `File: ${file.name} (upload failed)`,
-            file: uploadedFile.value,
-            timestamp: new Date(),
-            status: 'error'
-          });
-        }
-        
-        // Scroll to bottom
-        scrollToBottom();
+        // Clear the upload
+        uploadedFile.value = null;
       } finally {
         // Clear the input and uploading state
         if (event.target) {
@@ -262,78 +356,94 @@
     
     if (!hasText && !hasFile) return;
   
-    // Add user message if there's text input
-    if (hasText && messages.value) {
-      messages.value.push({
-        isUser: true,
-        content: inputMessage.value.trim(),
-        timestamp: new Date(),
-        status: 'sent'
-      });
+    // Need a valid conversation ID
+    if (!conversationId.value) {
+      console.error('No conversation ID available');
+      return;
     }
   
-    // Clear input
-    const userMessage = hasText ? inputMessage.value.trim() : '';
-    inputMessage.value = '';
+    // Prevent multiple sends
+    isSendingMessage.value = true;
   
-    // Scroll to bottom
-    await scrollToBottom();
-  
-    // If this is a new conversation, create it on the server
-    if (!conversationId.value) {
-      try {
-        // Format the current date
-        const today = new Date();
-        const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+    try {
+      // Prepare message data
+      const messageData = {
+        content: hasText ? inputMessage.value.trim() : '',
+        sender: 'user'
+      };
+      
+      // Add file if uploaded
+      if (hasFile && uploadedFile.value && uploadedFile.value.id) {
+        messageData.file = {
+          id: uploadedFile.value.id
+        };
+      }
+      
+      // Send message to server
+      const response = await api.post(`conversations/${conversationId.value}/messages`, messageData);
+      
+      if (response && response.success && response.data) {
+        // Add message to UI
+        const newMessage = {
+          id: response.data.id,
+          isUser: true,
+          content: response.data.content,
+          timestamp: new Date(response.data.createdAt),
+          status: 'delivered',
+          file: response.data.file ? {
+            id: response.data.file.id,
+            name: response.data.file.filename,
+            path: response.data.file.path,
+            url: response.data.file.path,
+            type: response.data.file.mimetype,
+            size: 0
+          } : null
+        };
         
-        // Create new conversation
-        if (api && typeof api.post === 'function') {
-          const response = await api.post('conversations', {
-            title: `Strategy as on ${formattedDate}`
+        if (messages.value) {
+          messages.value.push(newMessage);
+        }
+        
+        // Reset inputs
+        inputMessage.value = '';
+        uploadedFile.value = null;
+        
+        // Scroll to bottom
+        await scrollToBottom();
+        
+        // Simulate AI response (in real app, you'd wait for server events)
+        setTimeout(async () => {
+          const aiResponse = await api.post(`conversations/${conversationId.value}/messages`, {
+            content: 'I received your message. This is a placeholder response.',
+            sender: 'assistant'
           });
           
-          if (response && response.success && response.data) {
-            // Store the conversation ID
-            conversationId.value = response.data.id;
+          if (aiResponse && aiResponse.success && aiResponse.data) {
+            const aiMessage = {
+              id: aiResponse.data.id,
+              isUser: false,
+              content: aiResponse.data.content,
+              timestamp: new Date(aiResponse.data.createdAt),
+              status: 'delivered',
+              file: null
+            };
             
-            // Safely emit events if emitter is available
-            if (emitter && typeof emitter.emit === 'function') {
-              // Try-catch to prevent any potential errors
-              try {
-                emitter.emit('strategy-created');
-                
-                // Emit a second refresh event with a slight delay to ensure it's processed
-                setTimeout(() => {
-                  if (emitter && typeof emitter.emit === 'function') {
-                    emitter.emit('refresh-strategies');
-                  }
-                }, 200);
-              } catch (err) {
-                console.warn('Error emitting event:', err);
-              }
-            } else {
-              console.warn('Event emitter not available or invalid');
+            if (messages.value) {
+              messages.value.push(aiMessage);
+              await scrollToBottom();
             }
-          } else {
-            console.error('Failed to create conversation:', response?.error || 'Unknown error');
           }
-        }
-      } catch (error) {
-        console.error('Error creating conversation:', error);
+        }, 1000);
+        
+      } else {
+        console.error('Failed to send message:', response?.error || 'Unknown error');
+        alert('Failed to send message. Please try again.');
       }
-    }
-  
-    // Simulate AI response
-    if (messages.value) {
-      setTimeout(async () => {
-        messages.value.push({
-          isUser: false,
-          content: 'I received your message. This is a placeholder response.',
-          timestamp: new Date(),
-          status: 'delivered'
-        });
-        await scrollToBottom();
-      }, 1000);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Error sending message. Please try again.');
+    } finally {
+      isSendingMessage.value = false;
     }
   };
   
@@ -349,9 +459,31 @@
     scrollToBottom();
   }, { deep: true });
   
-  // Initial scroll on mount
+  // Watch for conversation ID changes
+  watchEffect(() => {
+    // When conversation ID changes, load messages
+    if (conversationId.value) {
+      loadMessages(1);
+    }
+  });
+  
+  // Initialize scroll handler for infinite scrolling
   onMounted(() => {
-    scrollToBottom();
+    if (chatHistoryRef.value) {
+      chatHistoryRef.value.addEventListener('scroll', handleScroll);
+    }
+    
+    // Load messages if conversation ID is available
+    if (conversationId.value) {
+      loadMessages(1);
+    }
+  });
+  
+  // Clean up event listeners
+  onBeforeMount(() => {
+    if (chatHistoryRef.value) {
+      chatHistoryRef.value.removeEventListener('scroll', handleScroll);
+    }
   });
   </script>
   

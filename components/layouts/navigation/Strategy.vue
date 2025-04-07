@@ -33,7 +33,7 @@ const fetchStrategies = async () => {
       // Map API response to menu items, truncating titles if needed
       Strategies.value = response.data.data.map(item => ({
         title: item.title.length > 30 ? item.title.substring(0, 30) + '...' : item.title,
-        to: `strategies/${item.id}`,
+        to: `/strategies/${item.id}`,
         icon: "tabler-message"
       }));
       console.log('Strategies menu updated:', Strategies.value);
@@ -95,7 +95,7 @@ onMounted(() => {
         :key="item.to"
         class="vertical-nav-list__group"
         :title="item.title"
-        :to="`/${item.to}`"
+        :to="item.to"
       />
     </v-list-group>
   </template>
