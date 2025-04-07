@@ -1,6 +1,10 @@
 <script setup>
 import Admin from "./Admin.vue";
 import Strategy from "./Strategy.vue";
+import { useAuth } from '~/composables/auth';
+
+const { isAdmin } = useAuth();
+
 defineProps({
   isVertical: {
     type: Boolean,
@@ -11,7 +15,7 @@ defineProps({
 
 <template>
   <v-list v-if="isVertical" class="vertical-nav-list">
-    <admin />
+    <admin v-if="isAdmin" />
     <strategy />
   </v-list>
 </template>
