@@ -86,6 +86,68 @@ export const useApi = () => {
       };
     }
   };
+  
+  // File upload handler that maintains consistent auth and error handling
+  const uploadFile = async (endpoint, file, options = {}) => {
+    // Check token expiry like in standard requests
+    if (authStore.token && authStore.isTokenExpired && endpoint !== 'auth/refresh') {
+      console.log('Token expired, refreshing before upload...');
+      const refreshResult = await authStore.refreshTokens();
+      if (!refreshResult.success) {
+        console.error('Token refresh failed:', refreshResult.error);
+        authStore.logout();
+        return { success: false, error: 'Session expired. Please login again.' };
+      }
+    }
+    
+    const url = `${BASE_URL}${endpoint}`;
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Add any extra form fields from options
+    if (options.formData) {
+      Object.entries(options.formData).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+    }
+    
+    // Prepare headers - don't set Content-Type as it will be set automatically with the boundary
+    const headers = { ...options.headers };
+    
+    // Add Authorization header if token exists
+    if (authStore.token) {
+      headers['Authorization'] = `Bearer ${authStore.token}`;
+    }
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers,
+        ...options
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Upload failed' }));
+        return { 
+          success: false, 
+          error: errorData.message || 'Upload failed',
+          status: response.status
+        };
+      }
+      
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error('File upload error:', error);
+      return { 
+        success: false, 
+        error: 'An error occurred during file upload. Please try again later.'
+      };
+    }
+  };
 
   return {
     get: (endpoint, options = {}) => apiRequest(endpoint, { ...options, method: 'GET' }),
@@ -105,6 +167,7 @@ export const useApi = () => {
       body: JSON.stringify(data)
     }),
     delete: (endpoint, options = {}) => apiRequest(endpoint, { ...options, method: 'DELETE' }),
+    upload: (endpoint, file, options = {}) => uploadFile(endpoint, file, options),
     // Export the base URL for external use if needed
     getBaseUrl: () => BASE_URL
   };

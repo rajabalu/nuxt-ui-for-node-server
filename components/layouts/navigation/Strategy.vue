@@ -1,13 +1,14 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
-import { useApi } from '@/composables/api';
+import { useChatStore } from '@/stores/chat';
 import { useNuxtApp } from '#app';
+import VerticalNavItem from './VerticalNavItem.vue';
 
 const drawer = ref(false);
 const loading = ref(false);
 const activeItem = ref(0);
 const Strategies = ref([]);
-const api = useApi();
+const chatStore = useChatStore();
 
 // Get emitter from Nuxt plugin
 const nuxtApp = useNuxtApp();
@@ -23,19 +24,11 @@ const formatDate = (dateString) => {
 const fetchStrategies = async () => {
   loading.value = true;
   try {
-    const response = await api.get('conversations');
+    const response = await chatStore.fetchConversations();
     
-    if (response && response.success) {
-      // Check the actual structure of the response
-      console.log('API response structure:', response);
-      
-      // Get the array of conversations from the correct path
-      const conversations = Array.isArray(response.data) 
-        ? response.data 
-        : (response.data?.data || []);
-      
+    if (response.success) {
       // Map API response to menu items
-      Strategies.value = conversations.map(item => ({
+      Strategies.value = response.data.map(item => ({
         id: item.id,
         title: item.title && item.title.length > 30 ? item.title.substring(0, 27) + '...' : item.title || 'Untitled',
         icon: 'mdi-message-outline',
@@ -43,7 +36,7 @@ const fetchStrategies = async () => {
         subtitle: formatDate(item.createdAt)
       }));
     } else {
-      console.error('Failed to load strategies:', response?.error || 'Unknown error');
+      console.error('Failed to load strategies:', response.error);
       Strategies.value = [];
     }
   } catch (error) {
@@ -81,30 +74,20 @@ defineExpose({
 
 <template>
   <div>
-    <v-navigation-drawer
-      v-model="drawer"
-      location="left"
-      temporary
-      class="rounded-r-xl border-r"
-      style="min-width:290px"
-    >
-      <v-list class="mt-2">
-        <template v-for="(item, index) in Strategies" :key="index">
-          <v-list-item
-            :to="item.to"
-            :active="index === activeItem"
-            @click="activeItem = index"
-            class="my-1 rounded-r-xl mx-1"
-          >
-            <template v-slot:prepend>
-              <v-icon :icon="item.icon"></v-icon>
-            </template>
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
-            <v-list-item-subtitle>{{ item.subtitle }}</v-list-item-subtitle>
-          </v-list-item>
-        </template>
-      </v-list>
-    </v-navigation-drawer>
+    <v-list class="mt-2">
+      <VerticalNavItem
+        v-for="(item, index) in Strategies"
+        :key="index"
+        :active="activeItem === index"
+        :item="item"
+        @click="activeItem = index"
+      />
+      
+      <div v-if="loading" class="d-flex justify-center py-2">
+        <v-progress-circular indeterminate size="20" color="primary"></v-progress-circular>
+      </div>
+      
+    </v-list>
   </div>
 </template>
 
