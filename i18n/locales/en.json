@@ -95,7 +95,8 @@
     "language": "Language",
     "selectLanguage": "Select Language",
     "darkMode": "Dark Mode",
-    "lightMode": "Light Mode"
+    "lightMode": "Light Mode",
+    "newPassword": "New Password"
   },
   "notifications": {
     "title": "Notifications",

@@ -659,11 +659,13 @@ const onEmail = async () => {
                   <v-radio-group
                     v-model="theme.global.name.value"
                     @update:model-value="toggleLightDarkMode"
+                    class="d-flex flex-row"
                   >
                     <v-radio
                       value="light"
                       :label="t('settings.lightMode')"
                       color="primary"
+                      class="mr-4"
                     />
                     <v-radio
                       value="dark"

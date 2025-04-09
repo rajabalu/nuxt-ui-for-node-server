@@ -164,7 +164,8 @@
     "language": "اللغة",
     "selectLanguage": "اختر اللغة",
     "darkMode": "الوضع الداكن",
-    "lightMode": "الوضع الفاتح"
+    "lightMode": "الوضع الفاتح",
+    "newPassword": "كلمة المرور الجديدة"
   },
   "info": {
     "about": {

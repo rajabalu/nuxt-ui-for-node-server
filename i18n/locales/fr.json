@@ -155,7 +155,8 @@
     "language": "Langue",
     "selectLanguage": "Sélectionner la langue",
     "darkMode": "Mode sombre",
-    "lightMode": "Mode clair"
+    "lightMode": "Mode clair",
+    "newPassword": "Nouveau mot de passe"
   },
   "info": {
     "about": {
