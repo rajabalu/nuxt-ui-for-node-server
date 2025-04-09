@@ -3,100 +3,141 @@ description:
 globs: 
 alwaysApply: true
 ---
-You are a Senior Frontend Developer and an Expert in Vue 3, Nuxt 3, JavaScript, TypeScript, TailwindCSS, HTML and CSS. You are thoughtful, give nuanced answers, and are brilliant at reasoning. You carefully provide accurate, factual, thoughtful answers, and are a genius at reasoning.
+# Implementation Patterns Reference
 
-Follow the user’s requirements carefully & to the letter. First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail. Confirm, then write code!
+## Project Structure
+- **Main Files**: 
+  - `app.vue` - Main application component with v-app wrapper
+  - `nuxt.config.js` - Configuration for Nuxt, i18n, plugins, and PWA
+  - `.env` - Environment variables including API endpoints
 
-Always write correct, best practice, DRY principle (Dont Repeat Yourself), bug free, fully functional and working code also it should be aligned to listed rules down below at # Code Implementation Guidelines.
+## API Calls
+- **ALWAYS** use the `useApi()` composable from `composables/api.js` for all API requests
+- **NEVER** use direct fetch() or axios calls in components or stores
+- **ALWAYS** use the consistent error handling pattern from api.js
+- For file uploads, use `useApi().upload()` method, not custom fetch implementations
 
-Focus on easy and readability code, over being performant. Fully implement all requested functionality. Leave NO todo’s, placeholders or missing pieces. Ensure code is complete! Verify thoroughly finalised. Include all required imports, and ensure proper naming of key components.
 
-Be concise Minimize any other prose. If you think there might not be a correct answer, you say so. If you do not know the answer, say so, instead of guessing
+## Event Communication
+- **ALWAYS** use the event bus system via `re-useevent-bus.js` for cross-component communication
+- **NEVER** create custom event systems or one-off emitters
+- For component-specific events, use Vue's built-in emit system
+- Document all events with clear names and expected payloads
 
-## Coding environment:
+## UI Toast Notifications
+- **ALWAYS** use `useNotification()` from `composables/useNotification.js` for user feedback
+- **NEVER** use alert(), console.log(), or custom toast implementations
+- **USE** appropriate notification types:
+  - `notification.success()` for successful operations
+  - `notification.error()` for error messages and failures
+  - `notification.info()` for general information
+  - `notification.warning()` for warnings and cautions
+- **INCLUDE** clear, actionable messages in notifications
+- **DON'T** show sensitive information in notifications
 
-The user asks questions about the following coding languages:
-- Vue 3 and Composition API
-- Vuetify 3 as the UI framework
-- Pinia for state management
-- TypeScript support
-- JWT-based authentication system
-- Tabler icons
-- VueUse utilities
-- SCSS for styling
-- PWA capabilities via @vite-pwa/nuxt
-- ApexCharts for data visualization
-- Vite as the build tool
+## Authentication
+- **NEVER** access tokens directly from localStorage
+- **ALWAYS** use the auth store (`useAuthStore()`) to access or validate tokens
+- **NEVER** manually include auth tokens in request headers - let api.js handle this
+- For any auth checking, use the composables/auth.js helpers or store getters
 
-## Code Implementation Guidelines:
+## State Management
+- Keep related API calls and state in dedicated stores
+- Use composables to abstract common functionality
+- Prefer using store actions for API calls rather than calling API directly in components
 
-Follow these rules when you write code:
-Use early returns whenever possible to make the code more readable.
-Always use Tailwind classes for styling HTML elements; avoid using CSS or tags.
-Always use composition api.
-Use descriptive variable and function/const names. Also, event functions should be named with a “handle” prefix, like “handleClick” for onClick and “handleKeyDown” for onKeyDown.
-Implement accessibility features on elements. For example, a tag should have a tabindex=“0”, aria-label, on:click, and on:keydown, and similar attributes.
-Use consts instead of functions, for example, “const toggle = () =>”. Also, define a type if possible.
+## API Call Pattern
+- **Key Files**:
+  - `composables/api.js` - Core API functionality with `useApi()` composable
+  - `plugins/api.js` - Registers API services
+  - `composables/useCrudOperations.js` - Reusable CRUD operations
 
-## Project Structure:
-app/: Nuxt application entry point with the main Vue component
-app.vue: Main application component with v-app wrapper
-assets/: Static files that are processed by the build system
-styles/: SCSS styling including Vuetify configuration
-components/: Vue components organized by purpose
-globals/: Global components available throughout the app
-ui-components/: Reusable Vuetify UI components organized by type
-layouts/: Components used in layouts
-layouts-pages/: Page-specific layout components
-dashboard/: Dashboard-specific components
-apps/: Application module components
-composables/: Reusable composition functions
-auth.js: Authentication composable wrapping the auth store
-layouts/: Nuxt layout templates for different page structures
-locales/: Internationalization files
-middleware/: Nuxt route middleware
-auth.js: Authentication middleware protecting routes
-pages/: File-based routing structure
-plugins/: Nuxt plugins that run before the app is mounted
-z-auth.js: Auth initialization and API interceptors
-public/: Static assets served directly
-stores/: Pinia state management stores
-auth.js: Authentication state and actions
-utils/: Utility functions
-i18n/locales: i18n related language files
-Key files:
-nuxt.config.js: Nuxt configuration including PWA setup, plugins, and modules
-package.json: Dependencies and scripts
-.env: Environment variables
-The project follows a structured approach with:
-JWT authentication with token refresh
-Component library built on Vuetify
-Code examples in code.js files for documentation
-Standardized naming for event handlers (handle prefix)
-Composition API with script setup syntax
+- **Main Methods**:
+  - `useApi().get(endpoint, options)` - GET requests
+  - `useApi().post(endpoint, data, options)` - POST requests
+  - `useApi().put(endpoint, data, options)` - PUT requests
+  - `useApi().patch(endpoint, data, options)` - PATCH requests
+  - `useApi().delete(endpoint, options)` - DELETE requests
+  - `useApi().getBaseUrl()` - Returns the base API URL
 
-## General:
+- **CRUD Operations**:
+  - `useCrudOperations(apiConfig).fetchData(params)` - List items with pagination
+  - `useCrudOperations(apiConfig).createItem(data)` - Create new item
+  - `useCrudOperations(apiConfig).updateItem(id, data)` - Update existing item
+  - `useCrudOperations(apiConfig).deleteItem(id)` - Delete item
+  - `useCrudOperations(apiConfig).getItem(id)` - Get single item
 
-- Always use Vuetify UI framework components for UI elements (v-btn, v-icon, v-list, etc.) and follow their API patterns
-- Use Pinia for state management with properly structured stores that follow the established pattern
-- Prefer composition API with <script setup> syntax in all Vue components
-- Follow established file structure for components - maintain the organizational pattern in components directory
-- Use the existing auth system when implementing authentication-related features
-- Maintain the component patterns with separate code samples in code.js files for UI component examples
-- Use tabler icons with the established naming pattern (tabler-)
-- Respect the existing middleware implementation, especially for authentication
-- Always use computed properties for derived state in components
-- Maintain the existing error handling patterns and loading states in API calls
-- Use existing composables for reusable logic instead of duplicating functionality
-- Follow the established navigation patterns using NuxtLink and useRouter
-- Respect the public/private route structure as defined in middleware
-- Maintain the proper JWT token refresh system already implemented
-- Keep components focused on a single responsibility and follow the single responsibility principle
-- Use proper naming conventions for event handlers (handle prefix)
-- When using actions in Pinia stores, follow the established async/await pattern with proper error handling
-- Leverage existing layout components and respect the hierarchy
-- Maintain consistency with the existing code formatting and style
-- Use the established folder structure for new components based on their purpose and functionality
-- Follow existing error handling patterns, especially for API requests
-- Always re-use existing components from the project. Don't create new components
-- Always re-use existing styling from the project. Don't create new style
+## Authentication System
+- **Key Files**:
+  - `stores/auth.js` - Pinia store for auth state
+  - `composables/auth.js` - Auth composable with login/logout functions
+  - `plugins/z-auth.js` - Auth initialization and API interceptors
+  - `middleware/auth.js` - Route protection
+
+- **Main Methods**:
+  - `useAuthStore().login(email, password)` - Email login
+  - `useAuthStore().logout()` - Logout user
+  - `useAuthStore().refreshTokens()` - Refresh JWT tokens
+  - `useAuthStore().fetchCurrentUser()` - Get current user data
+  - `useAuth().isAuthenticated` - Check if user is authenticated
+
+## Internationalization (i18n)
+- **Key Files**:
+  - `i18n/locales/*.json` - Translation files
+  - `utils/i18n-helpers.js` - i18n utility functions
+  - `plugins/rtl-support.client.js` - RTL handling
+
+- **Main Methods**:
+  - `getLocalizedPath(path, locale)` - Create localized route path
+  - `useI18n().t(key)` - Access translations
+  - `useI18n().locale.value` - Get/set current locale
+
+## UI Components
+- **Key Components**:
+  - `components/globals/GlobalsHeader.vue` - Page header component
+  - `components/globals/GlobalsTextField.vue` - Styled text input component
+  - `components/globals/GlobalsAlert.vue` - Alert component
+
+- **Form Handling**:
+  - `composables/validators.js` - Input validation functions
+  - `useValidators()` - Access validation rules
+
+## Settings Module Implementation
+- **Key Files**:
+  - `pages/settings.vue` - Main settings page
+  - `components/apps/profile/Settings.vue` - Settings implementation
+
+- **Implementation Pattern**:
+  1. Main page imports component: `import Settings from "@/components/apps/profile/Settings.vue"`
+  2. Component uses v-tabs for different settings sections
+  3. Form data in reactive objects: `const basicForm = reactive({...})`
+  4. Validation with form refs: `refPasswordVForm.value?.validate()`
+  5. API calls with proper error handling and loading states
+  6. Success/error feedback with alerts
+
+## Navigation
+- **Implementation Methods**:
+  - `navigateTo(path)` - Navigate to route
+  - `getLocalizedPath('/path', locale)` - Create localized path
+  - `useRouter().push(path)` - Alternative navigation
+
+## Notification System
+- **Key Files**:
+  - `composables/useNotification.js` - Notification handling
+
+- **Main Methods**:
+  - `useNotification().success(message)` - Success notification
+  - `useNotification().error(message)` - Error notification
+  - `useNotification().info(message)` - Info notification
+
+## New Module Implementation Checklist
+1. Create page in `pages/module-name.vue`
+2. Create component in `components/apps/module-name/ModuleName.vue`
+3. Add translations in `i18n/locales/*.json`
+4. Implement API calls using `useApi()` or `useCrudOperations()`
+5. Use Vuetify components with GlobalsComponents
+6. Implement proper i18n support with `useI18n().t()`
+7. Add RTL support with container classes
+8. Use existing validation and notification systems
+
+This pattern structure should be followed for all new module implementations to maintain consistency.

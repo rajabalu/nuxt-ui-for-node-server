@@ -3,6 +3,7 @@ import { useChatStore } from '~/stores/chat';
 import { useNotification } from '~/composables/useNotification';
 import { useRouter } from 'vue-router';
 import { useNuxtApp } from '#app';
+import { useSanitization } from './useSanitization';
 
 /**
  * Composable for handling chat input and message sending
@@ -17,12 +18,13 @@ export const useInput = (options = {}) => {
   // Input message
   const inputMessage = ref('');
   
-  // Get the chat store
+  // Get the chat store and sanitization utility
   const chatStore = useChatStore();
   const notification = useNotification();
   const router = useRouter();
   const nuxtApp = useNuxtApp();
   const emitter = nuxtApp?.$emitter;
+  const { sanitizeForStorage } = useSanitization();
   
   // Computed properties from the store
   const isSendingMessage = computed(() => chatStore.isSendingMessage);
@@ -62,13 +64,15 @@ export const useInput = (options = {}) => {
         return;
       }
       
+      // Sanitize the message before sending
+      const sanitizedContent = sanitizeForStorage(content);
+      
       // Clear the input before sending to prevent duplicates
-      const messageToSend = content;
       inputMessage.value = '';
       
       const result = await chatStore.sendMessage(
         conversationId.value, 
-        messageToSend,
+        sanitizedContent,
         fileId
       );
       

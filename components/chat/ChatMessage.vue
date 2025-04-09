@@ -15,7 +15,8 @@
           :class="['message-card', { 'user-card': isUser, 'system-card': !isUser }]"
         >
           <v-card-text :class="{'text-white': isUser}">
-            {{ content }}
+            <div v-if="isUser">{{ content }}</div>
+            <div v-else class="markdown-content" v-html="parsedContent"></div>
             
             <!-- File attachment if exists -->
             <div v-if="file" class="file-attachment mt-2">
@@ -47,6 +48,20 @@
 
 <script setup>
 import { computed } from 'vue';
+import { marked } from 'marked';
+import { useSanitization } from '~/composables/chat/useSanitization';
+
+// Configure marked
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+  smartypants: true,
+  // Security: disable dangerous features
+  sanitize: false, // We'll handle sanitization with DOMPurify
+});
+
+// Get sanitization utility
+const { sanitizeForDisplay } = useSanitization();
 
 // Props
 const props = defineProps({
@@ -59,12 +74,12 @@ const props = defineProps({
     default: ''
   },
   timestamp: {
-    type: Date,
+    type: [Date, String],
     default: () => new Date()
   },
   status: {
     type: String,
-    default: 'sent' // sent, delivered, read
+    default: 'sent'
   },
   file: {
     type: Object,
@@ -81,6 +96,14 @@ const formattedTime = computed(() => {
   });
 });
 
+const parsedContent = computed(() => {
+  if (!props.isUser) {
+    const rawHtml = marked.parse(props.content || '');
+    return sanitizeForDisplay(rawHtml);
+  }
+  return sanitizeForDisplay(props.content);
+});
+
 // Methods
 const formatFileSize = (bytes) => {
   if (bytes < 1024) return bytes + ' B';
@@ -89,8 +112,8 @@ const formatFileSize = (bytes) => {
 };
 
 const openFile = () => {
-  if (props.file && props.file.url) {
-    window.open(props.file.url, '_blank');
+  if (props.file?.url) {
+    window.open(props.file.url, '_blank', 'noopener,noreferrer');
   }
 };
 </script>
@@ -128,12 +151,12 @@ const openFile = () => {
 }
 
 .user-card {
-  background-color: #6366F1 !important; // Purple for user messages
+  background-color: #6366F1 !important;
   color: white;
 }
 
 .system-card {
-  background-color: #F5F5F5; // Light gray for system messages
+  background-color: #F5F5F5;
   color: #212121;
 }
 
@@ -167,7 +190,66 @@ const openFile = () => {
   }
 }
 
-// For dark theme
+// Markdown styling
+.markdown-content {
+  ::v-deep() {
+    line-height: 1.6;
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-size: 1.1em;
+      margin: 0.5em 0;
+      font-weight: 600;
+    }
+
+    code {
+      background-color: rgba(0,0,0,0.1);
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+
+    pre {
+      background-color: rgba(0,0,0,0.1);
+      padding: 0.8em;
+      border-radius: 4px;
+      overflow-x: auto;
+      
+      code {
+        background: none;
+        padding: 0;
+      }
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      &:hover {
+        opacity: 0.8;
+      }
+      &[href^="http"] {
+        &::after {
+          content: "↗";
+          margin-left: 0.25em;
+          font-size: 0.8em;
+        }
+      }
+    }
+
+    ul, ol {
+      padding-left: 1.2em;
+      margin: 0.5em 0;
+    }
+
+    blockquote {
+      border-left: 3px solid rgba(0,0,0,0.1);
+      margin: 0.5em 0;
+      padding-left: 1em;
+      color: rgba(0,0,0,0.7);
+    }
+  }
+}
+
+// Dark theme adjustments
 .v-theme--dark {
   .system-card {
     background-color: #424242;
@@ -176,6 +258,17 @@ const openFile = () => {
   
   .message-time {
     color: rgba(255, 255, 255, 0.6);
+  }
+
+  .markdown-content ::v-deep() {
+    code, pre {
+      background-color: rgba(255,255,255,0.1);
+    }
+    
+    blockquote {
+      border-color: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+    }
   }
 }
 
