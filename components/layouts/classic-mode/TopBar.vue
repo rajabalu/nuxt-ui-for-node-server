@@ -1,7 +1,6 @@
 <script setup>
 import Notification from "@/components/layouts/Notification.vue";
 import UserProfile from "@/components/layouts/UserProfile.vue";
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useGlobal } from "@/stores/global";
 import { useI18n } from "vue-i18n";
 import { useAuthStore } from '@/stores/auth';
@@ -219,10 +218,6 @@ if (smallDisplay.value) {
     </template>
 
     <template #append>
-      <icon-btn @click="toggleLightDarkMode">
-        <v-icon size="25" :icon="globalStore.datkMode ? 'tabler-sun' : 'tabler-moon'"/>
-      </icon-btn>
-      <LanguageSwitcher />
       <Notification v-if="authStore.isAuthenticated" />
       <UserProfile v-if="authStore.isAuthenticated" />
     </template>

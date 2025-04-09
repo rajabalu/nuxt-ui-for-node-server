@@ -149,7 +149,13 @@
     "currentPassword": "Mot de passe actuel",
     "enterCurrentPassword": "Entrez le mot de passe actuel",
     "enterNewPassword": "Entrez le nouveau mot de passe",
-    "confirmNewPassword": "Confirmez le nouveau mot de passe"
+    "confirmNewPassword": "Confirmez le nouveau mot de passe",
+    "preferences": "Préférences",
+    "theme": "Thème",
+    "language": "Langue",
+    "selectLanguage": "Sélectionner la langue",
+    "darkMode": "Mode sombre",
+    "lightMode": "Mode clair"
   },
   "info": {
     "about": {

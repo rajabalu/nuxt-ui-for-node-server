@@ -1,7 +1,10 @@
 <script setup>
-import avatar11 from "/images/avatar/avatar-11.jpg";
+import { nextTick } from 'vue';
 import { useAuthStore } from '~/stores/auth';
 import { useI18n } from 'vue-i18n';
+import { useUserPreferencesHelper } from '~/composables/useUserPreferencesHelper';
+import { useGlobal } from '~/stores/global';
+import { useTheme } from 'vuetify';
 
 const { t } = useI18n();
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
@@ -13,6 +16,8 @@ const refPasswordVForm = ref();
 
 // Get user data from auth store
 const authStore = useAuthStore();
+const globalStore = useGlobal();
+const theme = useTheme();
 
 // Use computed property for profile image to ensure it updates when auth store changes
 const profileImage = computed(() => {
@@ -64,6 +69,110 @@ const errors = ref({
 
 // Add dialog state
 const showPasswordConfirmDialog = ref(false);
+
+// Add preferences helper
+const preferencesHelper = useUserPreferencesHelper();
+const showSyncMessage = ref(false);
+const isPreferencesSubmitting = ref(false);
+
+// Initialize locale with current language
+const { locale } = useI18n();
+const currentLocale = ref(locale.value);
+
+// Function to show sync message temporarily
+const displaySyncMessage = () => {
+  if (preferencesHelper.syncMessage.value) {
+    showSyncMessage.value = true;
+    setTimeout(() => {
+      showSyncMessage.value = false;
+    }, 3000); // Hide after 3 seconds
+  }
+};
+
+// Theme toggle function
+const toggleLightDarkMode = async (newTheme) => {
+  try {
+    // Update the theme in global store
+    globalStore.datkMode = newTheme === 'dark';
+    
+    // Apply theme change through theme config
+    theme.global.name.value = newTheme;
+    
+    // Save theme preference to store using our helper
+    await preferencesHelper.saveThemePreference(newTheme);
+    
+    // Show sync message
+    displaySyncMessage();
+  } catch (error) {
+    console.error('Error toggling theme:', error);
+    showErrorAlert.value = true;
+    errorMessage.value = `Failed to update theme: ${error.message}`;
+  }
+};
+
+// Language options
+const languages = [
+  { code: "en", name: "English" },
+  { code: "fr", name: "Français" },
+  { code: "ar", name: "العربية" }
+];
+
+// Language change handler
+const handleLanguageChange = async (lang) => {
+  try {
+    const currentTabValue = currentTab.value;
+    currentLocale.value = lang;
+    
+    await preferencesHelper.saveLanguagePreference(lang);
+    
+    displaySyncMessage();
+    
+    await nextTick();
+    
+    currentTab.value = currentTabValue;
+  } catch (error) {
+    console.error('Error changing language:', error);
+    showErrorAlert.value = true;
+    errorMessage.value = `Failed to update language: ${error.message}`;
+  }
+};
+
+// Save preferences
+const onPreferences = async () => {
+  try {
+    isPreferencesSubmitting.value = true;
+    
+    // Get API and base URL from composables
+    const nuxtApp = useNuxtApp();
+    const api = nuxtApp.$api;
+    
+    if (!api) {
+      throw new Error('API not available');
+    }
+    
+    // Prepare preferences data
+    const preferencesData = {
+      theme: theme.global.name.value,
+      language: currentLocale.value
+    };
+    
+    // Save preferences to server
+    const response = await api.patch('user-preferences', preferencesData);
+    
+    if (response.success) {
+      showSuccessAlert.value = true;
+      successMessage.value = t('settings.preferencesUpdated');
+    } else {
+      throw new Error(response.error || 'Failed to update preferences');
+    }
+  } catch (error) {
+    console.error('Error updating preferences:', error);
+    showErrorAlert.value = true;
+    errorMessage.value = `Failed to update preferences: ${error.message}`;
+  } finally {
+    isPreferencesSubmitting.value = false;
+  }
+};
 
 const onProfileChange = async (event) => {
   try {
@@ -360,6 +469,10 @@ const onEmail = async () => {
             <v-icon start icon="tabler-lock" />
             {{ t('settings.changePassword') }}
           </v-tab>
+          <v-tab value="tab-4">
+            <v-icon start icon="tabler-settings" />
+            {{ t('settings.preferences') }}
+          </v-tab>
         </v-tabs>
       </div>
 
@@ -465,11 +578,6 @@ const onEmail = async () => {
                   </div>
                 </v-col>
               </v-row>
-              <v-row no-gutters class="pb-3">
-                <v-col offset-sm="4">
-                  <v-btn type="submit" :loading="isEmailSubmitting"> {{ t('settings.saveChanges') }} </v-btn>
-                </v-col>
-              </v-row>
             </v-form>
           </v-card-item>
         </v-window-item>
@@ -534,9 +642,52 @@ const onEmail = async () => {
                   </div>
                 </v-col>
               </v-row>
+            </v-form>
+          </v-card-item>
+        </v-window-item>
+
+        <!-- Preferences Tab -->
+        <v-window-item value="tab-4">
+          <v-card-item>
+            <v-form>
+              <!-- Theme Preferences -->
               <v-row no-gutters class="pb-3">
-                <v-col offset-sm="4">
-                  <v-btn type="submit" :loading="isPasswordSubmitting" color="primary"> {{ t('settings.saveChanges') }} </v-btn>
+                <v-col cols="12" sm="4">
+                  <v-label class="form-label">{{ t('settings.theme') }}</v-label>
+                </v-col>
+                <v-col cols="12" sm="8">
+                  <v-radio-group
+                    v-model="theme.global.name.value"
+                    @update:model-value="toggleLightDarkMode"
+                  >
+                    <v-radio
+                      value="light"
+                      :label="t('settings.lightMode')"
+                      color="primary"
+                    />
+                    <v-radio
+                      value="dark"
+                      :label="t('settings.darkMode')"
+                      color="primary"
+                    />
+                  </v-radio-group>
+                </v-col>
+              </v-row>
+
+              <!-- Language Preferences -->
+              <v-row no-gutters class="pb-3">
+                <v-col cols="12" sm="4">
+                  <v-label class="form-label">{{ t('settings.language') }}</v-label>
+                </v-col>
+                <v-col cols="12" sm="8">
+                  <v-select
+                    v-model="currentLocale"
+                    :items="languages"
+                    item-title="name"
+                    item-value="code"
+                    :label="t('settings.selectLanguage')"
+                    @update:model-value="handleLanguageChange"
+                  />
                 </v-col>
               </v-row>
             </v-form>
@@ -546,4 +697,23 @@ const onEmail = async () => {
       </v-window>
     </div>
   </v-card>
+
+  <!-- Sync Message Snackbar -->
+  <v-snackbar
+    v-model="showSyncMessage"
+    :timeout="3000"
+    color="success"
+    location="top"
+  >
+    {{ preferencesHelper.syncMessage.value }}
+    <template v-slot:actions>
+      <v-btn
+        color="white"
+        variant="text"
+        @click="showSyncMessage = false"
+      >
+        {{ t('common.close') }}
+      </v-btn>
+    </template>
+  </v-snackbar>
 </template>

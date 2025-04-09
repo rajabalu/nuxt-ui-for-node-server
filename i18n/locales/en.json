@@ -89,7 +89,13 @@
     "currentPassword": "Current password",
     "enterCurrentPassword": "Enter Current password",
     "enterNewPassword": "Enter New password",
-    "confirmNewPassword": "Confirm new password"
+    "confirmNewPassword": "Confirm new password",
+    "preferences": "Preferences",
+    "theme": "Theme",
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
   },
   "notifications": {
     "title": "Notifications",

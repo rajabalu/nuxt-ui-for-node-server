@@ -158,7 +158,13 @@
     "currentPassword": "كلمة المرور الحالية",
     "enterCurrentPassword": "أدخل كلمة المرور الحالية",
     "enterNewPassword": "أدخل كلمة المرور الجديدة",
-    "confirmNewPassword": "تأكيد كلمة المرور الجديدة"
+    "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+    "preferences": "التفضيلات",
+    "theme": "المظهر",
+    "language": "اللغة",
+    "selectLanguage": "اختر اللغة",
+    "darkMode": "الوضع الداكن",
+    "lightMode": "الوضع الفاتح"
   },
   "info": {
     "about": {
