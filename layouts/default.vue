@@ -14,6 +14,4 @@ import Footer from "@/components/layouts/classic-mode/Footer.vue";
     <slot />
   </v-main>
 
-  <!-- Footer -->
-  <Footer />
-</template>
+  </template>

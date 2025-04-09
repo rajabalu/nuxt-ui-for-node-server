@@ -25,6 +25,35 @@ const { locale, t } = useI18n();
 const authStore = useAuthStore();
 const userPreferencesStore = useUserPreferences();
 
+// Add menu items for the info menu
+const infoMenuItems = computed(() => [
+  {
+    title: t('footer.help'),
+    icon: 'tabler-help-circle',
+    to: '/info/help'
+  },
+  {
+    title: t('footer.terms'),
+    icon: 'tabler-file-text',
+    to: '/info/terms'
+  },
+  {
+    title: t('footer.privacy'),
+    icon: 'tabler-shield-lock',
+    to: '/info/privacy'
+  },
+  {
+    title: t('footer.contact'),
+    icon: 'tabler-mail',
+    to: '/info/contact'
+  },
+  {
+    title: t('footer.about'),
+    icon: 'tabler-info-circle',
+    to: '/info/about'
+  }
+]);
+
 // Debug computed properties
 const currentLocale = computed(() => locale.value);
 const homePath = computed(() => getLocalizedPath('/', locale.value));
@@ -186,6 +215,16 @@ watch(smallDisplay, (newValue, oldValue) => {
 if (smallDisplay.value) {
   toggleSidebarPhone(false);
 }
+
+// Add menu open state
+const menuOpen = ref(false);
+
+// Handle navigation for menu items
+const handleMenuNavigation = (path) => {
+  const localizedPath = getLocalizedPath(path, locale.value);
+  router.push(localizedPath);
+  menuOpen.value = false;
+};
 </script>
 
 <template>
@@ -218,6 +257,30 @@ if (smallDisplay.value) {
     </template>
 
     <template #append>
+      <v-menu
+        v-model="menuOpen"
+        location="bottom end"
+        transition="scale-transition"
+      >
+        <template v-slot:activator="{ props }">
+          <icon-btn
+            v-bind="props"
+            class="mr-2"
+          >
+            <v-icon size="25" icon="tabler-help" />
+          </icon-btn>
+        </template>
+
+        <v-list>
+          <v-list-item
+            v-for="(item, index) in infoMenuItems"
+            :key="index"
+            :prepend-icon="item.icon"
+            :title="item.title"
+            @click="handleMenuNavigation(item.to)"
+          />
+        </v-list>
+      </v-menu>
       <Notification v-if="authStore.isAuthenticated" />
       <UserProfile v-if="authStore.isAuthenticated" />
     </template>
