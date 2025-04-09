@@ -17,6 +17,7 @@ alwaysApply: true
 - **ALWAYS** use the consistent error handling pattern from api.js
 - For file uploads, use `useApi().upload()` method, not custom fetch implementations
 
+## **ALWAYS** use GlobalsTextField control to create new textbox or modify existing textboxes
 
 ## Event Communication
 - **ALWAYS** use the event bus system via `re-useevent-bus.js` for cross-component communication

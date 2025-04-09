@@ -67,7 +67,7 @@
   
             <!-- Text Input -->
             <v-col class="pr-2">
-              <v-textarea
+              <GlobalsTextField
                 v-model="inputMessage"
                 placeholder="Type a message..."
                 auto-grow
@@ -79,7 +79,7 @@
                 @keydown.enter.prevent="onEnterPress"
                 class="chat-textarea"
                 :disabled="isSendingMessage"
-              ></v-textarea>
+              />
             </v-col>
   
             <!-- Voice and Send Buttons -->
@@ -119,6 +119,7 @@
   import { useNuxtApp } from '#app';
   import { useRouter } from 'vue-router';
   import ChatMessage from '~/components/chat/ChatMessage.vue';
+  import GlobalsTextField from '~/components/globals/GlobalsTextField.vue';
   import { useMessages, useFileUpload, useInput } from '~/composables/chat';
   import { useChatStore } from '~/stores/chat';
   import { useApi } from '~/composables/api';
