@@ -68,14 +68,14 @@ function initThreeJS() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf0f0f0);
   
-  // Initialize camera
+  // Initialize camera with wider field of view to show more of the avatar
   camera = new THREE.PerspectiveCamera(
-    45, 
+    28, // Wider field of view to show more of the model
     container.value.clientWidth / container.value.clientHeight, 
     0.1, 
     1000
   );
-  camera.position.set(0, 1.5, 3);
+  camera.position.set(0, -2, 7);
   
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -84,23 +84,33 @@ function initThreeJS() {
   renderer.outputEncoding = THREE.sRGBEncoding;
   container.value.appendChild(renderer.domElement);
   
-  // Add lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  // Enhanced lighting for better appearance
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
   scene.add(ambientLight);
   
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(0, 1, 2);
+  // Main light positioned to illuminate the entire avatar
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  directionalLight.position.set(0, 2, 2); // Light from above and front
   scene.add(directionalLight);
+  
+  // Add a fill light to brighten the entire model
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+  fillLight.position.set(0, 1, -1); // From behind to create separation from background
+  scene.add(fillLight);
   
   // Initialize clock for animations
   clock = new THREE.Clock();
   
-  // Add orbit controls
+  // Add orbit controls with optimized settings
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 1, 0);
+  controls.target.set(0, 1.1, 0); // Target at mid-body to see full avatar
   controls.update();
   controls.enablePan = false;
   controls.enableDamping = true;
+  controls.dampingFactor = 0.1;
+  controls.rotateSpeed = 0.7;
+  controls.maxDistance = 7;
+  controls.minDistance = 2.5;
 }
 
 function loadAvatar() {
@@ -115,9 +125,22 @@ function loadAvatar() {
     // Center the model
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    
+    // Reset position
     model.position.x = -center.x;
     model.position.y = -center.y;
     model.position.z = -center.z;
+    
+    // Move model up to ensure full visibility
+    model.position.y += size.y * 0.2; // Move model up by 20% of its height
+    
+    // Adjust the model's rotation to look directly at the camera
+    model.rotation.x = THREE.MathUtils.degToRad(5); // Slightly tilt head up
+    
+    // Apply scale to ensure the entire avatar is visible
+    const scale = 0.9; // Reduce scale slightly to ensure full visibility
+    model.scale.set(scale, scale, scale);
     
     // Setup animations
     if (gltf.animations && gltf.animations.length > 0) {
@@ -126,7 +149,6 @@ function loadAvatar() {
       // Store animations by name
       gltf.animations.forEach(clip => {
         animations[clip.name] = mixer.clipAction(clip);
-        console.log('Found animation:', clip.name);
       });
       
       // Play idle animation by default
@@ -226,8 +248,10 @@ function speakMessage(message) {
 .three-container {
   width: 100%;
   height: 100%;
-  min-height: 300px;
+  min-height: 400px; /* Match the avatar container's min-height */
   border-radius: 12px;
   overflow: hidden;
+  position: relative; /* Added for potential overlays/effects */
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); /* Subtle inner shadow for depth */
 }
 </style>

@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { computed } from 'vue';
 import AvatarPlaceholder from '~/components/chat/Avatar.vue';
 import ChatInterface from '~/components/chat/ChatInterface.vue';
 import { useRoute } from 'vue-router';
@@ -37,10 +37,17 @@ useHead({ title: 'Strategy Details' });
   height: calc(100vh - 64px); // Account for header
   border-right: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   background-color: rgb(var(--v-theme-surface));
-  overflow-y: auto;
+  overflow-y: auto; // Keep this if content within might exceed height
+  overflow-x: hidden; // Prevent horizontal overflow
   z-index: 2;
   display: flex;
   flex-direction: column;
+  width: 300px; // Example fixed width
+  max-width: 300px; // Ensure it doesn't exceed this
+  min-width: 300px; // Ensure it doesn't shrink below this
+  flex-basis: 300px !important; // Force the basis width in flex context
+  flex-grow: 0 !important; // Prevent growing
+  flex-shrink: 0 !important; // Prevent shrinking
 }
 
 .chat-container {
@@ -48,6 +55,9 @@ useHead({ title: 'Strategy Details' });
   overflow: hidden;
   position: relative;
   background-color: rgb(var(--v-theme-background));
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0; // Allow shrinking below content size
 
   > div {
     height: 100%;
@@ -66,6 +76,12 @@ useHead({ title: 'Strategy Details' });
 @media (max-width: 959px) {
   .avatar-container {
     display: none !important;
+    width: auto;
+    max-width: none;
+    min-width: auto;
+    flex-basis: auto !important;
+    flex-grow: 1 !important;
+    flex-shrink: 1 !important;
   }
   
   .chat-container {
@@ -73,9 +89,4 @@ useHead({ title: 'Strategy Details' });
     border-left: none;
   }
 }
-
-// Smooth scroll behavior
-html {
-  scroll-behavior: smooth;
-}
-</style> 
+</style>
