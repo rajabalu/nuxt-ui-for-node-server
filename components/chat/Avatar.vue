@@ -1,12 +1,33 @@
 <!-- Avatar.vue -->
 <template>
   <div class="avatar-placeholder">
-    <div class="avatar-circle mb-2">
-      <v-icon color="white" size="36">mdi-robot</v-icon>
+    <h3 class="text-center text-body-1 mb-3">{{ selectedAvatar.name }}</h3>
+    
+    <!-- 3D Avatar -->
+    <div class="avatar-container mb-3">
+      <ThreeAvatar :avatar-id="globalStore.selectedAvatarId" />
     </div>
-    <h3 class="text-center text-body-1 mt-3 mb-1">3D Assistant Avatar</h3>
+    
+    <div class="avatar-selector text-center mb-3">
+      <v-btn-group>
+        <v-btn 
+          v-for="avatar in globalStore.AVAILABLE_AVATARS" 
+          :key="avatar.id"
+          :color="globalStore.selectedAvatarId === avatar.id ? 'primary' : ''"
+          icon
+          size="small"
+          variant="text"
+          @click="selectAvatar(avatar.id)"
+        >
+          <v-avatar size="24">
+            <v-img :src="avatar.thumbnail" :alt="avatar.name" />
+          </v-avatar>
+        </v-btn>
+      </v-btn-group>
+    </div>
+    
     <p class="text-center text-caption text-medium-emphasis px-5">
-      Interactive 3D avatar will be displayed here. The avatar will react to your conversations.
+      Interactive 3D avatar reacts to system messages in your conversation.
     </p>
     
     <!-- New Strategy Button -->
@@ -29,18 +50,26 @@
 import { useRouter } from '#app';
 import { computed } from 'vue';
 import { useChatStore } from '~/stores/chat';
+import { useGlobal } from '~/stores/global';
+import ThreeAvatar from '~/components/chat/ThreeAvatar.vue';
 
 const router = useRouter();
 const chatStore = useChatStore();
+const globalStore = useGlobal();
+
+// Select avatar function
+const selectAvatar = (id) => {
+  globalStore.setAvatar(id);
+};
+
+// Get selected avatar through computed property
+const selectedAvatar = computed(() => globalStore.getSelectedAvatar());
+
 const navigateToNewStrategy = () => {
   // Navigate to index page to start a new strategy
   chatStore.clearMessages();
   router.push('/');
 };
-
-const isButtonDisabled = computed(() => {
-  return !inputMessage.value.trim() && !uploadedFile.value; // Disable if both are empty
-});
 </script>
 
 <style lang="scss" scoped>
@@ -50,16 +79,16 @@ const isButtonDisabled = computed(() => {
   color: rgba(var(--v-theme-on-surface), 0.9);
   position: sticky;
   top: 0;
+  display: flex;
+  flex-direction: column;
   
-  .avatar-circle {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background-color: rgb(var(--v-theme-primary));
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .avatar-container {
+    width: 100%;
+    height: 300px;
     margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: rgba(var(--v-theme-surface-variant), 0.6);
   }
   
   h3 { font-weight: 500; }
@@ -73,6 +102,6 @@ const isButtonDisabled = computed(() => {
 
 // Dark theme adjustments
 .v-theme--dark .avatar-placeholder {
-  background-color: white
+  background-color: transparent;
 }
 </style>
