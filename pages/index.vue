@@ -28,9 +28,8 @@ useHead({ title: 'Welcome!' });
 
 <style lang="scss" scoped>
 .avatar-container {
-  position: sticky;
-  top: 0;
-  height: calc(100vh - 64px); // Account for header
+  position: relative; /* Changed from sticky to ensure proper flow */
+  height: calc(100vh - 64px); /* Account for header */
   border-right: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   background-color: rgb(var(--v-theme-surface));
   overflow-y: auto;
@@ -40,7 +39,7 @@ useHead({ title: 'Welcome!' });
 }
 
 .chat-container {
-  height: calc(100vh - 64px); // Account for header
+  height: calc(100vh - 64px); /* Account for header */
   overflow: hidden;
   position: relative;
   background-color: rgb(var(--v-theme-background));
@@ -56,6 +55,8 @@ useHead({ title: 'Welcome!' });
   .v-row {
     height: 100%;
     min-height: 0;
+    flex-direction: row !important; /* Force row direction */
+    display: flex !important;
   }
 }
 
@@ -65,7 +66,7 @@ useHead({ title: 'Welcome!' });
   }
   
   .chat-container {
-    height: calc(100vh - 56px); // Adjust for mobile header
+    height: calc(100vh - 56px); /* Adjust for mobile header */
     border-left: none;
   }
 }
