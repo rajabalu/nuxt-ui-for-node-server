@@ -1,9 +1,15 @@
 <!-- Avatar.vue -->
 <template>
   <div class="avatar-placeholder" ref="placeholderRef">
-    <!-- 3D Avatar -->
-    <div class="avatar-container mb-3" ref="avatarContainerRef">
+    <!-- 3D Avatar - Only show when avatar is enabled -->
+    <div v-if="globalStore.isAvatarEnabled()" class="avatar-container mb-3" ref="avatarContainerRef">
       <ThreeAvatar ref="threeAvatarRef" :avatar-id="globalStore.selectedAvatarId" />
+    </div>
+    
+    <!-- Show placeholder message when no avatar is selected -->
+    <div v-else class="no-avatar-container">
+      <v-icon size="100" color="grey-lighten-1">mdi-account-off</v-icon>
+      <p class="text-body-2 text-center mt-3 text-grey">{{ $t('avatar.disabled') }}</p>
     </div>
     
     <!-- New Strategy Button -->
@@ -79,6 +85,16 @@ const navigateToNewStrategy = () => {
   overflow: hidden;
   flex-shrink: 0;
   flex-grow: 1; // Allow growing to fill space
+}
+
+.no-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh; // Match the height of the avatar container
+  min-height: 400px; // Ensure minimum height
+  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .text-center {

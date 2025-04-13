@@ -56,7 +56,8 @@
   },
   "avatar": {
     "title": "3D Assistant Avatar",
-    "description": "Interactive 3D avatar will be displayed here. The avatar will react to your conversations and provide a more immersive experience."
+    "description": "Interactive 3D avatar will be displayed here. The avatar will react to your conversations and provide a more immersive experience.",
+    "disabled": "AI Avatar is disabled"
   },
   "footer": {
     "copyright": "All Rights Reserved",
@@ -67,6 +68,11 @@
     "about": "About"
   },
   "settings": {
+    "aiAvatar": "AI Avatar",
+    "selectAvatarInfo": "Choose an AI avatar for your chat interactions or select 'No Avatar' to disable it",
+    "avatarUpdated": "AI Avatar updated successfully",
+    "avatarUsedInChat": "This AI avatar will be displayed during your chat interactions",
+    "preferencesUpdated": "Your preferences have been updated successfully",
     "confirmPasswordChange": "Confirm Password Change",
     "logoutAfterPasswordChange": "You will be logged out after successfully changing your password. All your other active sessions will also be terminated.",
     "confirmContinue": "Are you sure you want to continue?",
@@ -96,11 +102,7 @@
     "selectLanguage": "Select Language",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
-    "newPassword": "New Password",
-    "selectAvatarInfo": "Choose an avatar for your chat interactions",
-    "avatarUpdated": "Avatar updated successfully",
-    "avatarUsedInChat": "This avatar will be displayed during your chat interactions",
-    "preferencesUpdated": "Your preferences have been updated successfully"
+    "newPassword": "New Password"
   },
   "notifications": {
     "title": "Notifications",

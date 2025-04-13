@@ -114,6 +114,12 @@ function initThreeJS() {
 }
 
 function loadAvatar() {
+  // Check if we have a valid model path before attempting to load it
+  if (!selectedAvatar.value.modelPath) {
+    console.log('No avatar model path provided, skipping 3D avatar loading');
+    return;
+  }
+  
   const loader = new GLTFLoader();
   
   loader.load(selectedAvatar.value.modelPath, (gltf) => {

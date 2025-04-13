@@ -127,6 +127,11 @@
     "continueWithFacebook": "Continuer avec Facebook"
   },
   "settings": {
+    "aiAvatar": "Avatar IA",
+    "selectAvatarInfo": "Choisissez un avatar IA pour vos interactions de chat ou sélectionnez 'Pas d'avatar' pour le désactiver",
+    "avatarUpdated": "Avatar IA mis à jour avec succès",
+    "avatarUsedInChat": "Cet avatar IA sera affiché pendant vos interactions de chat",
+    "preferencesUpdated": "Vos préférences ont été mises à jour avec succès",
     "confirmPasswordChange": "Confirmer le changement de mot de passe",
     "logoutAfterPasswordChange": "Vous serez déconnecté après avoir changé votre mot de passe. Toutes vos autres sessions actives seront également terminées.",
     "confirmContinue": "Êtes-vous sûr de vouloir continuer?",
@@ -135,7 +140,6 @@
     "changeEmail": "Changer l'email",
     "changePassword": "Changer le mot de passe",
     "fullName": "Nom complet",
-    "avatar": "Avatar",
     "uploadPhoto": "Télécharger une photo",
     "newEmail": "Nouvel email",
     "emailVerificationProcess": "Processus de vérification de l'email",
@@ -156,11 +160,7 @@
     "selectLanguage": "Sélectionner la langue",
     "darkMode": "Mode sombre",
     "lightMode": "Mode clair",
-    "newPassword": "Nouveau mot de passe",
-    "selectAvatarInfo": "Choisissez un avatar pour vos interactions de chat",
-    "avatarUpdated": "Avatar mis à jour avec succès",
-    "avatarUsedInChat": "Cet avatar sera affiché pendant vos interactions de chat",
-    "preferencesUpdated": "Vos préférences ont été mises à jour avec succès"
+    "newPassword": "Nouveau mot de passe"
   },
   "info": {
     "about": {
@@ -359,5 +359,10 @@
         }
       }
     }
+  },
+  "avatar": {
+    "title": "Avatar Assistant 3D",
+    "description": "L'avatar 3D interactif sera affiché ici. L'avatar réagira à vos conversations et offrira une expérience plus immersive.",
+    "disabled": "L'Avatar IA est désactivé"
   }
 }
