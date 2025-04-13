@@ -116,8 +116,6 @@ function initThreeJS() {
 function loadAvatar() {
   const loader = new GLTFLoader();
   
-  console.log('Loading avatar from:', selectedAvatar.value.modelPath);
-  
   loader.load(selectedAvatar.value.modelPath, (gltf) => {
     model = gltf.scene;
     scene.add(model);
@@ -163,11 +161,11 @@ function loadAvatar() {
   }, 
   // Progress callback
   (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    // Empty progress callback - removed console.log
   },
   // Error callback
   (error) => {
-    console.error('Error loading 3D model:', error);
+    console.error('Error loading 3D model:', error); // Keeping error logs for production troubleshooting
   });
 }
 

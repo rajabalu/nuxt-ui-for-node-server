@@ -24,7 +24,7 @@
 
 <script setup>
 import { useRouter } from '#app';
-import { computed, ref, onMounted, nextTick } from 'vue'; // Added ref, onMounted, nextTick
+import { computed, ref } from 'vue'; // Removed onMounted, nextTick since they're no longer needed
 import { useChatStore } from '~/stores/chat';
 import { useGlobal } from '~/stores/global';
 import ThreeAvatar from '~/components/chat/ThreeAvatar.vue';
@@ -33,37 +33,10 @@ const router = useRouter();
 const chatStore = useChatStore();
 const globalStore = useGlobal();
 
-// Refs for debugging
+// Refs for component elements
 const placeholderRef = ref(null);
 const avatarContainerRef = ref(null);
 const buttonContainerRef = ref(null);
-
-onMounted(async () => {
-  await nextTick(); // Wait for DOM updates
-  console.log('--- Avatar.vue Debug ---');
-  if (placeholderRef.value) {
-    console.log('Placeholder Offset Height:', placeholderRef.value.offsetHeight);
-    console.log('Placeholder Client Height:', placeholderRef.value.clientHeight);
-    console.log('Placeholder Computed Style (display):', window.getComputedStyle(placeholderRef.value).display);
-    console.log('Placeholder Computed Style (justify-content):', window.getComputedStyle(placeholderRef.value).justifyContent);
-    console.log('Placeholder Computed Style (align-items):', window.getComputedStyle(placeholderRef.value).alignItems);
-  } else {
-    console.log('Placeholder ref not found.');
-  }
-  if (avatarContainerRef.value) {
-    console.log('Avatar Container Offset Height:', avatarContainerRef.value.offsetHeight);
-    console.log('Avatar Container Offset Top:', avatarContainerRef.value.offsetTop);
-  } else {
-    console.log('Avatar Container ref not found.');
-  }
-   if (buttonContainerRef.value) {
-    console.log('Button Container Offset Top:', buttonContainerRef.value.offsetTop);
-  } else {
-    console.log('Button Container ref not found.');
-  }
-  console.log('------------------------');
-});
-
 
 // Select avatar function
 const selectAvatar = (id) => {
