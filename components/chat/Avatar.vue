@@ -3,11 +3,24 @@
   <div class="avatar-placeholder" ref="placeholderRef">
     <!-- 3D Avatar -->
     <div class="avatar-container mb-3" ref="avatarContainerRef">
-      <ThreeAvatar :avatar-id="globalStore.selectedAvatarId" />
+      <ThreeAvatar ref="threeAvatarRef" :avatar-id="globalStore.selectedAvatarId" />
     </div>
     
-    <!-- New Strategy Button -->
-    <div class="text-center mt-6" ref="buttonContainerRef">
+    <!-- Button Container for both buttons -->
+    <div class="text-center mt-6 d-flex flex-row justify-center gap-2" ref="buttonContainerRef">
+      <!-- Animate Button -->
+      <v-btn
+        color="secondary"
+        variant="elevated"
+        prepend-icon="mdi-animation-outline"
+        @click="triggerWaveAnimation"
+        rounded="pill"
+        size="small"
+      >
+        Animate
+      </v-btn>
+      
+      <!-- New Strategy Button -->
       <v-btn
         color="primary"
         variant="elevated"
@@ -37,6 +50,7 @@ const globalStore = useGlobal();
 const placeholderRef = ref(null);
 const avatarContainerRef = ref(null);
 const buttonContainerRef = ref(null);
+const threeAvatarRef = ref(null); // Added ref for ThreeAvatar component
 
 // Select avatar function
 const selectAvatar = (id) => {
@@ -50,6 +64,13 @@ const navigateToNewStrategy = () => {
   // Navigate to index page to start a new strategy
   chatStore.clearMessages();
   router.push('/');
+};
+
+const triggerWaveAnimation = () => {
+  // Trigger wave animation on the ThreeAvatar component
+  if (threeAvatarRef.value) {
+    threeAvatarRef.value.triggerWave();
+  }
 };
 </script>
 

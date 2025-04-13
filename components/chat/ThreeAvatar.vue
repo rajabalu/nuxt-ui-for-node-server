@@ -149,25 +149,108 @@ function loadAvatar() {
         animations[clip.name] = mixer.clipAction(clip);
       });
       
-      // Play idle animation by default
-      if (animations['idle']) {
-        animations['idle'].play();
-        currentAnimation = 'idle';
-      } else if (animations['Idle']) {
-        animations['Idle'].play();
-        currentAnimation = 'Idle';
+      // Log all available animations
+      console.log('Available animations:');
+      Object.keys(animations).forEach(animName => {
+        console.log(`- ${animName}`);
+      });
+      
+      // Play idle animation by default using correct name format
+      const idleAnimation = animations['CharacterArmature|Idle'] || animations['CharacterArmature|Idle_Neutral'];
+      if (idleAnimation) {
+        idleAnimation.play();
+        currentAnimation = idleAnimation === animations['CharacterArmature|Idle'] ? 
+                           'CharacterArmature|Idle' : 'CharacterArmature|Idle_Neutral';
       }
+      
+      // Add a slight delay before playing the wave animation
+      // This gives the model time to fully render and position itself
+      setTimeout(() => {
+        playWaveAnimation();
+      }, 1000);
     }
   }, 
   // Progress callback
   (xhr) => {
-    // Empty progress callback - removed console.log
+    // Empty progress callback
   },
   // Error callback
   (error) => {
     console.error('Error loading 3D model:', error);
   });
 }
+
+// Add playWaveAnimation function to handle the initial greeting
+function playWaveAnimation() {
+  // Use the specific animation name we found in the model
+  const waveAnimation = animations['CharacterArmature|Wave'];
+  
+  if (waveAnimation) {
+    // Stop current animation with a fade out
+    if (currentAnimation && animations[currentAnimation]) {
+      animations[currentAnimation].fadeOut(0.3);
+    }
+    
+    // Play wave animation
+    waveAnimation.reset().fadeIn(0.3).play();
+    currentAnimation = 'CharacterArmature|Wave';
+    
+    // After wave animation, return to idle
+    setTimeout(() => {
+      if (animations[currentAnimation]) {
+        animations[currentAnimation].fadeOut(0.5);
+      }
+      
+      // Find and play idle animation with the correct name
+      const idleAnimation = animations['CharacterArmature|Idle'] || 
+                          animations['CharacterArmature|Idle_Neutral'];
+      
+      if (idleAnimation) {
+        idleAnimation.reset().fadeIn(0.5).play();
+        currentAnimation = idleAnimation === animations['CharacterArmature|Idle'] ? 
+                         'CharacterArmature|Idle' : 'CharacterArmature|Idle_Neutral';
+      }
+    }, 3000); // Duration for wave animation (3 seconds)
+  }
+}
+
+// Add public method to trigger wave animation that can be called from parent component
+function triggerWave() {
+  const waveAnimation = animations['CharacterArmature|Wave'];
+  
+  if (waveAnimation) {
+    // Stop current animation with a fade out
+    if (currentAnimation && animations[currentAnimation]) {
+      animations[currentAnimation].fadeOut(0.3);
+    }
+    
+    // Play wave animation
+    waveAnimation.reset().fadeIn(0.3).play();
+    currentAnimation = 'CharacterArmature|Wave';
+    
+    // After wave animation completes, return to idle
+    setTimeout(() => {
+      if (animations[currentAnimation]) {
+        animations[currentAnimation].fadeOut(0.5);
+      }
+      
+      // Find and play idle animation
+      const idleAnimation = animations['CharacterArmature|Idle'] || 
+                           animations['CharacterArmature|Idle_Neutral'];
+      
+      if (idleAnimation) {
+        idleAnimation.reset().fadeIn(0.5).play();
+        currentAnimation = idleAnimation === animations['CharacterArmature|Idle'] ? 
+                         'CharacterArmature|Idle' : 'CharacterArmature|Idle_Neutral';
+      }
+    }, 3000); // Duration for wave animation (3 seconds)
+  }
+}
+
+// Expose the triggerWave method to parent components
+defineExpose({
+  triggerWave
+});
 
 // Handle window resize
 function onResize() {
