@@ -68,14 +68,14 @@ function initThreeJS() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf0f0f0);
   
-  // Initialize camera with wider field of view to show more of the avatar
+  // Initialize camera with adjusted field of view and position
   camera = new THREE.PerspectiveCamera(
-    28, // Wider field of view to show more of the model
+    25, // Wider field of view
     container.value.clientWidth / container.value.clientHeight, 
     0.1, 
     1000
   );
-  camera.position.set(0, -2, 7);
+  camera.position.set(0, 1.0, 5.5); // Moved camera back and adjusted height
   
   // Initialize renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -103,14 +103,14 @@ function initThreeJS() {
   
   // Add orbit controls with optimized settings
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 1.1, 0); // Target at mid-body to see full avatar
+  controls.target.set(0, 0, 0);
   controls.update();
   controls.enablePan = false;
   controls.enableDamping = true;
   controls.dampingFactor = 0.1;
   controls.rotateSpeed = 0.7;
-  controls.maxDistance = 7;
-  controls.minDistance = 2.5;
+  controls.maxDistance = 3.5;
+  controls.minDistance = 1;
 }
 
 function loadAvatar() {
@@ -130,14 +130,14 @@ function loadAvatar() {
     model.position.y = -center.y;
     model.position.z = -center.z;
     
-    // Move model up to ensure full visibility
-    model.position.y += size.y * 0.2; // Move model up by 20% of its height
+    // Move model up to ensure full visibility including feet
+    model.position.y += size.y * 0.1; 
     
     // Adjust the model's rotation to look directly at the camera
-    model.rotation.x = THREE.MathUtils.degToRad(5); // Slightly tilt head up
+    model.rotation.x = THREE.MathUtils.degToRad(-20); // Just slightly tilt head up
     
     // Apply scale to ensure the entire avatar is visible
-    const scale = 0.9; // Reduce scale slightly to ensure full visibility
+    const scale = 0.8; // Reduce scale more to ensure full visibility
     model.scale.set(scale, scale, scale);
     
     // Setup animations
@@ -165,7 +165,7 @@ function loadAvatar() {
   },
   // Error callback
   (error) => {
-    console.error('Error loading 3D model:', error); // Keeping error logs for production troubleshooting
+    console.error('Error loading 3D model:', error);
   });
 }
 
