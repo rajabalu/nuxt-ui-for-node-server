@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { watch, onBeforeUnmount } from 'vue';
+import { watch, onBeforeUnmount, onMounted } from 'vue';
 import { useUserPreferencesHelper } from '@/composables/useUserPreferencesHelper';
 import { useUserPreferences } from '@/stores/userPreferences';
 import { useI18n } from 'vue-i18n';
@@ -15,6 +15,7 @@ import { useNuxtApp } from '#app';
 import { useRouter } from 'vue-router';
 import { useTheme } from 'vuetify';
 import { useRTL } from '@/composables/useRTL';
+import { useGlobal } from '~/stores/global';
 
 // Initialize user preferences store
 const userPreferencesStore = useUserPreferences();
@@ -24,9 +25,22 @@ const nuxtApp = useNuxtApp();
 const router = useRouter();
 const theme = useTheme();
 const rtlUtils = useRTL();
+const globalStore = useGlobal();
 
 // Flag to check if component is mounted
 let isMounted = true;
+
+// Initialize everything on mount
+onMounted(() => {
+  // Initialize preferences
+  userPreferencesStore.initPreferences();
+  
+  // Apply avatar preference if available
+  const avatarId = userPreferencesStore.getAdditionalSetting('avatarId');
+  if (avatarId !== null && avatarId !== undefined) {
+    globalStore.setAvatar(Number(avatarId));
+  }
+});
 
 // Clean up when component is unmounted
 onBeforeUnmount(() => {
@@ -81,6 +95,16 @@ watch(() => userPreferencesStore.language, (newLanguage) => {
   }
 });
 
+// Watch for additional settings changes that might affect the avatar
+watch(() => userPreferencesStore.additionalSettings, (newSettings) => {
+  if (!isMounted) return;
+  
+  if (newSettings && 'avatarId' in newSettings) {
+    const avatarId = newSettings.avatarId;
+    globalStore.setAvatar(Number(avatarId));
+  }
+}, { deep: true });
+
 // Sync language with router to ensure URL reflects current locale
 async function syncLanguageWithRouter(language) {
   if (!language || !process.client || !isMounted) return;
@@ -121,4 +145,4 @@ async function syncLanguageWithRouter(language) {
     console.warn('[AppInitializer] Error syncing language with router:', e);
   }
 }
-</script> 
+</script>

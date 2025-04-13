@@ -147,10 +147,10 @@ const handleAvatarChange = async (avatarId) => {
     selectedAvatarId.value = avatarId;
     globalStore.setAvatar(avatarId);
     
-    // Save preferences to the server
-    await savePreferences();
+    // Use the preferences helper to save the avatar preference
+    await preferencesHelper.saveAvatarPreference(avatarId);
     
-    // Show sync message
+    // Show success message
     showSuccessAlert.value = true;
     successMessage.value = t('settings.avatarUpdated');
   } catch (error) {
@@ -173,11 +173,16 @@ const savePreferences = async () => {
       throw new Error('API not available');
     }
     
-    // Prepare preferences data
+    // Prepare preferences data with AdditionalSettings
+    const additionalSettings = {
+      avatarId: selectedAvatarId.value
+      // Add any additional settings here in the future
+    };
+    
     const preferencesData = {
       theme: theme.global.name.value,
       language: currentLocale.value,
-      avatarId: selectedAvatarId.value
+      AdditionalSettings: JSON.stringify(additionalSettings)
     };
     
     // Save preferences to server

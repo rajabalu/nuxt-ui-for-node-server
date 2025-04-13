@@ -9,7 +9,8 @@ export const useUserPreferences = defineStore('userPreferences', {
     language: null,
     theme: null,
     initialized: false,
-    isAuthenticated: false
+    isAuthenticated: false,
+    additionalSettings: {} // New addition to store additional settings
   }),
 
   actions: {
@@ -57,6 +58,58 @@ export const useUserPreferences = defineStore('userPreferences', {
       }
     },
     
+    // New action to set or update additionalSettings
+    setAdditionalSettings(settings) {
+      if (!settings) {
+        console.warn('[userPreferences] Attempted to set null additionalSettings, skipping');
+        return;
+      }
+      
+      // Merge with existing settings if any
+      this.additionalSettings = {
+        ...this.additionalSettings,
+        ...settings
+      };
+      
+      // Save to localStorage only if not authenticated
+      if (process.client && !this.isAuthenticated) {
+        try {
+          localStorage.setItem('user_additional_settings', JSON.stringify(this.additionalSettings));
+        } catch (error) {
+          console.error('[userPreferences] Error saving additionalSettings to localStorage:', error);
+        }
+      }
+    },
+    
+    // Set a single value in additionalSettings
+    setAdditionalSetting(key, value) {
+      if (!key) {
+        console.warn('[userPreferences] Attempted to set null key in additionalSettings, skipping');
+        return;
+      }
+      
+      this.additionalSettings = {
+        ...this.additionalSettings,
+        [key]: value
+      };
+      
+      // Save to localStorage only if not authenticated
+      if (process.client && !this.isAuthenticated) {
+        try {
+          localStorage.setItem('user_additional_settings', JSON.stringify(this.additionalSettings));
+        } catch (error) {
+          console.error('[userPreferences] Error saving additionalSettings to localStorage:', error);
+        }
+      }
+    },
+    
+    // Get a value from additionalSettings with optional default
+    getAdditionalSetting(key, defaultValue = null) {
+      return this.additionalSettings && key in this.additionalSettings
+        ? this.additionalSettings[key]
+        : defaultValue;
+    },
+    
     // Initialize preferences from localStorage only when not authenticated
     initPreferences() {
       if (this.initialized) {
@@ -97,6 +150,17 @@ export const useUserPreferences = defineStore('userPreferences', {
             this.theme = 'light';
           }
           
+          // Get additional settings from localStorage
+          const savedAdditionalSettings = localStorage.getItem('user_additional_settings');
+          if (savedAdditionalSettings) {
+            try {
+              this.additionalSettings = JSON.parse(savedAdditionalSettings);
+            } catch (error) {
+              console.error('[userPreferences] Error parsing additionalSettings from localStorage:', error);
+              this.additionalSettings = {};
+            }
+          }
+          
           this.initialized = true;
         } catch (error) {
           console.error('[userPreferences] Error loading preferences from localStorage:', error);
@@ -104,6 +168,7 @@ export const useUserPreferences = defineStore('userPreferences', {
           // Set defaults in case of error
           this.language = 'en';
           this.theme = 'light';
+          this.additionalSettings = {};
         }
       }
     },
@@ -128,6 +193,7 @@ export const useUserPreferences = defineStore('userPreferences', {
           
           const serverTheme = response.data.theme;
           const serverLanguage = response.data.language;
+          const serverAdditionalSettings = response.data.AdditionalSettings;
           
           // First apply theme since that doesn't require navigation
           if (serverTheme) {
@@ -206,6 +272,31 @@ export const useUserPreferences = defineStore('userPreferences', {
             }
           }
           
+          // Parse and apply additional settings if available
+          if (serverAdditionalSettings) {
+            try {
+              // Parse if it's a string, otherwise use as is
+              const parsedSettings = typeof serverAdditionalSettings === 'string'
+                ? JSON.parse(serverAdditionalSettings)
+                : serverAdditionalSettings;
+              
+              this.additionalSettings = parsedSettings;
+              
+              // Save to localStorage for persistence
+              if (process.client) {
+                try {
+                  localStorage.setItem('user_additional_settings', 
+                    typeof parsedSettings === 'string' ? parsedSettings : JSON.stringify(parsedSettings));
+                } catch (error) {
+                  console.error('[userPreferences] Error saving additionalSettings to localStorage:', error);
+                }
+              }
+            } catch (error) {
+              console.error('[userPreferences] Error parsing AdditionalSettings:', error);
+              this.additionalSettings = {};
+            }
+          }
+          
           return { success: true, data: response.data };
         } else {
           console.error('[userPreferences] Failed to fetch preferences from server:', response.error);
@@ -223,4 +314,4 @@ export const useUserPreferences = defineStore('userPreferences', {
       // We don't reset preferences here, just the authentication status
     }
   }
-}); 
+});

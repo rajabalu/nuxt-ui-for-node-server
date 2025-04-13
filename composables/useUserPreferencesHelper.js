@@ -9,7 +9,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '~/stores/auth';
 
 /**
- * Composable to handle user preferences (theme and language)
+ * Composable to handle user preferences (theme, language, and avatar)
  * Safe to use within component setup functions
  */
 export const useUserPreferencesHelper = () => {
@@ -120,6 +120,14 @@ export const useUserPreferencesHelper = () => {
     }
   };
   
+  // Apply avatar from preferences
+  const applyAvatar = (avatarId) => {
+    if (avatarId !== undefined && avatarId !== null) {
+      // Set avatar in global store
+      globalStore.setAvatar(Number(avatarId));
+    }
+  };
+  
   // Initialize preferences when component is mounted
   const initializePreferences = () => {
     onMounted(async () => {
@@ -131,6 +139,12 @@ export const useUserPreferencesHelper = () => {
       // Then apply theme
       if (userPreferencesStore.theme) {
         applyTheme(userPreferencesStore.theme);
+      }
+      
+      // Apply avatar if it exists in additionalSettings
+      const avatarId = userPreferencesStore.getAdditionalSetting('avatarId');
+      if (avatarId !== null && avatarId !== undefined) {
+        applyAvatar(avatarId);
       }
     });
     
@@ -149,6 +163,14 @@ export const useUserPreferencesHelper = () => {
         isServerInitiatedChange.value = false;
       }, 500);
     });
+    
+    // Watch for avatar changes in the global store
+    watch(() => globalStore.selectedAvatarId, (newAvatarId) => {
+      // Only save if not being updated from the server/preferences load
+      if (!isServerInitiatedChange.value) {
+        saveAvatarPreference(newAvatarId);
+      }
+    }, { deep: true });
     
     // Also watch the locale directly in case it's changed elsewhere
     watch(locale, (newLocale) => {
@@ -183,6 +205,24 @@ export const useUserPreferencesHelper = () => {
     }
   };
   
+  // Save avatar preference
+  const saveAvatarPreference = async (avatarId) => {
+    // Store in additionalSettings
+    userPreferencesStore.setAdditionalSetting('avatarId', avatarId);
+    
+    // Sync with server if user is authenticated
+    if (authStore.isAuthenticated) {
+      // Format as expected by the API
+      const additionalSettings = {
+        ...userPreferencesStore.additionalSettings
+      };
+      
+      await savePreferencesToServer({
+        AdditionalSettings: JSON.stringify(additionalSettings)
+      });
+    }
+  };
+  
   // Ensure locale is consistent with preferences
   const syncLocaleWithPreferences = async () => {
     const savedLanguage = userPreferencesStore.language;
@@ -199,13 +239,16 @@ export const useUserPreferencesHelper = () => {
   return {
     applyTheme,
     applyLanguage,
+    applyAvatar,
     initializePreferences,
     saveThemePreference,
     saveLanguagePreference,
+    saveAvatarPreference,
     syncLocaleWithPreferences,
     currentTheme: () => userPreferencesStore.theme,
     currentLanguage: () => userPreferencesStore.language,
+    currentAvatar: () => userPreferencesStore.getAdditionalSetting('avatarId'),
     syncMessage,
     isServerInitiatedChange
   };
-}; 
+};
