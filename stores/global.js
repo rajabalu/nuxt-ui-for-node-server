@@ -11,13 +11,13 @@ export const useGlobal = defineStore({
       {
         id: 1,
         name: 'Peter Hinchcliffe',
-        thumbnail: '/images/avatars/avatar-17.jpg', // Fixed path
+        thumbnail: '/images/avatar/avatar-17.jpg', // Corrected path
         modelPath: '/models/business-man.glb'
       },
       {
         id: 2,
         name: 'Lara Smith',
-        thumbnail: '/images/avatars/avatar-20.jpg', // Fixed path
+        thumbnail: '/images/avatar/avatar-20.jpg', // Corrected path
         modelPath: '/models/business-women.glb'
       }
     ]
@@ -54,13 +54,13 @@ export const AVAILABLE_AVATARS = [
   {
     id: 1,
     name: 'Peter Hinchcliffe',
-    thumbnail: '/images/avatars/avatar-17.jpg', // Fixed path
+    thumbnail: '/images/avatar/avatar-17.jpg', // Corrected path
     modelPath: '/models/business-man.glb'
   },
   {
     id: 2,
     name: 'Lara Smith',
-    thumbnail: '/images/avatars/avatar-20.jpg', // Fixed path
+    thumbnail: '/images/avatar/avatar-20.jpg', // Corrected path
     modelPath: '/models/business-women.glb'
   }
 ];

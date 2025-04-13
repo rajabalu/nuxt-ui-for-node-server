@@ -156,7 +156,11 @@
     "selectLanguage": "Sélectionner la langue",
     "darkMode": "Mode sombre",
     "lightMode": "Mode clair",
-    "newPassword": "Nouveau mot de passe"
+    "newPassword": "Nouveau mot de passe",
+    "selectAvatarInfo": "Choisissez un avatar pour vos interactions de chat",
+    "avatarUpdated": "Avatar mis à jour avec succès",
+    "avatarUsedInChat": "Cet avatar sera affiché pendant vos interactions de chat",
+    "preferencesUpdated": "Vos préférences ont été mises à jour avec succès"
   },
   "info": {
     "about": {

@@ -33,6 +33,10 @@ const showErrorAlert = ref(false);
 const errorMessage = ref('');
 const currentTab = ref('tab-1');
 
+// Avatar selection
+const selectedAvatarId = ref(globalStore.selectedAvatarId);
+const availableAvatars = computed(() => globalStore.AVAILABLE_AVATARS);
+
 const basicForm = reactive({
   firstName: authStore.user?.firstName || "",
   lastName: authStore.user?.lastName || "",
@@ -137,8 +141,27 @@ const handleLanguageChange = async (lang) => {
   }
 };
 
+// Avatar selection handler
+const handleAvatarChange = async (avatarId) => {
+  try {
+    selectedAvatarId.value = avatarId;
+    globalStore.setAvatar(avatarId);
+    
+    // Save preferences to the server
+    await savePreferences();
+    
+    // Show sync message
+    showSuccessAlert.value = true;
+    successMessage.value = t('settings.avatarUpdated');
+  } catch (error) {
+    console.error('Error changing avatar:', error);
+    showErrorAlert.value = true;
+    errorMessage.value = `Failed to update avatar: ${error.message}`;
+  }
+};
+
 // Save preferences
-const onPreferences = async () => {
+const savePreferences = async () => {
   try {
     isPreferencesSubmitting.value = true;
     
@@ -153,7 +176,8 @@ const onPreferences = async () => {
     // Prepare preferences data
     const preferencesData = {
       theme: theme.global.name.value,
-      language: currentLocale.value
+      language: currentLocale.value,
+      avatarId: selectedAvatarId.value
     };
     
     // Save preferences to server
@@ -172,6 +196,11 @@ const onPreferences = async () => {
   } finally {
     isPreferencesSubmitting.value = false;
   }
+};
+
+// Save all preferences
+const onPreferences = async () => {
+  await savePreferences();
 };
 
 const onProfileChange = async (event) => {
@@ -692,6 +721,38 @@ const onEmail = async () => {
                   />
                 </v-col>
               </v-row>
+
+              <!-- Avatar Preferences -->
+              <v-row no-gutters class="pb-3">
+                <v-col cols="12" sm="4">
+                  <v-label class="form-label">{{ t('settings.avatar') }}</v-label>
+                </v-col>
+                <v-col cols="12" sm="8">
+                  <!-- Avatar Gallery -->
+                  <div class="avatar-gallery mb-4">
+                    <v-card variant="outlined" class="pa-3">
+                      <p class="text-body-2 mb-3">{{ t('settings.selectAvatarInfo') }}</p>
+                      <div class="d-flex flex-wrap gap-3">
+                        <div 
+                          v-for="avatar in availableAvatars" 
+                          :key="avatar.id" 
+                          class="avatar-option"
+                          :class="{'selected': selectedAvatarId === avatar.id}"
+                          @click="handleAvatarChange(avatar.id)"
+                        >
+                          <v-avatar size="80" :class="{'border-primary': selectedAvatarId === avatar.id}">
+                            <v-img :src="avatar.thumbnail" :alt="avatar.name" />
+                          </v-avatar>
+                          <span class="text-caption text-center d-block mt-1">{{ avatar.name }}</span>
+                        </div>
+                      </div>
+                      <p class="text-caption text-grey mt-3">
+                        {{ t('settings.avatarUsedInChat') }}
+                      </p>
+                    </v-card>
+                  </div>
+                </v-col>
+              </v-row>
             </v-form>
           </v-card-item>
         </v-window-item>
@@ -719,3 +780,43 @@ const onEmail = async () => {
     </template>
   </v-snackbar>
 </template>
+
+<style lang="scss" scoped>
+.form-label {
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.rtl-container {
+  direction: rtl;
+}
+
+.avatar-option {
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(var(--v-theme-primary), 0.1);
+  }
+
+  &.selected {
+    background-color: rgba(var(--v-theme-primary), 0.15);
+  }
+}
+
+.border-primary {
+  border: 3px solid rgb(var(--v-theme-primary));
+}
+
+.avatar-gallery {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.gap-3 {
+  gap: 12px;
+}
+</style>

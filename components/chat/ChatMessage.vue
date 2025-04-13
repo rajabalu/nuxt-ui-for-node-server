@@ -3,7 +3,7 @@
     <div class="message-wrapper">
       <!-- Avatar for system messages -->
       <div v-if="!isUser" class="message-avatar">
-        <v-avatar color="#6366F1" size="40">
+        <v-avatar size="40" color="#6366F1">
           <v-icon color="white">mdi-robot</v-icon>
         </v-avatar>
       </div>

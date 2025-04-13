@@ -96,7 +96,11 @@
     "selectLanguage": "Select Language",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
-    "newPassword": "New Password"
+    "newPassword": "New Password",
+    "selectAvatarInfo": "Choose an avatar for your chat interactions",
+    "avatarUpdated": "Avatar updated successfully",
+    "avatarUsedInChat": "This avatar will be displayed during your chat interactions",
+    "preferencesUpdated": "Your preferences have been updated successfully"
   },
   "notifications": {
     "title": "Notifications",
