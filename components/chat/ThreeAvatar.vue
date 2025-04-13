@@ -134,7 +134,7 @@ function loadAvatar() {
     model.position.y += size.y * 0.1; 
     
     // Adjust the model's rotation to look directly at the camera
-    model.rotation.x = THREE.MathUtils.degToRad(-20); // Just slightly tilt head up
+    model.rotation.x = THREE.MathUtils.degToRad(-20); // Tilt head to face the screen
     
     // Apply scale to ensure the entire avatar is visible
     const scale = 0.8; // Reduce scale more to ensure full visibility
@@ -149,12 +149,6 @@ function loadAvatar() {
         animations[clip.name] = mixer.clipAction(clip);
       });
       
-      // Log all available animations
-      console.log('Available animations:');
-      Object.keys(animations).forEach(animName => {
-        console.log(`- ${animName}`);
-      });
-      
       // Play idle animation by default using correct name format
       const idleAnimation = animations['CharacterArmature|Idle'] || animations['CharacterArmature|Idle_Neutral'];
       if (idleAnimation) {
@@ -163,8 +157,7 @@ function loadAvatar() {
                            'CharacterArmature|Idle' : 'CharacterArmature|Idle_Neutral';
       }
       
-      // Add a slight delay before playing the wave animation
-      // This gives the model time to fully render and position itself
+      // Play wave animation once on load after a short delay
       setTimeout(() => {
         playWaveAnimation();
       }, 1000);
