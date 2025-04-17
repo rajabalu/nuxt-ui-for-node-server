@@ -166,7 +166,6 @@
     startListening, 
     stopListening,
     resetTranscript,
-    setLanguage,
     error: voiceError
   } = useVoiceToText();
   

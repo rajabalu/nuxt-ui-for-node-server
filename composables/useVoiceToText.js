@@ -1,9 +1,11 @@
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useUserPreferences } from '@/stores/userPreferences'
 
 export const useVoiceToText = () => {
   const { locale } = useI18n()
-  
+  const userPreferencesStore = useUserPreferences()
+
   // State
   const isListening = ref(false)
   const transcript = ref('')
@@ -15,12 +17,15 @@ export const useVoiceToText = () => {
     'en': 'English',
     'fr': 'French',
     'ar': 'Arabic',
+    'hi': 'Hindi', // Added Hindi support
     // Add more languages as needed based on i18n/locales
   })
-  
-  // Selected language (default to current i18n locale)
-  const selectedLanguage = ref(locale.value || 'en')
-  
+
+  // Use language from user preferences, fallback to i18n locale, then 'en'
+  const selectedLanguage = computed(() =>
+    userPreferencesStore.language || locale.value || 'en'
+  )
+
   // Check for browser support
   const initializeSpeechRecognition = () => {
     if (process.client) {
@@ -28,18 +33,18 @@ export const useVoiceToText = () => {
       if (SpeechRecognition) {
         recognition.value = new SpeechRecognition()
         isSupported.value = true
-        
+
         // Configure recognition
         recognition.value.continuous = true
         recognition.value.interimResults = true
         recognition.value.lang = selectedLanguage.value
-        
+
         // Set up event handlers
         recognition.value.onstart = () => {
           isListening.value = true
           error.value = null
         }
-        
+
         recognition.value.onend = () => {
           isListening.value = false;
           // Finalize the transcript to ensure no data is lost
@@ -49,11 +54,11 @@ export const useVoiceToText = () => {
             interimTranscript.value = '';
           }
         }
-        
+
         recognition.value.onresult = (event) => {
           let finalTranscript = ''
           let currentInterim = ''
-          
+
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const result = event.results[i]
             if (result.isFinal) {
@@ -62,14 +67,14 @@ export const useVoiceToText = () => {
               currentInterim += result[0].transcript
             }
           }
-          
+
           if (finalTranscript) {
             transcript.value += ' ' + finalTranscript
             transcript.value = transcript.value.trim()
           }
           interimTranscript.value = currentInterim
         }
-        
+
         recognition.value.onerror = (event) => {
           error.value = event.error
           isListening.value = false
@@ -77,27 +82,27 @@ export const useVoiceToText = () => {
       }
     }
   }
-  
+
   // Start listening
   const startListening = () => {
     if (!recognition.value) {
       initializeSpeechRecognition()
     }
-    
+
     if (recognition.value) {
       try {
         // Make sure we're not already listening
         if (isListening.value) {
           recognition.value.stop()
         }
-        
+
         // Reset transcript before starting a new session
         transcript.value = ''
         interimTranscript.value = ''
-        
-        // Update language based on current selection
+
+        // Always set language from user preferences before starting
         recognition.value.lang = selectedLanguage.value
-        
+
         // Small delay to ensure any previous session is properly cleaned up
         setTimeout(() => {
           recognition.value.start()
@@ -110,22 +115,22 @@ export const useVoiceToText = () => {
       error.value = 'Speech recognition not supported in this browser'
     }
   }
-  
+
   // Stop listening
   const stopListening = () => {
     if (recognition.value && isListening.value) {
       recognition.value.stop()
     }
   }
-  
+
   // Change recognition language
   const setLanguage = (lang) => {
-    selectedLanguage.value = lang
+    userPreferencesStore.language = lang
     if (recognition.value) {
       recognition.value.lang = lang
     }
   }
-  
+
   // Reset transcript
   const resetTranscript = () => {
     transcript.value = ''
@@ -143,7 +148,7 @@ export const useVoiceToText = () => {
       const formData = new FormData()
       formData.append('audio', audioBlob)
       formData.append('language', selectedLanguage.value)
-      
+
       const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
@@ -151,11 +156,11 @@ export const useVoiceToText = () => {
         },
         body: formData
       })
-      
+
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`)
       }
-      
+
       const data = await response.json()
       transcript.value = data.text
       return data
@@ -177,45 +182,45 @@ export const useVoiceToText = () => {
 
       const chunks = []
       let mediaRecorder = null
-      
+
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
           mediaRecorder = new MediaRecorder(stream)
-          
+
           mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) {
               chunks.push(e.data)
             }
           }
-          
+
           mediaRecorder.onstop = () => {
             const audioBlob = new Blob(chunks, { type: 'audio/webm' })
             stream.getTracks().forEach(track => track.stop())
             resolve(audioBlob)
           }
-          
+
           mediaRecorder.onerror = (err) => {
             error.value = 'Error recording audio'
             reject(err)
           }
-          
+
           mediaRecorder.start()
           isListening.value = true
-          
+
           // Automatically stop after 30 seconds to prevent very large files
           setTimeout(() => {
             if (mediaRecorder.state === 'recording') {
               mediaRecorder.stop()
             }
           }, 30000)
-          
+
           return mediaRecorder
         })
         .catch(err => {
           error.value = 'Failed to access microphone'
           reject(err)
         })
-        
+
       return {
         stop: () => {
           if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -231,7 +236,7 @@ export const useVoiceToText = () => {
   const startWhisperLikeTranscription = async (apiEndpoint, apiKey) => {
     try {
       const recorder = await recordAudio()
-      
+
       // Return method to stop recording and get transcript
       return {
         stop: async () => {
@@ -241,7 +246,7 @@ export const useVoiceToText = () => {
               resolve(e.data)
             }
           })
-          
+
           return useExternalRecognition(audioBlob, apiEndpoint, apiKey)
         }
       }
@@ -252,11 +257,27 @@ export const useVoiceToText = () => {
     }
   }
 
+  // Add a stronger watcher for userPreferencesStore.language
+  watch(() => userPreferencesStore.language, (newLanguage) => {
+    if (newLanguage && recognition.value) {
+      recognition.value.lang = newLanguage;
+      console.log(`Speech recognition language updated from user preferences to: ${newLanguage}`);
+    }
+  }, { immediate: true });
+  
+  // Watch selectedLanguage for changes (from computed property)
+  watch(selectedLanguage, (newLanguage) => {
+    if (recognition.value) {
+      recognition.value.lang = newLanguage;
+      console.log(`Speech recognition language updated to: ${newLanguage}`);
+    }
+  });
+
   // Initialize browser recognition on client-side only
   if (process.client) {
-    initializeSpeechRecognition()
+    initializeSpeechRecognition();
   }
-  
+
   return {
     isListening,
     transcript,

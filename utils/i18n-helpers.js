@@ -3,6 +3,14 @@
  */
 import { isRTLLanguage, applyRTLToDocument } from './rtl-config';
 
+// Global supported languages list
+export const SUPPORTED_LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'fr', name: 'Français' },
+  { code: 'ar', name: 'العربية' },
+  { code: 'hi', name: 'हिन्दी' }
+];
+
 /**
  * Force loads translation messages for a specific locale
  * This uses multiple approaches to ensure messages are loaded correctly
@@ -172,4 +180,4 @@ export const getLocalizedPath = (path, locale) => {
   // For non-default locales, add the prefix
   const localePath = path.startsWith('/') ? path : `/${path}`;
   return `/${locale}${localePath}`; 
-}; 
+};

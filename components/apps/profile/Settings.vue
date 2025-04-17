@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 import { useUserPreferencesHelper } from '~/composables/useUserPreferencesHelper';
 import { useGlobal } from '~/stores/global';
 import { useTheme } from 'vuetify';
+import { SUPPORTED_LANGUAGES } from '~/utils/i18n-helpers';
+import { useUserPreferences } from '~/stores/userPreferences';
 
 const { t } = useI18n();
 const { alphaValidator, emailValidator, requiredValidator, passwordValidator, confirmedValidator } =
@@ -18,6 +20,7 @@ const refPasswordVForm = ref();
 const authStore = useAuthStore();
 const globalStore = useGlobal();
 const theme = useTheme();
+const userPreferencesStore = useUserPreferences();
 
 // Use computed property for profile image to ensure it updates when auth store changes
 const profileImage = computed(() => {
@@ -42,7 +45,7 @@ const basicForm = reactive({
   lastName: authStore.user?.lastName || "",
   email: authStore.user?.email || "",
   phone: authStore.user?.phone || "",
-  location: authStore.user?.location || "India",
+  location: authStore.user?.location || "",
   address1: authStore.user?.address1 || "",
   address2: authStore.user?.address2 || "",
   zipCode: authStore.user?.zipCode || "",
@@ -115,30 +118,11 @@ const toggleLightDarkMode = async (newTheme) => {
 };
 
 // Language options
-const languages = [
-  { code: "en", name: "English" },
-  { code: "fr", name: "Français" },
-  { code: "ar", name: "العربية" }
-];
+const languages = SUPPORTED_LANGUAGES;
 
-// Language change handler
+// Language change handler - now just updates the UI selection
 const handleLanguageChange = async (lang) => {
-  try {
-    const currentTabValue = currentTab.value;
-    currentLocale.value = lang;
-    
-    await preferencesHelper.saveLanguagePreference(lang);
-    
-    displaySyncMessage();
-    
-    await nextTick();
-    
-    currentTab.value = currentTabValue;
-  } catch (error) {
-    console.error('Error changing language:', error);
-    showErrorAlert.value = true;
-    errorMessage.value = `Failed to update language: ${error.message}`;
-  }
+  currentLocale.value = lang;
 };
 
 // Avatar selection handler
@@ -205,7 +189,77 @@ const savePreferences = async () => {
 
 // Save all preferences
 const onPreferences = async () => {
-  await savePreferences();
+  try {
+    isPreferencesSubmitting.value = true;
+    
+    // First, save theme and language to localStorage via the preferences helper
+    if (theme.global.name.value) {
+      await preferencesHelper.saveThemePreference(theme.global.name.value);
+    }
+    
+    // Handle language change
+    if (currentLocale.value !== locale.value) {
+      // This will trigger proper locale change and routing
+      await preferencesHelper.saveLanguagePreference(currentLocale.value);
+      // Apply the language change immediately with proper loading of messages
+      await preferencesHelper.applyLanguage(currentLocale.value);
+    }
+    
+    // Save avatar preference if changed
+    if (selectedAvatarId.value) {
+      await preferencesHelper.saveAvatarPreference(selectedAvatarId.value);
+    }
+    
+    // Create the preferences object for API call
+    const additionalSettings = {
+      avatarId: selectedAvatarId.value
+      // Add any additional settings here in the future
+    };
+    
+    // Get API and base URL from composables
+    const nuxtApp = useNuxtApp();
+    const api = nuxtApp.$api;
+    
+    if (!api) {
+      throw new Error('API not available');
+    }
+    
+    // Prepare preferences data
+    const preferencesData = {
+      theme: theme.global.name.value,
+      language: currentLocale.value,
+      AdditionalSettings: JSON.stringify(additionalSettings)
+    };
+    
+    // Save preferences to server
+    const response = await api.patch('user-preferences', preferencesData);
+    
+    if (response.success) {
+      showSuccessAlert.value = true;
+      successMessage.value = t('settings.preferencesUpdated');
+      
+      // Force update user preferences store
+      userPreferencesStore.setLanguage(currentLocale.value);
+      userPreferencesStore.setTheme(theme.global.name.value);
+      userPreferencesStore.setAdditionalSettings(additionalSettings);
+      
+      // Show sync message
+      showSyncMessage.value = true;
+      
+      // Keep user on the same tab
+      const currentTabValue = currentTab.value;
+      await nextTick();
+      currentTab.value = currentTabValue;
+    } else {
+      throw new Error(response.error || 'Failed to update preferences');
+    }
+  } catch (error) {
+    console.error('Error updating preferences:', error);
+    showErrorAlert.value = true;
+    errorMessage.value = `Failed to update preferences: ${error.message}`;
+  } finally {
+    isPreferencesSubmitting.value = false;
+  }
 };
 
 const onProfileChange = async (event) => {
@@ -577,6 +631,10 @@ const onEmail = async () => {
                   <v-btn variant="outlined" color="secondary" @click="$refs.file.click()" :loading="isUploading">
                     {{ t('settings.uploadPhoto') }}
                   </v-btn>
+                  <!-- Added save button for basic info tab -->
+                  <v-btn color="primary" type="submit" :loading="isUploading">
+                    {{ t('common.save') }}
+                  </v-btn>
                 </v-col>
               </v-row>
             </v-form>
@@ -609,6 +667,13 @@ const onEmail = async () => {
                       <li class="text-body-2 py-0">{{ t('settings.afterVerificationCanLogin') }}</li>
                       <li class="text-body-2 py-0">{{ t('settings.oldEmailRemains') }}</li>
                     </ul>
+                  </div>
+
+                  <!-- Added save button for email tab -->
+                  <div class="mt-4">
+                    <v-btn color="primary" type="submit" :loading="isEmailSubmitting">
+                      {{ t('common.save') }}
+                    </v-btn>
                   </div>
                 </v-col>
               </v-row>
@@ -674,6 +739,13 @@ const onEmail = async () => {
                       <li class="text-body-2 py-0">{{ t('special') }}</li>
                     </ul>
                   </div>
+
+                  <!-- Added save button for password tab -->
+                  <div class="mt-4">
+                    <v-btn color="primary" type="submit" :loading="isPasswordSubmitting">
+                      {{ t('common.save') }}
+                    </v-btn>
+                  </div>
                 </v-col>
               </v-row>
             </v-form>
@@ -683,7 +755,7 @@ const onEmail = async () => {
         <!-- Preferences Tab -->
         <v-window-item value="tab-4">
           <v-card-item>
-            <v-form>
+            <v-form @submit.prevent="onPreferences">
               <!-- Theme Preferences -->
               <v-row no-gutters class="pb-3">
                 <v-col cols="12" sm="4">
@@ -692,7 +764,6 @@ const onEmail = async () => {
                 <v-col cols="12" sm="8">
                   <v-radio-group
                     v-model="theme.global.name.value"
-                    @update:model-value="toggleLightDarkMode"
                     class="d-flex flex-row"
                   >
                     <v-radio
@@ -722,7 +793,6 @@ const onEmail = async () => {
                     item-title="name"
                     item-value="code"
                     :label="t('settings.selectLanguage')"
-                    @update:model-value="handleLanguageChange"
                   />
                 </v-col>
               </v-row>
@@ -755,6 +825,13 @@ const onEmail = async () => {
                         {{ t('settings.avatarUsedInChat') }}
                       </p>
                     </v-card>
+                  </div>
+                  
+                  <!-- Added save button for preferences tab -->
+                  <div class="mt-4">
+                    <v-btn color="primary" type="submit" :loading="isPreferencesSubmitting">
+                      {{ t('common.save') }}
+                    </v-btn>
                   </div>
                 </v-col>
               </v-row>

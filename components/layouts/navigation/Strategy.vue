@@ -4,6 +4,8 @@ import { useChatStore } from '@/stores/chat';
 import { useNuxtApp } from '#app';
 import { useNotification } from '~/composables/useNotification';
 import { useApi } from '~/composables/api';
+import { useI18n } from 'vue-i18n';
+import { getLocalizedPath } from '~/utils/i18n-helpers';
 import VerticalNavItem from './VerticalNavItem.vue';
 
 const drawer = ref(false);
@@ -13,6 +15,7 @@ const strategiesData = ref([]);
 const chatStore = useChatStore();
 const notification = useNotification();
 const api = useApi();
+const { locale } = useI18n();
 
 // Confirmation dialog
 const deleteDialog = ref(false);
@@ -47,7 +50,7 @@ const fetchStrategies = async () => {
         id: item.id,
         title: item.title && item.title.length > 30 ? item.title.substring(0, 27) + '...' : item.title || 'Untitled',
         icon: 'tabler-message-circle',
-        to: `/strategies/${item.id}`,
+        to: getLocalizedPath(`/strategies/${item.id}`, locale.value),
         updatedAt: item.updatedAt || item.createdAt
       }));
     } else {
@@ -258,4 +261,4 @@ defineExpose({
 .navigation-list {
   padding: 0.5rem 0;
 }
-</style> 
+</style>
