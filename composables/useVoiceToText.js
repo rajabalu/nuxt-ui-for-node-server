@@ -15,10 +15,8 @@ export const useVoiceToText = () => {
   const isSupported = ref(false)
   const languageOptions = reactive({
     'en': 'English',
-    'fr': 'French',
-    'ar': 'Arabic',
-    'hi': 'Hindi', // Added Hindi support
-    // Add more languages as needed based on i18n/locales
+    'hi': 'Hindi',
+    'ar': 'Arabic'    // Add more languages as needed based on i18n/locales
   })
 
   // Use language from user preferences, fallback to i18n locale, then 'en'

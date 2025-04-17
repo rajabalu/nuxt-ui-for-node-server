@@ -181,8 +181,8 @@ preferencesHelper.initializePreferences();
 
 const languages = [
   { code: "en", name: "English" },
-  { code: "fr", name: "Français" },
-  { code: "ar", name: "العربية" }
+  { code: "ar", name: "العربية" },
+  { code: "hi", name: "हिन्दी" }
 ];
 
 const toggleSidebarPhone = (tempObj) => {

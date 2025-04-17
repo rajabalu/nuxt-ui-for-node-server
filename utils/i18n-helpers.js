@@ -6,7 +6,6 @@ import { isRTLLanguage, applyRTLToDocument } from './rtl-config';
 // Global supported languages list
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
-  { code: 'fr', name: 'Français' },
   { code: 'ar', name: 'العربية' },
   { code: 'hi', name: 'हिन्दी' }
 ];
