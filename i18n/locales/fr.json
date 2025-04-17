@@ -47,7 +47,12 @@
     "languageChanged": "Langue changée avec succès",
     "languageChangeError": "Échec du changement de langue",
     "about": "À propos de nous",
-    "welcome": "Bienvenue !"
+    "welcome": "Bienvenue !",
+    "save": "Enregistrer",
+    "rename": "Renommer",
+    "edit": "Éditer",
+    "actions": "Actions",
+    "confirm": "Confirmer"
   },
   "footer": {
     "copyright": "Tous droits réservés",
@@ -67,7 +72,12 @@
     "defaultTitle": "Notification",
     "noNotifications": "Aucune notification pour l'instant.",
     "received": "Reçu",
-    "read": "Lu"
+    "read": "Lu",
+    "rename": "Renommer la notification",
+    "delete": "Supprimer la notification",
+    "edit": "Modifier la notification",
+    "actions": "Actions",
+    "menuOptions": "Options de notification"
   },
   "auth": {
     "signInTitle": "Connectez-vous à votre compte",
@@ -364,5 +374,21 @@
     "title": "Avatar Assistant 3D",
     "description": "L'avatar 3D interactif sera affiché ici. L'avatar réagira à vos conversations et offrira une expérience plus immersive.",
     "disabled": "L'Avatar IA est désactivé"
+  },
+  "strategies": {
+    "yourStrategies": "Vos Stratégies",
+    "noStrategiesFound": "Aucune stratégie trouvée. Créez votre première stratégie pour commencer.",
+    "lastUpdated": "Dernière mise à jour",
+    "createStrategy": "Créer une Stratégie",
+    "viewDetails": "Voir les Détails",
+    "deleteStrategy": "Supprimer la Stratégie",
+    "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer cette stratégie ?",
+    "strategyDeleted": "Stratégie supprimée avec succès",
+    "loadMore": "Charger Plus de Stratégies",
+    "rename": "Renommer la stratégie",
+    "edit": "Modifier la stratégie",
+    "actions": "Actions",
+    "menuOptions": "Options de stratégie",
+    "duplicate": "Dupliquer la stratégie"
   }
 }

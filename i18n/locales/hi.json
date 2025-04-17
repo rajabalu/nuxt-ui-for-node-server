@@ -46,7 +46,8 @@
     "languageChanged": "भाषा सफलतापूर्वक बदली गई",
     "languageChangeError": "भाषा बदलने में विफल",
     "about": "हमारे बारे में",
-    "welcome": "स्वागत है!"
+    "welcome": "स्वागत है!",
+    "save": "सहेजें"
   },
   "footer": {
     "copyright": "सर्वाधिकार सुरक्षित",

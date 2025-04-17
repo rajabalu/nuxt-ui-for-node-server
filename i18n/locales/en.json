@@ -46,7 +46,12 @@
     "languageChanged": "Language changed successfully",
     "languageChangeError": "Failed to change language",
     "about": "About Us",
-    "welcome": "Welcome!"
+    "welcome": "Welcome!",
+    "save": "Save",
+    "rename": "Rename",
+    "edit": "Edit",
+    "actions": "Actions",
+    "confirm": "Confirm"
   },
   "chat": {
     "typeMessage": "Type a message...",
@@ -114,7 +119,12 @@
     "defaultTitle": "Notification",
     "noNotifications": "No notifications yet.",
     "received": "Received",
-    "read": "Read"
+    "read": "Read",
+    "rename": "Rename notification",
+    "delete": "Delete notification",
+    "edit": "Edit notification",
+    "actions": "Actions",
+    "menuOptions": "Notification options"
   },
   "auth": {
     "signInTitle": "Login to Your Account",
@@ -395,6 +405,11 @@
     "deleteStrategy": "Delete Strategy",
     "deleteConfirmation": "Are you sure you want to delete this strategy?",
     "strategyDeleted": "Strategy deleted successfully",
-    "loadMore": "Load More Strategies"
+    "loadMore": "Load More Strategies",
+    "rename": "Rename strategy",
+    "edit": "Edit strategy",
+    "actions": "Actions",
+    "menuOptions": "Strategy options",
+    "duplicate": "Duplicate strategy"
   }
 }
