@@ -52,7 +52,7 @@
                 class="mx-1"
                 aria-label="Attach file"
                 @click="triggerFileInput"
-                :disabled="isUploading || isSendingMessage"
+                :disabled="isUploading || isSendingMessage || isListening"
                 :loading="isUploading"
               >
                 <v-icon>mdi-paperclip</v-icon>
@@ -78,7 +78,7 @@
                 hide-details
                 @keydown.enter.prevent="onEnterPress"
                 class="chat-textarea"
-                :disabled="isSendingMessage"
+                :disabled="isSendingMessage || isListening"
               />
             </v-col>
   
@@ -87,12 +87,17 @@
               <v-btn
                 icon
                 variant="text"
-                color="primary"
-                class="mx-1"
+                :color="isListening ? 'error' : 'primary'"
+                class="mx-1 voice-btn"
                 aria-label="Voice input"
                 :disabled="isUploading || isSendingMessage"
+                @click="toggleVoiceRecognition"
               >
-                <v-icon>mdi-microphone</v-icon>
+                <v-icon v-if="!isListening">mdi-microphone</v-icon>
+                <v-icon v-else>mdi-stop</v-icon>
+                <template v-if="isListening" #append>
+                  <span class="recording-indicator"></span>
+                </template>
               </v-btn>
   
               <v-btn
@@ -121,6 +126,7 @@
   import ChatMessage from '~/components/chat/ChatMessage.vue';
   import GlobalsTextField from '~/components/globals/GlobalsTextField.vue';
   import { useMessages, useFileUpload, useInput } from '~/composables/chat';
+  import { useVoiceToText } from '~/composables/useVoiceToText';
   import { useChatStore } from '~/stores/chat';
   import { useApi } from '~/composables/api';
   import { useNotification } from '~/composables/useNotification';
@@ -150,6 +156,54 @@
   
   // Use our composables
   const chatStore = useChatStore();
+  
+  // Voice to text composable
+  const { 
+    isListening, 
+    transcript, 
+    interimTranscript,
+    isSupported,
+    startListening, 
+    stopListening,
+    resetTranscript,
+    setLanguage,
+    error: voiceError
+  } = useVoiceToText();
+  
+  // Toggle voice recognition on/off
+  const toggleVoiceRecognition = async () => {
+    if (isListening.value) {
+      stopListening();
+      // Do not append transcript here; let the watcher handle it after recognition ends
+    } else {
+      if (!isSupported.value) {
+        notification.error('Speech recognition is not supported in your browser');
+        return;
+      }
+      
+      try {
+        startListening();
+      } catch (err) {
+        notification.error('Failed to start speech recognition');
+        console.error('Speech recognition error:', err);
+      }
+    }
+  };
+  
+  // Watch for voice recognition errors and display notifications
+  watchEffect(() => {
+    if (voiceError.value) {
+      notification.error(`Speech recognition error: ${voiceError.value}`);
+    }
+  });
+  
+  // Append transcript to inputMessage when recognition stops and transcript is available
+  watchEffect(() => {
+    if (!isListening.value && transcript.value.trim()) {
+      inputMessage.value += (inputMessage.value ? ' ' : '') + transcript.value.trim();
+      resetTranscript();
+    }
+  });
   
   // Message handling
   const { 
@@ -222,6 +276,11 @@
   
   // New function to send a message and wait for AI response
   const sendMessageWithAiResponse = async () => {
+    // If we are currently listening, stop before sending
+    if (isListening.value) {
+      toggleVoiceRecognition();
+    }
+    
     if (isButtonDisabled.value) return;
     
     const content = inputMessage.value.trim();
@@ -418,6 +477,36 @@
   .chat-textarea {
     :deep(.v-field__field) {
       padding-top: 8px !important;
+    }
+  }
+
+  .voice-btn {
+    position: relative;
+    
+    .recording-indicator {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: rgb(var(--v-theme-error));
+      top: 8px;
+      right: 8px;
+      animation: recording-pulse 1.5s infinite;
+    }
+  }
+  
+  @keyframes recording-pulse {
+    0% {
+      transform: scale(0.8);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(0.8);
+      opacity: 1;
     }
   }
   </style>
