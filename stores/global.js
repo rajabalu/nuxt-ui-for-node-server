@@ -16,15 +16,33 @@ export const useGlobal = defineStore({
       },
       {
         id: 1,
-        name: 'Peter Hinchcliffe',
-        thumbnail: '/images/avatar/avatar-17.jpg',
-        modelPath: '/models/business-man.glb'
+        name: 'Leo',
+        thumbnail: '/images/avatar/Leo.png',
+        modelPath: '/models/leo.glb'
       },
       {
         id: 2,
-        name: 'Lara Smith',
-        thumbnail: '/images/avatar/avatar-20.jpg',
-        modelPath: '/models/business-women.glb'
+        name: 'Nova',
+        thumbnail: '/images/avatar/Nova.png',
+        modelPath: '/models/nova.glb'
+      },
+      {
+        id: 3,
+        name: 'Max',
+        thumbnail: '/images/avatar/Max.png',
+        modelPath: '/models/max.glb'
+      },
+      {
+        id: 4,
+        name: 'Aria',
+        thumbnail: '/images/avatar/Aria.png',
+        modelPath: '/models/Aria.glb'
+      },
+      {
+        id: 5,
+        name: 'Dennis',
+        thumbnail: '/images/avatar/Dennis.png',
+        modelPath: '/models/dennis.glb'
       }
     ]
   }),
