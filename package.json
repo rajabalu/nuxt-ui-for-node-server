@@ -40,6 +40,7 @@
     "three": "^0.175.0",
     "vite-plugin-vuetify": "^2.0.4",
     "vue-code-highlighter": "^1.1.2",
-    "vue3-apexcharts": "^1.6.0"
+    "vue3-apexcharts": "^1.6.0",
+    "splitpanes": "4.0.3"
   }
 }
