@@ -1,5 +1,5 @@
 <template>
-    <div class="h-screen">
+    <div>
       <Splitpanes class="default-theme">
         <!-- Fixed avatar pane -->
       <Pane :size="25" :min-size="25" :max-size="50" class="flex items-center justify-center bg-gray-100">
