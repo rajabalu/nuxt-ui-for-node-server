@@ -65,8 +65,8 @@
               />
             </v-col>
   
-            <!-- Text Input -->
-            <v-col class="pr-2">
+            <!-- Text Input with Listening indicator -->
+            <v-col class="pr-2 position-relative">
               <GlobalsTextField
                 v-model="inputMessage"
                 placeholder="Type a message..."
@@ -80,6 +80,16 @@
                 class="chat-textarea"
                 :disabled="isSendingMessage || isListening"
               />
+              
+              <!-- Modern Wave Animation (centered in text field) -->
+              <transition name="fade">
+                <div v-if="isListening" class="listening-indicator">
+                  <div class="sound-waves">
+                    <div v-for="n in 4" :key="n" class="wave-bar" :style="{ animationDelay: `${(n-1) * 0.2}s` }"></div>
+                  </div>
+                  <span class="listening-text">Listening...</span>
+                </div>
+              </transition>
             </v-col>
   
             <!-- Voice and Send Buttons -->
@@ -95,9 +105,6 @@
               >
                 <v-icon v-if="!isListening">mdi-microphone</v-icon>
                 <v-icon v-else>mdi-stop</v-icon>
-                <template v-if="isListening" #append>
-                  <span class="recording-indicator"></span>
-                </template>
               </v-btn>
   
               <v-btn
@@ -120,7 +127,7 @@
   </template>
   
   <script setup>
-  import { ref, computed, watchEffect, nextTick } from 'vue';
+  import { ref, computed, watchEffect, nextTick, onMounted } from 'vue';
   import { useNuxtApp } from '#app';
   import { useRouter } from 'vue-router';
   import ChatMessage from '~/components/chat/ChatMessage.vue';
@@ -157,6 +164,15 @@
   // Use our composables
   const chatStore = useChatStore();
   
+  // Voice wave animation
+  const waveHeights = ref([]);
+  const updateWaveHeight = () => {
+    if (!isListening.value) return;
+    
+    waveHeights.value = Array.from({ length: 5 }, () => Math.random() * 0.8 + 0.4); // Random heights between 0.4 and 1.2
+    setTimeout(updateWaveHeight, Math.random() * 300 + 100); // Random interval between 100ms and 400ms
+  };
+  
   // Voice to text composable
   const { 
     isListening, 
@@ -182,6 +198,8 @@
       
       try {
         startListening();
+        // Start the wave animation
+        updateWaveHeight();
       } catch (err) {
         notification.error('Failed to start speech recognition');
         console.error('Speech recognition error:', err);
@@ -470,6 +488,7 @@
       background: rgba(var(--v-theme-on-surface), 0.05);
       border-radius: 28px;
       padding: 4px 12px;
+      position: relative;
     }
   }
   
@@ -494,6 +513,56 @@
     }
   }
   
+  .listening-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .sound-waves {
+      display: flex;
+      gap: 4px;
+      
+      .wave-bar {
+        width: 4px;
+        height: 16px;
+        background-color: rgb(var(--v-theme-error));
+        animation: wave-animation 1s infinite ease-in-out;
+      }
+    }
+    
+    .listening-text {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: rgb(var(--v-theme-error));
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  @keyframes wave-animation {
+    0%, 100% {
+      transform: scaleY(0.5);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
+
   @keyframes recording-pulse {
     0% {
       transform: scale(0.8);
