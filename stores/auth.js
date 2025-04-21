@@ -219,10 +219,40 @@ export const useAuthStore = defineStore('auth', {
     // Apply user preferences from the server after login
     async syncUserPreferences() {
       try {
+        const nuxtApp = useNuxtApp();
         const userPreferencesStore = useUserPreferences();
         
         // Fetch preferences from server and apply to local
         const result = await userPreferencesStore.fetchFromServer();
+        
+        // Handle language change if needed
+        if (result?.success && result?.languageChanged && result?.newLanguage) {
+          // Only handle navigation if we're on the client side
+          if (process.client) {
+            // Get the current route
+            const router = useRouter();
+            const route = useRoute();
+            const i18n = nuxtApp.$i18n;
+            const currentLocale = i18n.locale.value;
+            
+            // Get current path without locale prefix
+            const currentPath = route.fullPath;
+            // Remove locale prefix if it exists
+            let pathWithoutLocale = currentPath;
+            if (currentLocale !== 'en' && pathWithoutLocale.startsWith(`/${currentLocale}/`)) {
+              pathWithoutLocale = pathWithoutLocale.substring(currentLocale.length + 1);
+            } else if (currentLocale === 'en' && pathWithoutLocale.startsWith('/')) {
+              // For English, just use the path as is
+              pathWithoutLocale = currentPath;
+            }
+            
+            // Use getLocalizedPath helper to create the new path
+            const newPath = getLocalizedPath(pathWithoutLocale, result.newLanguage);
+            
+            // Update router with correct path
+            router.push(newPath);
+          }
+        }
       } catch (error) {
         console.error('[authStore] Error applying server preferences:', error);
       }
@@ -412,4 +442,4 @@ export const useAuthStore = defineStore('auth', {
       }
     }
   }
-}); 
+});

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { useTheme } from 'vuetify';
 import { themeConfig } from '@/composables/theme';
-import { useRouter, useRoute } from 'vue-router';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 export const useUserPreferences = defineStore('userPreferences', {
@@ -235,13 +234,11 @@ export const useUserPreferences = defineStore('userPreferences', {
               }
             }
             
-            // Get the current locale and route
-            const router = useRouter();
-            const route = useRoute();
+            // Get the current locale from i18n
             const i18n = nuxtApp.$i18n;
             const currentLocale = i18n.locale.value;
             
-            // Only redirect if needed
+            // Only need to handle locale loading here, not navigation
             if (serverLanguage !== currentLocale) {
               // Force load messages for new locale
               try {
@@ -251,24 +248,13 @@ export const useUserPreferences = defineStore('userPreferences', {
                 console.error('[userPreferences] Error loading messages:', error);
               }
               
-              // Get current path without locale prefix
-              const currentPath = route.fullPath;
-              // Remove locale prefix if it exists
-              let pathWithoutLocale = currentPath;
-              if (currentLocale !== 'en' && pathWithoutLocale.startsWith(`/${currentLocale}/`)) {
-                pathWithoutLocale = pathWithoutLocale.substring(currentLocale.length + 1);
-              } else if (currentLocale === 'en' && pathWithoutLocale.startsWith('/')) {
-                // For English, just use the path as is
-                pathWithoutLocale = currentPath;
-              }
-              
-              // Use getLocalizedPath helper to create the new path
-              const newPath = getLocalizedPath(pathWithoutLocale, serverLanguage);
-              
-              // Update router with correct path
-              if (process.client) {
-                router.push(newPath);
-              }
+              // Return language change info to allow caller to handle navigation
+              return { 
+                success: true, 
+                data: response.data,
+                languageChanged: true,
+                newLanguage: serverLanguage
+              };
             }
           }
           
