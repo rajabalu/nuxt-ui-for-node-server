@@ -99,7 +99,13 @@ export default defineNuxtConfig({
     },
   },
 
-  build: { transpile: ["vuetify"] },
+  build: { 
+    transpile: [
+      "vuetify",
+      "three",
+      "@met4citizen/talkinghead"
+    ] 
+  },
 
   compatibilityDate: "2024-07-15",
 
@@ -156,6 +162,8 @@ export default defineNuxtConfig({
     '~/plugins/apple-sdk.js',
     // RTL support plugin
     '~/plugins/rtl-support.client.js',
+    // TalkingHead plugin
+    '~/plugins/talking-head.client.js',
     // Other plugins will be loaded automatically
     '~/plugins/event-bus.js'
   ],
