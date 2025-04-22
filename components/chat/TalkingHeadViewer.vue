@@ -56,41 +56,63 @@ const visemeMap = [
   /* 21 */ "PP"              // p, b, m
 ];
 
-// Buffers for visemes, words and durations
+// --- Buffer management for lip-sync and audio ---
+// Match buffers exactly as in the example file
 let visemeBuffer = {
   visemes: [],
   vtimes: [],
   vdurations: []
 };
+let prevViseme = null;
 let wordBuffer = {
   words: [],
   wtimes: [],
   wdurations: []
 };
-let prevViseme = null;
+let lipsyncType = "visemes"; // Default to visemes mode
 
-// Reset buffers for new speech
+// Reset buffers between speech segments
 const resetBuffers = () => {
   visemeBuffer = {
     visemes: [],
     vtimes: [],
     vdurations: []
   };
+  prevViseme = null;
   wordBuffer = {
     words: [],
     wtimes: [],
     wdurations: []
   };
-  prevViseme = null;
 };
 
-// Method for handling viseme data
+// Ensure audio context and worklet are properly initialized
+const ensureAudioContextReady = async () => {
+  if (!talkingHead) {
+    console.error("TalkingHead not initialized");
+    return false;
+  }
+  
+  try {
+    if (talkingHead.audioCtx && talkingHead.audioCtx.state === "suspended") {
+      await talkingHead.audioCtx.resume();
+    }
+    return true;
+  } catch (error) {
+    console.error("Error initializing audio context:", error);
+    return false;
+  }
+};
+
+// --- Exposed Methods ---
+// Method for handling viseme data (called by parent component)
 const processViseme = (visemeId, audioOffset) => {
   if (!talkingHead || !talkingHead.isStreaming) return;
   
   const vtime = audioOffset / 10000; // Convert to milliseconds
   const viseme = visemeMap[visemeId];
   
+  // Process viseme data exactly as in example
   if (prevViseme) {
     let vduration = vtime - prevViseme.vtime;
     if (vduration < 40) vduration = 40; // Minimum duration
@@ -103,11 +125,53 @@ const processViseme = (visemeId, audioOffset) => {
   prevViseme = { viseme, vtime };
 };
 
+// Process final viseme (called when speech synthesis is complete)
+const processFinalViseme = () => {
+  if (prevViseme) {
+    // Add final viseme with estimated duration - same as example
+    const finalDuration = 100;
+    visemeBuffer.visemes.push(prevViseme.viseme);
+    visemeBuffer.vtimes.push(prevViseme.vtime);
+    visemeBuffer.vdurations.push(finalDuration);
+    
+    // Clear the last viseme
+    prevViseme = null;
+  }
+  
+  // Send any remaining data
+  let finalData = {};
+  
+  // Mirror example file logic for final data
+  if (visemeBuffer.visemes.length) {
+    finalData.visemes = visemeBuffer.visemes.splice(0, visemeBuffer.visemes.length);
+    finalData.vtimes = visemeBuffer.vtimes.splice(0, visemeBuffer.vtimes.length);
+    finalData.vdurations = visemeBuffer.vdurations.splice(0, visemeBuffer.vdurations.length);
+  }
+  
+  // Stream words always for subtitles
+  finalData.words = wordBuffer.words.splice(0, wordBuffer.words.length);
+  finalData.wtimes = wordBuffer.wtimes.splice(0, wordBuffer.wtimes.length);
+  finalData.wdurations = wordBuffer.wdurations.splice(0, wordBuffer.wdurations.length);
+  
+  if (finalData.visemes || finalData.words) {
+    // If we have any visemes or words left, stream them
+    finalData.audio = null;
+    talkingHead.streamAudio(finalData);
+  }
+  
+  // Notify the end of streaming
+  talkingHead.streamNotifyEnd();
+  
+  // Reset buffers
+  resetBuffers();
+};
+
 // Method for handling word boundary data
 const processWordBoundary = (text, audioOffset, duration, boundaryType) => {
   const time = audioOffset / 10000;
   const durationMs = duration / 10000;
   
+  // Match exactly the example file logic
   if (boundaryType === "PunctuationBoundary" && wordBuffer.words.length) {
     // Append punctuation to previous word
     wordBuffer.words[wordBuffer.words.length - 1] += text;
@@ -119,19 +183,7 @@ const processWordBoundary = (text, audioOffset, duration, boundaryType) => {
   }
 };
 
-// --- Exposed Methods ---
-const processAudioChunk = (audioData) => {
-  // Process audio chunks for animation - called by parent component
-  if (!talkingHead || !talkingHead.isStreaming) {
-    console.warn("TalkingHead not streaming, cannot process viseme");
-    return;
-  }
-  
-  // This method may be called by Azure TTS but we only need to track visemes
-  // The audio playback is handled separately
-};
-
-// Method to play audio chunks
+// Method to play audio chunks - core function that needs fixing
 const playAudioChunk = (audioData) => {
   if (!talkingHead || !talkingHead.isStreaming) {
     console.warn("TalkingHead not streaming, cannot play audio");
@@ -139,85 +191,32 @@ const playAudioChunk = (audioData) => {
   }
   
   try {
-    // Send both audio and accumulated viseme data to TalkingHead
-    const streamData = {
-      audio: audioData
-    };
-    
-    // Add any accumulated viseme data
-    if (visemeBuffer.visemes.length > 0) {
-      streamData.visemes = [...visemeBuffer.visemes];
-      streamData.vtimes = [...visemeBuffer.vtimes];
-      streamData.vdurations = [...visemeBuffer.vdurations];
-      
-      // Clear the buffer after sending
-      visemeBuffer.visemes = [];
-      visemeBuffer.vtimes = [];
-      visemeBuffer.vdurations = [];
+    // Following exactly the example file approach
+    switch (lipsyncType) {
+      case "visemes":
+        talkingHead.streamAudio({
+          audio: audioData,
+          visemes: visemeBuffer.visemes.splice(0, visemeBuffer.visemes.length),
+          vtimes: visemeBuffer.vtimes.splice(0, visemeBuffer.vtimes.length),
+          vdurations: visemeBuffer.vdurations.splice(0, visemeBuffer.vdurations.length),
+        });
+        break;
+      case "words":
+        talkingHead.streamAudio({
+          audio: audioData,
+          words: wordBuffer.words.splice(0, wordBuffer.words.length),
+          wtimes: wordBuffer.wtimes.splice(0, wordBuffer.wtimes.length),
+          wdurations: wordBuffer.wdurations.splice(0, wordBuffer.wdurations.length)
+        });
+        break;
+      default:
+        console.error(`Unknown animation mode: ${lipsyncType}`);
     }
-    
-    // Add any accumulated word data (for subtitles)
-    if (wordBuffer.words.length > 0) {
-      streamData.words = [...wordBuffer.words];
-      streamData.wtimes = [...wordBuffer.wtimes];
-      streamData.wdurations = [...wordBuffer.wdurations];
-      
-      // Clear the buffer after sending
-      wordBuffer.words = [];
-      wordBuffer.wtimes = [];
-      wordBuffer.wdurations = [];
-    }
-    
-    // Send to TalkingHead (this will handle both animation and audio)
-    talkingHead.streamAudio(streamData);
     
     log("Audio chunk sent to TalkingHead");
-    
-    // Let TalkingHead handle audio playback internally - don't use Web Audio API directly
   } catch (error) {
     console.error("Error playing audio chunk:", error);
   }
-};
-
-// Process final viseme (called when speech synthesis is complete)
-const processFinalViseme = () => {
-  if (prevViseme) {
-    // Add final viseme with estimated duration
-    const finalDuration = 100;
-    visemeBuffer.visemes.push(prevViseme.viseme);
-    visemeBuffer.vtimes.push(prevViseme.vtime);
-    visemeBuffer.vdurations.push(finalDuration);
-    
-    // Clear the last viseme
-    prevViseme = null;
-  }
-  
-  // Send any remaining data
-  if (visemeBuffer.visemes.length > 0 || wordBuffer.words.length > 0) {
-    const finalData = {};
-    
-    if (visemeBuffer.visemes.length > 0) {
-      finalData.visemes = [...visemeBuffer.visemes];
-      finalData.vtimes = [...visemeBuffer.vtimes];
-      finalData.vdurations = [...visemeBuffer.vdurations];
-    }
-    
-    if (wordBuffer.words.length > 0) {
-      finalData.words = [...wordBuffer.words];
-      finalData.wtimes = [...wordBuffer.wtimes];
-      finalData.wdurations = [...wordBuffer.wdurations];
-    }
-    
-    // Send final data without audio
-    finalData.audio = null;
-    talkingHead.streamAudio(finalData);
-  }
-  
-  // Notify the end of streaming
-  talkingHead.streamNotifyEnd();
-  
-  // Reset buffers
-  resetBuffers();
 };
 
 const reset = () => {
@@ -236,7 +235,7 @@ const reset = () => {
 };
 
 // Start streaming mode to prepare for audio chunks
-const startStreaming = () => {
+const startStreaming = async () => {
   if (!talkingHead) {
     console.error("TalkingHead not initialized");
     return false;
@@ -246,25 +245,30 @@ const startStreaming = () => {
     // Reset buffers for new speech
     resetBuffers();
     
-    // Start streaming mode with appropriate callbacks
-    talkingHead.streamStart({
-      sampleRate: 48000,  // Make sure we match the audio format from Azure
-      gain: 1.0, // Full volume
-      lipsyncLang: 'en',
-      mood: 'neutral'
-    }, 
-    // Start callback - called when audio playback starts
-    () => {
-      console.log("TalkingHead audio playback started");
-    },
-    // End callback - called when audio playback ends
-    () => {
-      console.log("TalkingHead audio playback ended");
-    },
-    // Subtitle callback - called when a subtitle should be displayed
-    (subtitleText) => {
-      console.log("Subtitle text:", subtitleText);
-    });
+    // Mirror example file exactly
+    talkingHead.streamStart(
+      { 
+        sampleRate: 48000, // 48kHz sample rate for Azure Raw48Khz16BitMonoPcm
+        mood: "neutral",
+        gain: 0.5, 
+        lipsyncType: lipsyncType 
+      },
+      // Start callback - called when audio playback starts
+      () => {
+        console.log("TalkingHead audio playback started");
+        // Could add subtitles reset here if needed
+      },
+      // End callback - called when audio playback ends
+      () => {
+        console.log("TalkingHead audio playback ended");
+        // Could handle subtitle cleanup here if needed
+      },
+      // Subtitle callback
+      (subtitleText) => {
+        console.log("Subtitle text:", subtitleText);
+        // Could display subtitles here if needed
+      }
+    );
     
     return true;
   } catch (error) {
@@ -321,7 +325,6 @@ onUnmounted(() => {
 
 // Expose methods for parent component to call
 defineExpose({
-  processAudioChunk,
   playAudioChunk,
   processViseme,
   processWordBoundary,

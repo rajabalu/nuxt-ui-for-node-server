@@ -56,7 +56,7 @@
     const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion);
     speechConfig.speechSynthesisVoiceName = voiceName;
   
-    // Match the exact format used in the example
+    // Match the exact format used in the example - this is critical for audio compatibility
     speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Raw48Khz16BitMonoPcm;
   
     // Create synthesizer with null AudioConfig to handle stream manually
@@ -66,8 +66,12 @@
     synthesizer.synthesizing = (sender, event) => {
       if (viewerRef.value && event.result && event.result.audioData) {
         console.log(`Audio chunk received: ${event.result.audioData.byteLength} bytes`);
-        // Send audio chunk to TalkingHead which will now play it directly
-        viewerRef.value.playAudioChunk(event.result.audioData);
+        
+        // Ensure audio context is resumed before playing
+        if (viewerRef.value) {
+          // Send raw audio data to TalkingHeadViewer
+          viewerRef.value.playAudioChunk(event.result.audioData);
+        }
       }
     };
   
@@ -140,26 +144,26 @@
   
   const handleSpeakRequest = (textToSpeak) => {
     if (!azureCredentialsAvailable.value) {
-        error.value = "Cannot speak: Azure credentials missing.";
-        return;
+      error.value = "Cannot speak: Azure credentials missing.";
+      return;
     }
     if (!viewerRef.value) {
-        error.value = "Cannot speak: Viewer not ready.";
-        return;
+      error.value = "Cannot speak: Viewer not ready.";
+      return;
     }
     if (isSpeaking.value) {
-        console.warn("Already speaking, request ignored.");
-        return; // Avoid concurrent requests
+      console.warn("Already speaking, request ignored.");
+      return; // Avoid concurrent requests
     }
   
     // Initialize or reuse synthesizer
     if (!speechSynthesizer) {
-        speechSynthesizer = initializeSpeechSynthesizer();
+      speechSynthesizer = initializeSpeechSynthesizer();
     }
   
     if (!speechSynthesizer) {
-        error.value = "Failed to initialize speech synthesizer.";
-        return;
+      error.value = "Failed to initialize speech synthesizer.";
+      return;
     }
   
     status.value = "Sending request to Azure...";
@@ -176,35 +180,39 @@
     
     // Start the synthesis with SSML
     speechSynthesizer.speakSsmlAsync(
-        ssml,
-        result => {
-            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-                // Success is handled by synthesis events
-            } else {
-                console.error(`speakTextAsync failed: Reason=${result.reason}, Details=${result.errorDetails}`);
-                error.value = `Speech synthesis failed: ${result.errorDetails || SpeechSDK.ResultReason[result.reason]}`;
-                isSpeaking.value = false;
-                
-                if (viewerRef.value) {
-                    viewerRef.value.reset();
-                }
-            }
-        },
-        err => {
-            console.error('speakSsmlAsync error callback:', err);
-            error.value = `Failed to start speech synthesis: ${err}`;
-            status.value = 'Speech failed.';
-            isSpeaking.value = false;
-            
-            if (speechSynthesizer) {
-                speechSynthesizer.close();
-                speechSynthesizer = null;
-            }
-            
-            if (viewerRef.value) {
-                viewerRef.value.reset();
-            }
+      ssml,
+      result => {
+        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+          // Success is handled by synthesis events
+          // Process any final visemes
+          if (viewerRef.value) {
+            viewerRef.value.processFinalViseme();
+          }
+        } else {
+          console.error(`speakTextAsync failed: Reason=${result.reason}, Details=${result.errorDetails}`);
+          error.value = `Speech synthesis failed: ${result.errorDetails || SpeechSDK.ResultReason[result.reason]}`;
+          isSpeaking.value = false;
+          
+          if (viewerRef.value) {
+            viewerRef.value.reset();
+          }
         }
+      },
+      err => {
+        console.error('speakSsmlAsync error callback:', err);
+        error.value = `Failed to start speech synthesis: ${err}`;
+        status.value = 'Speech failed.';
+        isSpeaking.value = false;
+        
+        if (speechSynthesizer) {
+          speechSynthesizer.close();
+          speechSynthesizer = null;
+        }
+        
+        if (viewerRef.value) {
+          viewerRef.value.reset();
+        }
+      }
     );
   };
   
