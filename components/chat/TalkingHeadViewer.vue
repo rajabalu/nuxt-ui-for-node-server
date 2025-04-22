@@ -376,15 +376,53 @@ onMounted(async () => {
     talkingHead = new TalkingHead(viewerContainer.value, {
       ttsEndpoint: 'placeholder', // Dummy values to satisfy constructor
       jwtGet: () => 'dummy-token',
-      avatarIdleEyeContact: 0.5,
-      avatarIdleHeadMove: 0.5,
-      avatarSpeakingEyeContact: 0.8,
-      avatarSpeakingHeadMove: 0.8,
-      cameraView: "upper" // Upper body view like in the example
+      avatarMood: "happy", // Changed from neutral to happy for more enthusiastic expression
+      ttsRate: 1.1,         // Slightly faster speech rate for more energy
+      ttsPitch: 0.2,        // Higher pitch for more enthusiasm and energy
+      ttsVolume: 0.2,       // Slightly louder for more presence
+      modelMovementFactor: 1.3,  // More movement to appear more dynamic and energetic
+      avatarIdleEyeContact: 0.9,   // More eye contact when idle
+      avatarIdleHeadMove: 0.7,     // More head movement when idle for energetic appearance
+      avatarSpeakingEyeContact: 1.0,  // Maximum eye contact during speech
+      avatarSpeakingHeadMove: 0.8,   // More dynamic head movement while speaking
+      cameraView: "upper",          // Upper body view like in the example
+      lookAtCamera: true,           // Ensure the avatar focuses on the camera/user
+      lightDirectIntensity: 35      // Brighter lighting for more vibrant appearance
     });
     
-    // Load the model/avatar
-    await talkingHead.showAvatar({ url: props.modelUrl });
+    // Load the model/avatar with male body type, happy mood, and language settings
+    await talkingHead.showAvatar({ 
+      url: props.modelUrl,
+      body: 'M',              // Specify male body type
+      avatarMood: "happy",    // Set the avatar's mood to happy
+      ttsLang: "en-US",       // Set language to English
+      lipsyncLang: "en",       // Set lipsync language to English
+      lookAtCamera: true // Ensure the avatar focuses on the camera/user
+    });
+    
+    // Set initial head position to look straight at camera
+    if (talkingHead.avatar && talkingHead.avatar.lookAt) {
+      talkingHead.avatar.lookAt({x: 0, y: 0, z: 1}); // Look straight ahead
+    }
+    
+    // Make the avatar wave and say "Hi" after loading
+    setTimeout(async () => {
+      if (talkingHead) {
+        // Make sure audio context is resumed for speech to work
+        if (talkingHead.audioCtx && talkingHead.audioCtx.state === "suspended") {
+          await talkingHead.audioCtx.resume();
+        }
+        
+        // Make the avatar wave by playing the handup gesture
+        // Duration 3 seconds, no mirroring, 800ms transition time
+        talkingHead.playGesture("handup", 3, false, 800);
+        
+        // Make the avatar say "Hi" with a small delay to synchronize with the wave
+        setTimeout(() => {
+          talkingHead.speakText("Hi!");
+        }, 500);
+      }
+    }, 1000); // Wait 1 second after avatar loads before waving
     
   } catch (error) {
     console.error('Error initializing TalkingHead:', error);

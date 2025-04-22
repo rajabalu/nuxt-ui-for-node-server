@@ -3,7 +3,7 @@
       <Splitpanes class="default-theme">
         <!-- Fixed avatar pane -->
       <Pane :size="25" :min-size="25" :max-size="50" class="flex items-center justify-center bg-gray-100">
-        <AvatarPlaceHolder />
+        <AzureTalkingHead />
       </Pane>
 
       <!-- Scrollable text pane -->
@@ -19,7 +19,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import AvatarPlaceHolder from '~/components/chat/Avatar.vue';
+import AzureTalkingHead  from '~/components/chat/AzureTalkingHead.vue';
 import ChatInterface from '~/components/chat/ChatInterface.vue';
 import { useRoute } from 'vue-router';
 import { useGlobal } from '~/stores/global';

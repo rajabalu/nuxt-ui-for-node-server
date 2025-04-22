@@ -31,7 +31,7 @@
   const azureSpeechKey = config.public.AZURE_KEY;
   const azureSpeechRegion = config.public.AZURE_LOCATION;
   const modelPath = '/models/Leo.glb'; // Updated path to existing model in public/models folder
-  const voiceName = "en-US-JennyNeural"; // Choose desired Azure voice
+  const voiceName = "en-AU-WilliamNeural"; // Choose desired Azure voice
   
   // --- Component Refs ---
   const viewerRef = ref(null); // Ref to access TalkingHeadViewer methods
