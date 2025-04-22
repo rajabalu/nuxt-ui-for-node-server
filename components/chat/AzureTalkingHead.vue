@@ -55,9 +55,7 @@
     const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion);
     speechConfig.speechSynthesisVoiceName = voiceName;
   
-    // Try a different format that's more compatible with Web Audio API
-    // Change from Raw48Khz16BitMonoPcm to Audio16Khz32KBitRateMonoMp3
-    console.log("🔊 Setting speech synthesis format to Audio16Khz32KBitRateMonoMp3 for better compatibility");
+    // Set output format to MP3 for better compatibility
     speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
   
     // Create synthesizer with null AudioConfig to handle stream manually
@@ -66,11 +64,7 @@
     // Handle audio data chunks during synthesis
     synthesizer.synthesizing = (sender, event) => {
       if (event.result && event.result.audioData) {
-        // Enhanced debugging logs
-        console.log(`Audio chunk received: ${event.result.audioData.byteLength} bytes`);
-        
         if (event.result.audioData.byteLength === 0) {
-          console.warn("Empty audio chunk received from Azure, skipping playback");
           return;
         }
         
@@ -79,7 +73,6 @@
           try {
             // Ensure we're sending a copy of the audio data to avoid any reference issues
             const audioDataCopy = event.result.audioData.slice(0);
-            console.log("Sending audio data to TalkingHeadViewer:", audioDataCopy.byteLength);
             viewerRef.value.playAudioChunk(audioDataCopy);
           } catch (error) {
             console.error("Error sending audio chunk to viewer:", error);
@@ -127,7 +120,6 @@
       
       // Play accumulated audio as one continuous stream - this is the key fix
       if (viewerRef.value && viewerRef.value.playAccumulatedAudioChunks) {
-        console.log("🔊🔊 Triggering playback of accumulated audio chunks");
         viewerRef.value.playAccumulatedAudioChunks();
       }
       
@@ -173,16 +165,13 @@
       return;
     }
     if (isSpeaking.value) {
-      console.warn("Already speaking, request ignored.");
       return; // Avoid concurrent requests
     }
   
     // Critical fix: Resume audio context on user interaction (speaking button click)
     // This is required by browser autoplay policies
     if (viewerRef.value.resumeAudioContext) {
-      console.log("Attempting to resume audio context on user interaction...");
       const resumed = await viewerRef.value.resumeAudioContext();
-      console.log("Audio context resume result:", resumed);
     }
   
     // Initialize or reuse synthesizer
@@ -218,7 +207,6 @@
             viewerRef.value.processFinalViseme();
           }
         } else {
-          console.error(`speakTextAsync failed: Reason=${result.reason}, Details=${result.errorDetails}`);
           error.value = `Speech synthesis failed: ${result.errorDetails || SpeechSDK.ResultReason[result.reason]}`;
           isSpeaking.value = false;
           
@@ -228,7 +216,6 @@
         }
       },
       err => {
-        console.error('speakSsmlAsync error callback:', err);
         error.value = `Failed to start speech synthesis: ${err}`;
         status.value = 'Speech failed.';
         isSpeaking.value = false;
@@ -248,7 +235,6 @@
   // --- Lifecycle ---
   onMounted(() => {
     if (!azureCredentialsAvailable.value) {
-      console.warn("Azure Speech Key or Region not found in runtime config.");
       // Error message is shown via computed property in template
     }
   });

@@ -112,9 +112,7 @@ const resumeAudioContext = async () => {
   try {
     // Access and resume the audio context from the TalkingHead instance
     if (talkingHead.audioCtx && talkingHead.audioCtx.state === "suspended") {
-      console.log("Resuming suspended audio context...");
       await talkingHead.audioCtx.resume();
-      console.log("Audio context resumed successfully, state:", talkingHead.audioCtx.state);
       return true;
     }
     return true; // Already running
@@ -209,12 +207,10 @@ const isPlayingAccumulatedAudio = ref(false);
 // Method to collect all audio chunks and play them as one continuous stream
 const playAccumulatedAudioChunks = async () => {
   if (!audioChunks.value.length) {
-    console.log("No audio chunks to play");
     return;
   }
 
   if (isPlayingAccumulatedAudio.value) {
-    console.log("Already playing accumulated audio");
     return;
   }
   
@@ -227,15 +223,11 @@ const playAccumulatedAudioChunks = async () => {
     }
     
     if (window.__continuousAudioContext.state === "suspended") {
-      console.log("🔊🔊 Resuming continuous audio context...");
       await window.__continuousAudioContext.resume();
     }
     
-    console.log(`🔊🔊 Playing ${audioChunks.value.length} accumulated audio chunks...`);
-    
     // Calculate total size
     const totalSize = audioChunks.value.reduce((total, chunk) => total + chunk.byteLength, 0);
-    console.log(`🔊🔊 Total audio size: ${totalSize} bytes`);
     
     // Combine all chunks into one buffer
     const combinedBuffer = new Uint8Array(totalSize);
@@ -251,8 +243,6 @@ const playAccumulatedAudioChunks = async () => {
     window.__continuousAudioContext.decodeAudioData(
       combinedBuffer.buffer,
       (decodedBuffer) => {
-        console.log(`🔊🔊 Successfully decoded combined audio: ${decodedBuffer.duration} seconds`);
-        
         const source = window.__continuousAudioContext.createBufferSource();
         source.buffer = decodedBuffer;
         
@@ -265,68 +255,51 @@ const playAccumulatedAudioChunks = async () => {
         gainNode.connect(window.__continuousAudioContext.destination);
         
         // Start playback
-        console.log("🔊🔊 Starting continuous audio playback");
         source.start(0);
         
         // Handle playback completion
         source.onended = () => {
-          console.log("🔊🔊 Continuous audio playback completed");
           isPlayingAccumulatedAudio.value = false;
           // Clear the chunks after playback
           audioChunks.value = [];
         };
       },
       (error) => {
-        console.error("🔴 Error decoding combined audio:", error);
         isPlayingAccumulatedAudio.value = false;
       }
     );
   } catch (error) {
-    console.error("🔴 Error playing accumulated audio:", error);
     isPlayingAccumulatedAudio.value = false;
   }
 };
 
 // Method to play audio chunks
 const playAudioChunk = (audioData) => {
-  // Remove debugger statement
   if (!talkingHead || !talkingHead.isStreaming) {
-    console.warn("TalkingHead not streaming, cannot play audio");
     return;
   }
   
-  // Basic diagnostics
-  console.log(`Received audio chunk: ${audioData?.byteLength ?? 'undefined'} bytes`);
-  
   try {
     if (!audioData || audioData.byteLength === 0) {
-      console.error("Empty or null audio data received");
       return;
     }
     
-    // IMPORTANT: We're no longer sending audio to TalkingHead directly
-    // but still need to process visemes for lip syncing
+    // Process lip sync data but don't send audio to TalkingHead
     switch (lipsyncType) {
       case "blendshapes":
-        // Skip sending audio but process animation data
         talkingHead.streamAudio({
-          // Removed audio: audioData to prevent immediate playback
           anims: azureBlendShapes?.sbuffer.splice(0, azureBlendShapes?.sbuffer.length)
         });
         break;
       case "visemes":
-        // Skip sending audio but process visemes for lip sync
         talkingHead.streamAudio({
-          // Removed audio: audioData to prevent immediate playback
           visemes: visemeBuffer.visemes.splice(0, visemeBuffer.visemes.length),
           vtimes: visemeBuffer.vtimes.splice(0, visemeBuffer.vtimes.length),
           vdurations: visemeBuffer.vdurations.splice(0, visemeBuffer.vdurations.length),
         });
         break;
       case "words":
-        // Skip sending audio but process words for lip sync
         talkingHead.streamAudio({
-          // Removed audio: audioData to prevent immediate playback
           words: wordBuffer.words.splice(0, wordBuffer.words.length),
           wtimes: wordBuffer.wtimes.splice(0, wordBuffer.wtimes.length),
           wdurations: wordBuffer.wdurations.splice(0, wordBuffer.wdurations.length)
@@ -336,9 +309,7 @@ const playAudioChunk = (audioData) => {
         console.error(`Unknown animation mode: ${lipsyncType}`);
     }
     
-    log("Animation data sent to TalkingHead (without audio)");
-    
-    // Still collect audio chunks for the accumulated playback at the end
+    // Collect audio chunks for accumulated playback at the end
     audioChunks.value.push(audioData);
   } catch (error) {
     console.error("Error processing animation data:", error);
@@ -346,7 +317,6 @@ const playAudioChunk = (audioData) => {
 };
 
 const reset = () => {
-  console.log("Resetting TalkingHead state");
   if (talkingHead) {
     try {
       // Stop any ongoing speech
@@ -363,7 +333,6 @@ const reset = () => {
 // Start streaming mode to prepare for audio chunks
 const startStreaming = async () => {
   if (!talkingHead) {
-    console.error("TalkingHead not initialized");
     return false;
   }
   
@@ -371,7 +340,6 @@ const startStreaming = async () => {
     // Reset buffers for new speech
     resetBuffers();
     
-    // Mirror example file exactly
     talkingHead.streamStart(
       { 
         sampleRate: 48000, // 48kHz sample rate for Azure Raw48Khz16BitMonoPcm
@@ -381,24 +349,20 @@ const startStreaming = async () => {
       },
       // Start callback - called when audio playback starts
       () => {
-        console.log("TalkingHead audio playback started");
         // Could add subtitles reset here if needed
       },
       // End callback - called when audio playback ends
       () => {
-        console.log("TalkingHead audio playback ended");
         // Could handle subtitle cleanup here if needed
       },
       // Subtitle callback
       (subtitleText) => {
-        console.log("Subtitle text:", subtitleText);
         // Could display subtitles here if needed
       }
     );
     
     return true;
   } catch (error) {
-    console.error("Error starting TalkingHead streaming:", error);
     return false;
   }
 };
@@ -418,12 +382,9 @@ onMounted(async () => {
       avatarSpeakingHeadMove: 0.8,
       cameraView: "upper" // Upper body view like in the example
     });
-
-    console.log('TalkingHead initialized.');
     
     // Load the model/avatar
     await talkingHead.showAvatar({ url: props.modelUrl });
-    console.log('Avatar loaded successfully');
     
   } catch (error) {
     console.error('Error initializing TalkingHead:', error);
