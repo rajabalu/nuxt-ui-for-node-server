@@ -183,7 +183,7 @@ const processWordBoundary = (text, audioOffset, duration, boundaryType) => {
   }
 };
 
-// Method to play audio chunks - core function that needs fixing
+// Method to play audio chunks - fixed to match example implementation
 const playAudioChunk = (audioData) => {
   if (!talkingHead || !talkingHead.isStreaming) {
     console.warn("TalkingHead not streaming, cannot play audio");
@@ -191,11 +191,11 @@ const playAudioChunk = (audioData) => {
   }
   
   try {
-    // Following exactly the example file approach
+    // Key fix: Always include the audioData directly in the streamAudio call
     switch (lipsyncType) {
       case "visemes":
         talkingHead.streamAudio({
-          audio: audioData,
+          audio: audioData, // This is the key change - include audio data
           visemes: visemeBuffer.visemes.splice(0, visemeBuffer.visemes.length),
           vtimes: visemeBuffer.vtimes.splice(0, visemeBuffer.vtimes.length),
           vdurations: visemeBuffer.vdurations.splice(0, visemeBuffer.vdurations.length),
@@ -203,7 +203,7 @@ const playAudioChunk = (audioData) => {
         break;
       case "words":
         talkingHead.streamAudio({
-          audio: audioData,
+          audio: audioData, // This is the key change - include audio data
           words: wordBuffer.words.splice(0, wordBuffer.words.length),
           wtimes: wordBuffer.wtimes.splice(0, wordBuffer.wtimes.length),
           wdurations: wordBuffer.wdurations.splice(0, wordBuffer.wdurations.length)
