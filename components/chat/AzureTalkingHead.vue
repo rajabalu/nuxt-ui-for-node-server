@@ -31,7 +31,7 @@
   const config = useRuntimeConfig();
   const azureSpeechKey = config.public.AZURE_KEY;
   const azureSpeechRegion = config.public.AZURE_LOCATION;
-  const modelPath = '/model.glb'; // Path to your model in the /public folder
+  const modelPath = '/models/Leo.glb'; // Updated path to existing model in public/models folder
   const voiceName = "en-US-JennyNeural"; // Choose desired Azure voice
   
   // --- Component Refs ---

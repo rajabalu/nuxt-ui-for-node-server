@@ -25,6 +25,20 @@
   "backToLogin": "Back to Login",
   "invalidResetLink": "Invalid or expired reset link. Please request a new one.",
   "resetTokenExpired": "Your password reset link has expired. Please request a new one below.",
+  "routes": {
+    "sign-in": "Sign In",
+    "sign-up": "Sign Up",
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "profile": "Profile",
+    "strategies": "Strategies",
+    "users": "Users",
+    "forget-password": "Forgot Password",
+    "password-change": "Change Password",
+    "registration-success": "Registration Success",
+    "unauthorized": "Unauthorized Access"
+  },
   "common": {
     "refresh": "Refresh",
     "delete": "Delete",
