@@ -3,8 +3,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, defineExpose } from 'vue';
+import { ref, onMounted, onUnmounted, defineExpose, defineEmits } from 'vue';
 import { TalkingHead } from '~/libs/talkinghead.mjs';
+import { useAuthStore } from '~/stores/auth'; // Import auth store
+
+const emit = defineEmits(['speak']);
 
 const props = defineProps({
   modelUrl: {
@@ -405,7 +408,7 @@ onMounted(async () => {
       talkingHead.avatar.lookAt({x: 0, y: 0, z: 1}); // Look straight ahead
     }
     
-    // Make the avatar wave and say "Hi" after loading
+    // Make the avatar smile, wave and say "Hi" after loading
     setTimeout(async () => {
       if (talkingHead) {
         // Make sure audio context is resumed for speech to work
@@ -413,16 +416,31 @@ onMounted(async () => {
           await talkingHead.audioCtx.resume();
         }
         
-        // Make the avatar wave by playing the handup gesture
-        // Duration 3 seconds, no mirroring, 800ms transition time
-        talkingHead.playGesture("handup", 3, false, 800);
+        // Get user information from auth store
+        const authStore = useAuthStore();
+        const firstName = authStore.user?.firstName || 'there';
         
-        // Make the avatar say "Hi" with a small delay to synchronize with the wave
+        // First make the avatar smile using the emoji
+        // This will trigger the smile facial expression
+        talkingHead.speakEmoji("😊"); // Use the smile with eyes emoji for a friendly expression
+        
+        // Small delay before waving
         setTimeout(() => {
-          talkingHead.speakText("Hi!");
-        }, 500);
+          // Make the avatar wave by playing the handup gesture
+          // Duration 3 seconds, no mirroring, 800ms transition time
+          talkingHead.playGesture("handup", 3, false, 800);
+          
+          // Create the greeting message with the user's name
+          const greeting = `Hi ${firstName}!`;
+          
+          // Emit the greeting event for the parent component to handle speech
+          setTimeout(() => {
+            // Emit 'speak' event following the same pattern as AzureSpeechControls
+            emit('speak', greeting);
+          }, 500);
+        }, 800); // Wait a moment after smile before waving
       }
-    }, 1000); // Wait 1 second after avatar loads before waving
+    }, 1000); // Wait 1 second after avatar loads before starting animation sequence
     
   } catch (error) {
     console.error('Error initializing TalkingHead:', error);
@@ -464,7 +482,7 @@ defineExpose({
 <style scoped>
 .viewer-container {
   width: 100%;
-  height: 800px; /* Set a fixed height */
+  height: 100%; /* Set a fixed height */
   min-height: 300px;
   position: relative; /* Needed for potential overlays */
   overflow: hidden; /* Ensure canvas doesn't overflow */
