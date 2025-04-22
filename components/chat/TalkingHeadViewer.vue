@@ -295,17 +295,8 @@ const playAudioChunk = (audioData) => {
     return;
   }
   
-  // Enhanced diagnostics
+  // Basic diagnostics
   console.log(`Received audio chunk: ${audioData?.byteLength ?? 'undefined'} bytes`);
-  
-  // AUDIO DEBUG: Log audio context state
-  if (talkingHead.audioCtx) {
-    console.log(`🔊 Audio context state: ${talkingHead.audioCtx.state}`);
-    console.log(`🔊 Audio context sample rate: ${talkingHead.audioCtx.sampleRate}`);
-    console.log(`🔊 Audio destination channels: ${talkingHead.audioCtx.destination.channelCount}`);
-  } else {
-    console.error("🔴 Audio context not available in talkingHead");
-  }
   
   try {
     if (!audioData || audioData.byteLength === 0) {
@@ -313,81 +304,29 @@ const playAudioChunk = (audioData) => {
       return;
     }
     
-    // AUDIO DEBUG: Log buffer details
-    console.log(`🔊 Audio data type: ${Object.prototype.toString.call(audioData)}`);
-    console.log(`🔊 First few bytes:`, Array.from(new Uint8Array(audioData.slice(0, 16))));
-    
-    // CRITICAL ADDITION: Direct Web Audio API fallback for debugging
-    // This attempts to play the audio directly with Web Audio API as a fallback
-    // to determine if the issue is with the TalkingHead library
-    try {
-      if (!window.__directAudioContext) {
-        window.__directAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-        console.log("🔊 Created direct audio context for testing:", window.__directAudioContext.state);
-      }
-      
-      if (window.__directAudioContext.state === "suspended") {
-        console.log("🔊 Resuming direct audio context...");
-        window.__directAudioContext.resume().then(() => {
-          console.log("🔊 Direct audio context resumed:", window.__directAudioContext.state);
-        });
-      }
-      
-      // Clone the audio buffer to avoid reference issues
-      const audioBuffer = audioData.slice(0);
-      
-      console.log("🔊 Decoding audio directly with Web Audio API...");
-      window.__directAudioContext.decodeAudioData(
-        audioBuffer,
-        (decodedBuffer) => {
-          console.log("🔊 Audio decoded successfully:", decodedBuffer.duration, "seconds");
-          
-          // Create a source node for the decoded audio
-          const source = window.__directAudioContext.createBufferSource();
-          source.buffer = decodedBuffer;
-          
-          // Connect to context destination
-          source.connect(window.__directAudioContext.destination);
-          
-          // Start playing the audio
-          console.log("🔊 Starting direct audio playback");
-          source.start(0);
-          source.onended = () => console.log("🔊 Direct audio playback ended");
-        },
-        (error) => {
-          console.error("🔴 Error decoding audio with direct Web Audio API:", error);
-          console.log("🔊 Audio format may be incompatible. Format might need to be changed in AzureTalkingHead.vue");
-        }
-      );
-    } catch (directAudioError) {
-      console.error("🔴 Error in direct audio playback attempt:", directAudioError);
-    }
-    
-    // Key fix: Always include the audioData directly in the streamAudio call
+    // IMPORTANT: We're no longer sending audio to TalkingHead directly
+    // but still need to process visemes for lip syncing
     switch (lipsyncType) {
       case "blendshapes":
-        console.log("🔊 Using blendshapes mode for audio");
-        // Fix: Changed 'head' to 'talkingHead'
+        // Skip sending audio but process animation data
         talkingHead.streamAudio({
-          audio: audioData,
+          // Removed audio: audioData to prevent immediate playback
           anims: azureBlendShapes?.sbuffer.splice(0, azureBlendShapes?.sbuffer.length)
         });
         break;
       case "visemes":
-        console.log("🔊 Using visemes mode for audio");
-        console.log(`🔊 Viseme buffer size: ${visemeBuffer.visemes.length}`);
+        // Skip sending audio but process visemes for lip sync
         talkingHead.streamAudio({
-          audio: audioData,
+          // Removed audio: audioData to prevent immediate playback
           visemes: visemeBuffer.visemes.splice(0, visemeBuffer.visemes.length),
           vtimes: visemeBuffer.vtimes.splice(0, visemeBuffer.vtimes.length),
           vdurations: visemeBuffer.vdurations.splice(0, visemeBuffer.vdurations.length),
         });
         break;
       case "words":
-        console.log("🔊 Using words mode for audio");
-        console.log(`🔊 Word buffer size: ${wordBuffer.words.length}`);
+        // Skip sending audio but process words for lip sync
         talkingHead.streamAudio({
-          audio: audioData,
+          // Removed audio: audioData to prevent immediate playback
           words: wordBuffer.words.splice(0, wordBuffer.words.length),
           wtimes: wordBuffer.wtimes.splice(0, wordBuffer.wtimes.length),
           wdurations: wordBuffer.wdurations.splice(0, wordBuffer.wdurations.length)
@@ -397,12 +336,12 @@ const playAudioChunk = (audioData) => {
         console.error(`Unknown animation mode: ${lipsyncType}`);
     }
     
-    log("Audio chunk sent to TalkingHead");
+    log("Animation data sent to TalkingHead (without audio)");
     
-    // Collect audio chunks for continuous playback
+    // Still collect audio chunks for the accumulated playback at the end
     audioChunks.value.push(audioData);
   } catch (error) {
-    console.error("Error playing audio chunk:", error);
+    console.error("Error processing animation data:", error);
   }
 };
 
