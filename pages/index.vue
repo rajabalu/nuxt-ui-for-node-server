@@ -1,10 +1,10 @@
 <!-- index.vue -->
 <template>
- <AvatarPlaceholder />
+ <AzureTalkingHead  />
 </template>
 
 <script setup>
-import AvatarPlaceholder from '~/components/chat/Avatar.vue';
+import AzureTalkingHead  from '~/components/chat/AzureTalkingHead.vue';
 
 definePageMeta({
   layout: 'default',

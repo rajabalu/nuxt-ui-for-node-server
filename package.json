@@ -42,6 +42,6 @@
     "vue-code-highlighter": "^1.1.2",
     "vue3-apexcharts": "^1.6.0",
     "splitpanes": "4.0.3",
-    "@met4citizen/talkinghead": "^1.4.0"
+    "microsoft-cognitiveservices-speech-sdk": "^1.22.0"
   }
 }
