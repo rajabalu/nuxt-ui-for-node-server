@@ -55,21 +55,37 @@
     const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion);
     speechConfig.speechSynthesisVoiceName = voiceName;
   
-    // Match the exact format used in the example - this is critical for audio compatibility
-    speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Raw48Khz16BitMonoPcm;
+    // Try a different format that's more compatible with Web Audio API
+    // Change from Raw48Khz16BitMonoPcm to Audio16Khz32KBitRateMonoMp3
+    console.log("🔊 Setting speech synthesis format to Audio16Khz32KBitRateMonoMp3 for better compatibility");
+    speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
   
     // Create synthesizer with null AudioConfig to handle stream manually
     const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
   
     // Handle audio data chunks during synthesis
     synthesizer.synthesizing = (sender, event) => {
-      if (viewerRef.value && event.result && event.result.audioData) {
+      if (event.result && event.result.audioData) {
+        // Enhanced debugging logs
         console.log(`Audio chunk received: ${event.result.audioData.byteLength} bytes`);
         
-        // Ensure audio context is resumed before playing
+        if (event.result.audioData.byteLength === 0) {
+          console.warn("Empty audio chunk received from Azure, skipping playback");
+          return;
+        }
+        
+        // Make sure viewer exists before sending audio
         if (viewerRef.value) {
-          // Send raw audio data to TalkingHeadViewer
-          viewerRef.value.playAudioChunk(event.result.audioData);
+          try {
+            // Ensure we're sending a copy of the audio data to avoid any reference issues
+            const audioDataCopy = event.result.audioData.slice(0);
+            console.log("Sending audio data to TalkingHeadViewer:", audioDataCopy.byteLength);
+            viewerRef.value.playAudioChunk(audioDataCopy);
+          } catch (error) {
+            console.error("Error sending audio chunk to viewer:", error);
+          }
+        } else {
+          console.error("Viewer reference not available for audio playback");
         }
       }
     };
@@ -109,6 +125,12 @@
     synthesizer.synthesisCompleted = (sender, event) => {
       status.value = `Speech finished.`;
       
+      // Play accumulated audio as one continuous stream - this is the key fix
+      if (viewerRef.value && viewerRef.value.playAccumulatedAudioChunks) {
+        console.log("🔊🔊 Triggering playback of accumulated audio chunks");
+        viewerRef.value.playAccumulatedAudioChunks();
+      }
+      
       if (viewerRef.value) {
         // Process any final visemes and notify end of stream
         viewerRef.value.processFinalViseme();
@@ -141,7 +163,7 @@
     return synthesizer;
   };
   
-  const handleSpeakRequest = (textToSpeak) => {
+  const handleSpeakRequest = async (textToSpeak) => {
     if (!azureCredentialsAvailable.value) {
       error.value = "Cannot speak: Azure credentials missing.";
       return;
@@ -153,6 +175,14 @@
     if (isSpeaking.value) {
       console.warn("Already speaking, request ignored.");
       return; // Avoid concurrent requests
+    }
+  
+    // Critical fix: Resume audio context on user interaction (speaking button click)
+    // This is required by browser autoplay policies
+    if (viewerRef.value.resumeAudioContext) {
+      console.log("Attempting to resume audio context on user interaction...");
+      const resumed = await viewerRef.value.resumeAudioContext();
+      console.log("Audio context resume result:", resumed);
     }
   
     // Initialize or reuse synthesizer

@@ -105,6 +105,25 @@ const ensureAudioContextReady = async () => {
 };
 
 // --- Exposed Methods ---
+// Method to ensure audio context is resumed - this needs to be called on user interaction
+const resumeAudioContext = async () => {
+  if (!talkingHead) return false;
+  
+  try {
+    // Access and resume the audio context from the TalkingHead instance
+    if (talkingHead.audioCtx && talkingHead.audioCtx.state === "suspended") {
+      console.log("Resuming suspended audio context...");
+      await talkingHead.audioCtx.resume();
+      console.log("Audio context resumed successfully, state:", talkingHead.audioCtx.state);
+      return true;
+    }
+    return true; // Already running
+  } catch (error) {
+    console.error("Error resuming audio context:", error);
+    return false;
+  }
+};
+
 // Method for handling viseme data (called by parent component)
 const processViseme = (visemeId, audioOffset) => {
   if (!talkingHead || !talkingHead.isStreaming) return;
@@ -183,34 +202,192 @@ const processWordBoundary = (text, audioOffset, duration, boundaryType) => {
   }
 };
 
-// Method to play audio chunks - fixed to match example implementation
+// Add variables to maintain accumulated audio data
+const audioChunks = ref([]);
+const isPlayingAccumulatedAudio = ref(false);
+
+// Method to collect all audio chunks and play them as one continuous stream
+const playAccumulatedAudioChunks = async () => {
+  if (!audioChunks.value.length) {
+    console.log("No audio chunks to play");
+    return;
+  }
+
+  if (isPlayingAccumulatedAudio.value) {
+    console.log("Already playing accumulated audio");
+    return;
+  }
+  
+  try {
+    isPlayingAccumulatedAudio.value = true;
+    
+    // Create a new audio context for the continuous playback
+    if (!window.__continuousAudioContext) {
+      window.__continuousAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    if (window.__continuousAudioContext.state === "suspended") {
+      console.log("🔊🔊 Resuming continuous audio context...");
+      await window.__continuousAudioContext.resume();
+    }
+    
+    console.log(`🔊🔊 Playing ${audioChunks.value.length} accumulated audio chunks...`);
+    
+    // Calculate total size
+    const totalSize = audioChunks.value.reduce((total, chunk) => total + chunk.byteLength, 0);
+    console.log(`🔊🔊 Total audio size: ${totalSize} bytes`);
+    
+    // Combine all chunks into one buffer
+    const combinedBuffer = new Uint8Array(totalSize);
+    let offset = 0;
+    
+    audioChunks.value.forEach(chunk => {
+      const chunkView = new Uint8Array(chunk);
+      combinedBuffer.set(chunkView, offset);
+      offset += chunk.byteLength;
+    });
+    
+    // Decode and play the combined buffer
+    window.__continuousAudioContext.decodeAudioData(
+      combinedBuffer.buffer,
+      (decodedBuffer) => {
+        console.log(`🔊🔊 Successfully decoded combined audio: ${decodedBuffer.duration} seconds`);
+        
+        const source = window.__continuousAudioContext.createBufferSource();
+        source.buffer = decodedBuffer;
+        
+        // Add gain control
+        const gainNode = window.__continuousAudioContext.createGain();
+        gainNode.gain.value = 1.0; // Full volume
+        
+        // Connect the nodes
+        source.connect(gainNode);
+        gainNode.connect(window.__continuousAudioContext.destination);
+        
+        // Start playback
+        console.log("🔊🔊 Starting continuous audio playback");
+        source.start(0);
+        
+        // Handle playback completion
+        source.onended = () => {
+          console.log("🔊🔊 Continuous audio playback completed");
+          isPlayingAccumulatedAudio.value = false;
+          // Clear the chunks after playback
+          audioChunks.value = [];
+        };
+      },
+      (error) => {
+        console.error("🔴 Error decoding combined audio:", error);
+        isPlayingAccumulatedAudio.value = false;
+      }
+    );
+  } catch (error) {
+    console.error("🔴 Error playing accumulated audio:", error);
+    isPlayingAccumulatedAudio.value = false;
+  }
+};
+
+// Method to play audio chunks
 const playAudioChunk = (audioData) => {
-  debugger;
+  // Remove debugger statement
   if (!talkingHead || !talkingHead.isStreaming) {
     console.warn("TalkingHead not streaming, cannot play audio");
     return;
   }
   
+  // Enhanced diagnostics
+  console.log(`Received audio chunk: ${audioData?.byteLength ?? 'undefined'} bytes`);
+  
+  // AUDIO DEBUG: Log audio context state
+  if (talkingHead.audioCtx) {
+    console.log(`🔊 Audio context state: ${talkingHead.audioCtx.state}`);
+    console.log(`🔊 Audio context sample rate: ${talkingHead.audioCtx.sampleRate}`);
+    console.log(`🔊 Audio destination channels: ${talkingHead.audioCtx.destination.channelCount}`);
+  } else {
+    console.error("🔴 Audio context not available in talkingHead");
+  }
+  
   try {
+    if (!audioData || audioData.byteLength === 0) {
+      console.error("Empty or null audio data received");
+      return;
+    }
+    
+    // AUDIO DEBUG: Log buffer details
+    console.log(`🔊 Audio data type: ${Object.prototype.toString.call(audioData)}`);
+    console.log(`🔊 First few bytes:`, Array.from(new Uint8Array(audioData.slice(0, 16))));
+    
+    // CRITICAL ADDITION: Direct Web Audio API fallback for debugging
+    // This attempts to play the audio directly with Web Audio API as a fallback
+    // to determine if the issue is with the TalkingHead library
+    try {
+      if (!window.__directAudioContext) {
+        window.__directAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log("🔊 Created direct audio context for testing:", window.__directAudioContext.state);
+      }
+      
+      if (window.__directAudioContext.state === "suspended") {
+        console.log("🔊 Resuming direct audio context...");
+        window.__directAudioContext.resume().then(() => {
+          console.log("🔊 Direct audio context resumed:", window.__directAudioContext.state);
+        });
+      }
+      
+      // Clone the audio buffer to avoid reference issues
+      const audioBuffer = audioData.slice(0);
+      
+      console.log("🔊 Decoding audio directly with Web Audio API...");
+      window.__directAudioContext.decodeAudioData(
+        audioBuffer,
+        (decodedBuffer) => {
+          console.log("🔊 Audio decoded successfully:", decodedBuffer.duration, "seconds");
+          
+          // Create a source node for the decoded audio
+          const source = window.__directAudioContext.createBufferSource();
+          source.buffer = decodedBuffer;
+          
+          // Connect to context destination
+          source.connect(window.__directAudioContext.destination);
+          
+          // Start playing the audio
+          console.log("🔊 Starting direct audio playback");
+          source.start(0);
+          source.onended = () => console.log("🔊 Direct audio playback ended");
+        },
+        (error) => {
+          console.error("🔴 Error decoding audio with direct Web Audio API:", error);
+          console.log("🔊 Audio format may be incompatible. Format might need to be changed in AzureTalkingHead.vue");
+        }
+      );
+    } catch (directAudioError) {
+      console.error("🔴 Error in direct audio playback attempt:", directAudioError);
+    }
+    
     // Key fix: Always include the audioData directly in the streamAudio call
     switch (lipsyncType) {
       case "blendshapes":
-                head.streamAudio({
-                  audio: audioData,
-                  anims: azureBlendShapes?.sbuffer.splice(0, azureBlendShapes?.sbuffer.length)
-                });
-                break;
-      case "visemes":
+        console.log("🔊 Using blendshapes mode for audio");
+        // Fix: Changed 'head' to 'talkingHead'
         talkingHead.streamAudio({
-          audio: audioData, // This is the key change - include audio data
+          audio: audioData,
+          anims: azureBlendShapes?.sbuffer.splice(0, azureBlendShapes?.sbuffer.length)
+        });
+        break;
+      case "visemes":
+        console.log("🔊 Using visemes mode for audio");
+        console.log(`🔊 Viseme buffer size: ${visemeBuffer.visemes.length}`);
+        talkingHead.streamAudio({
+          audio: audioData,
           visemes: visemeBuffer.visemes.splice(0, visemeBuffer.visemes.length),
           vtimes: visemeBuffer.vtimes.splice(0, visemeBuffer.vtimes.length),
           vdurations: visemeBuffer.vdurations.splice(0, visemeBuffer.vdurations.length),
         });
         break;
       case "words":
+        console.log("🔊 Using words mode for audio");
+        console.log(`🔊 Word buffer size: ${wordBuffer.words.length}`);
         talkingHead.streamAudio({
-          audio: audioData, // This is the key change - include audio data
+          audio: audioData,
           words: wordBuffer.words.splice(0, wordBuffer.words.length),
           wtimes: wordBuffer.wtimes.splice(0, wordBuffer.wtimes.length),
           wdurations: wordBuffer.wdurations.splice(0, wordBuffer.wdurations.length)
@@ -221,6 +398,9 @@ const playAudioChunk = (audioData) => {
     }
     
     log("Audio chunk sent to TalkingHead");
+    
+    // Collect audio chunks for continuous playback
+    audioChunks.value.push(audioData);
   } catch (error) {
     console.error("Error playing audio chunk:", error);
   }
@@ -333,11 +513,13 @@ onUnmounted(() => {
 // Expose methods for parent component to call
 defineExpose({
   playAudioChunk,
+  playAccumulatedAudioChunks,
   processViseme,
   processWordBoundary,
   processFinalViseme,
   startStreaming,
-  reset
+  reset,
+  resumeAudioContext
 });
 </script>
 
