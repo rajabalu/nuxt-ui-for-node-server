@@ -56,16 +56,17 @@
     const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion);
     speechConfig.speechSynthesisVoiceName = voiceName;
   
-    // Use Raw48Khz16BitMonoPcm for best audio quality
+    // Match the exact format used in the example
     speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Raw48Khz16BitMonoPcm;
   
     // Create synthesizer with null AudioConfig to handle stream manually
     const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
   
-    // Audio chunk handling
+    // Handle audio data chunks during synthesis
     synthesizer.synthesizing = (sender, event) => {
       if (viewerRef.value && event.result && event.result.audioData) {
-        // Send audio chunk to TalkingHead (library will handle playback)
+        console.log(`Audio chunk received: ${event.result.audioData.byteLength} bytes`);
+        // Send audio chunk to TalkingHead which will now play it directly
         viewerRef.value.playAudioChunk(event.result.audioData);
       }
     };

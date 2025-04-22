@@ -17,6 +17,18 @@ const props = defineProps({
 const viewerContainer = ref(null);
 let talkingHead = null;
 let audioContext = null;
+let audioSourceNode = null;
+let gainNode = null;
+
+// Debug flag - set to true to enable detailed logging
+const DEBUG = true;
+
+// --- Helper functions ---
+const log = (message, ...args) => {
+  if (DEBUG) {
+    console.log(`[TalkingHeadViewer] ${message}`, ...args);
+  }
+};
 
 // Viseme and word tracking for lipsync
 const visemeMap = [
@@ -159,7 +171,9 @@ const playAudioChunk = (audioData) => {
     // Send to TalkingHead (this will handle both animation and audio)
     talkingHead.streamAudio(streamData);
     
-    console.log("Audio chunk sent to TalkingHead");
+    log("Audio chunk sent to TalkingHead");
+    
+    // Let TalkingHead handle audio playback internally - don't use Web Audio API directly
   } catch (error) {
     console.error("Error playing audio chunk:", error);
   }
@@ -232,11 +246,24 @@ const startStreaming = () => {
     // Reset buffers for new speech
     resetBuffers();
     
-    // Start streaming mode
+    // Start streaming mode with appropriate callbacks
     talkingHead.streamStart({
-      gain: 1.0,
+      sampleRate: 48000,  // Make sure we match the audio format from Azure
+      gain: 1.0, // Full volume
       lipsyncLang: 'en',
       mood: 'neutral'
+    }, 
+    // Start callback - called when audio playback starts
+    () => {
+      console.log("TalkingHead audio playback started");
+    },
+    // End callback - called when audio playback ends
+    () => {
+      console.log("TalkingHead audio playback ended");
+    },
+    // Subtitle callback - called when a subtitle should be displayed
+    (subtitleText) => {
+      console.log("Subtitle text:", subtitleText);
     });
     
     return true;
