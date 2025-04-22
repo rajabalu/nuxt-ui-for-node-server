@@ -185,6 +185,7 @@ const processWordBoundary = (text, audioOffset, duration, boundaryType) => {
 
 // Method to play audio chunks - fixed to match example implementation
 const playAudioChunk = (audioData) => {
+  debugger;
   if (!talkingHead || !talkingHead.isStreaming) {
     console.warn("TalkingHead not streaming, cannot play audio");
     return;
@@ -193,6 +194,12 @@ const playAudioChunk = (audioData) => {
   try {
     // Key fix: Always include the audioData directly in the streamAudio call
     switch (lipsyncType) {
+      case "blendshapes":
+                head.streamAudio({
+                  audio: audioData,
+                  anims: azureBlendShapes?.sbuffer.splice(0, azureBlendShapes?.sbuffer.length)
+                });
+                break;
       case "visemes":
         talkingHead.streamAudio({
           audio: audioData, // This is the key change - include audio data
@@ -337,11 +344,12 @@ defineExpose({
 <style scoped>
 .viewer-container {
   width: 100%;
-  height: 400px; /* Set a fixed height */
+  height: 800px; /* Set a fixed height */
   min-height: 300px;
-  max-height: 500px; /* Add maximum height */
-  background-color: #f0f0f0;
   position: relative; /* Needed for potential overlays */
   overflow: hidden; /* Ensure canvas doesn't overflow */
+  background-image: url('../../public/images/background/DarkBackground.png'); /* Optional background image */
+  background-size: cover; /* Cover the entire container */
+  background-position: center; /* Center the background image */
 }
 </style>

@@ -1,6 +1,5 @@
 <template>
     <div>
-      <h2>Azure Streaming TTS Avatar</h2>
   
       <!-- Use ClientOnly if TalkingHeadViewer causes SSR issues, -->
       <!-- but onMounted should generally handle client-side libs -->
