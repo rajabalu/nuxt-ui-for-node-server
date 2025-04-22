@@ -18,30 +18,192 @@ const viewerContainer = ref(null);
 let talkingHead = null;
 let audioContext = null;
 
-// --- Exposed Methods ---
-const processAudioChunk = (audioData) => {
-  if (talkingHead && talkingHead.streamAudio) {
-    try {
-      // Create audio data object in the format expected by TalkingHead
-      const audioObj = {
-        audio: audioData
-      };
-      
-      // Use the streamAudio method that accepts raw audio data
-      talkingHead.streamAudio(audioObj);
-    } catch (error) {
-      console.error("Error processing audio chunk:", error);
-    }
-  } else {
-    console.warn("TalkingHead not fully initialized yet, cannot process audio chunk.");
+// Viseme and word tracking for lipsync
+const visemeMap = [
+  /* 0  */ "sil",            // Silence
+  /* 1  */ "aa",             // æ, ə, ʌ
+  /* 2  */ "aa",             // ɑ
+  /* 3  */ "O",              // ɔ
+  /* 4  */ "E",              // ɛ, ʊ
+  /* 5  */ "RR",             // ɝ
+  /* 6  */ "I",              // j, i, ɪ
+  /* 7  */ "U",              // w, u
+  /* 8  */ "O",              // o
+  /* 9  */ "O",              // aʊ
+  /* 10 */ "O",              // ɔɪ
+  /* 11 */ "I",              // aɪ
+  /* 12 */ "kk",             // h
+  /* 13 */ "RR",             // ɹ
+  /* 14 */ "nn",             // l
+  /* 15 */ "SS",             // s, z
+  /* 16 */ "CH",             // ʃ, tʃ, dʒ, ʒ
+  /* 17 */ "TH",             // ð
+  /* 18 */ "FF",             // f, v
+  /* 19 */ "DD",             // d, t, n, θ
+  /* 20 */ "kk",             // k, g, ŋ
+  /* 21 */ "PP"              // p, b, m
+];
+
+// Buffers for visemes, words and durations
+let visemeBuffer = {
+  visemes: [],
+  vtimes: [],
+  vdurations: []
+};
+let wordBuffer = {
+  words: [],
+  wtimes: [],
+  wdurations: []
+};
+let prevViseme = null;
+
+// Reset buffers for new speech
+const resetBuffers = () => {
+  visemeBuffer = {
+    visemes: [],
+    vtimes: [],
+    vdurations: []
+  };
+  wordBuffer = {
+    words: [],
+    wtimes: [],
+    wdurations: []
+  };
+  prevViseme = null;
+};
+
+// Method for handling viseme data
+const processViseme = (visemeId, audioOffset) => {
+  if (!talkingHead || !talkingHead.isStreaming) return;
+  
+  const vtime = audioOffset / 10000; // Convert to milliseconds
+  const viseme = visemeMap[visemeId];
+  
+  if (prevViseme) {
+    let vduration = vtime - prevViseme.vtime;
+    if (vduration < 40) vduration = 40; // Minimum duration
+    
+    visemeBuffer.visemes.push(prevViseme.viseme);
+    visemeBuffer.vtimes.push(prevViseme.vtime);
+    visemeBuffer.vdurations.push(vduration);
+  }
+  
+  prevViseme = { viseme, vtime };
+};
+
+// Method for handling word boundary data
+const processWordBoundary = (text, audioOffset, duration, boundaryType) => {
+  const time = audioOffset / 10000;
+  const durationMs = duration / 10000;
+  
+  if (boundaryType === "PunctuationBoundary" && wordBuffer.words.length) {
+    // Append punctuation to previous word
+    wordBuffer.words[wordBuffer.words.length - 1] += text;
+    wordBuffer.wdurations[wordBuffer.wdurations.length - 1] += durationMs;
+  } else if (boundaryType === "WordBoundary" || boundaryType === "PunctuationBoundary") {
+    wordBuffer.words.push(text);
+    wordBuffer.wtimes.push(time);
+    wordBuffer.wdurations.push(durationMs);
   }
 };
 
-// Method to play audio chunks (delegating to TalkingHead's internal audio system)
+// --- Exposed Methods ---
+const processAudioChunk = (audioData) => {
+  // Process audio chunks for animation - called by parent component
+  if (!talkingHead || !talkingHead.isStreaming) {
+    console.warn("TalkingHead not streaming, cannot process viseme");
+    return;
+  }
+  
+  // This method may be called by Azure TTS but we only need to track visemes
+  // The audio playback is handled separately
+};
+
+// Method to play audio chunks
 const playAudioChunk = (audioData) => {
-  // The library will handle audio playback internally as part of streamAudio
-  // No need to handle it separately
-  console.log("Audio handled by TalkingHead's internal audio system");
+  if (!talkingHead || !talkingHead.isStreaming) {
+    console.warn("TalkingHead not streaming, cannot play audio");
+    return;
+  }
+  
+  try {
+    // Send both audio and accumulated viseme data to TalkingHead
+    const streamData = {
+      audio: audioData
+    };
+    
+    // Add any accumulated viseme data
+    if (visemeBuffer.visemes.length > 0) {
+      streamData.visemes = [...visemeBuffer.visemes];
+      streamData.vtimes = [...visemeBuffer.vtimes];
+      streamData.vdurations = [...visemeBuffer.vdurations];
+      
+      // Clear the buffer after sending
+      visemeBuffer.visemes = [];
+      visemeBuffer.vtimes = [];
+      visemeBuffer.vdurations = [];
+    }
+    
+    // Add any accumulated word data (for subtitles)
+    if (wordBuffer.words.length > 0) {
+      streamData.words = [...wordBuffer.words];
+      streamData.wtimes = [...wordBuffer.wtimes];
+      streamData.wdurations = [...wordBuffer.wdurations];
+      
+      // Clear the buffer after sending
+      wordBuffer.words = [];
+      wordBuffer.wtimes = [];
+      wordBuffer.wdurations = [];
+    }
+    
+    // Send to TalkingHead (this will handle both animation and audio)
+    talkingHead.streamAudio(streamData);
+    
+    console.log("Audio chunk sent to TalkingHead");
+  } catch (error) {
+    console.error("Error playing audio chunk:", error);
+  }
+};
+
+// Process final viseme (called when speech synthesis is complete)
+const processFinalViseme = () => {
+  if (prevViseme) {
+    // Add final viseme with estimated duration
+    const finalDuration = 100;
+    visemeBuffer.visemes.push(prevViseme.viseme);
+    visemeBuffer.vtimes.push(prevViseme.vtime);
+    visemeBuffer.vdurations.push(finalDuration);
+    
+    // Clear the last viseme
+    prevViseme = null;
+  }
+  
+  // Send any remaining data
+  if (visemeBuffer.visemes.length > 0 || wordBuffer.words.length > 0) {
+    const finalData = {};
+    
+    if (visemeBuffer.visemes.length > 0) {
+      finalData.visemes = [...visemeBuffer.visemes];
+      finalData.vtimes = [...visemeBuffer.vtimes];
+      finalData.vdurations = [...visemeBuffer.vdurations];
+    }
+    
+    if (wordBuffer.words.length > 0) {
+      finalData.words = [...wordBuffer.words];
+      finalData.wtimes = [...wordBuffer.wtimes];
+      finalData.wdurations = [...wordBuffer.wdurations];
+    }
+    
+    // Send final data without audio
+    finalData.audio = null;
+    talkingHead.streamAudio(finalData);
+  }
+  
+  // Notify the end of streaming
+  talkingHead.streamNotifyEnd();
+  
+  // Reset buffers
+  resetBuffers();
 };
 
 const reset = () => {
@@ -52,9 +214,35 @@ const reset = () => {
       if (talkingHead.isSpeaking) {
         talkingHead.streamStop();
       }
+      resetBuffers();
     } catch (error) {
       console.error("Error resetting TalkingHead:", error);
     }
+  }
+};
+
+// Start streaming mode to prepare for audio chunks
+const startStreaming = () => {
+  if (!talkingHead) {
+    console.error("TalkingHead not initialized");
+    return false;
+  }
+  
+  try {
+    // Reset buffers for new speech
+    resetBuffers();
+    
+    // Start streaming mode
+    talkingHead.streamStart({
+      gain: 1.0,
+      lipsyncLang: 'en',
+      mood: 'neutral'
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error starting TalkingHead streaming:", error);
+    return false;
   }
 };
 
@@ -63,9 +251,6 @@ onMounted(async () => {
   if (!viewerContainer.value) return;
 
   try {
-    // Create audio context for TalkingHead to use
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
     // Initialize TalkingHead with the container DOM element
     talkingHead = new TalkingHead(viewerContainer.value, {
       ttsEndpoint: 'placeholder', // Dummy values to satisfy constructor
@@ -73,21 +258,16 @@ onMounted(async () => {
       avatarIdleEyeContact: 0.5,
       avatarIdleHeadMove: 0.5,
       avatarSpeakingEyeContact: 0.8,
-      avatarSpeakingHeadMove: 0.8
+      avatarSpeakingHeadMove: 0.8,
+      cameraView: "upper" // Upper body view like in the example
     });
 
     console.log('TalkingHead initialized.');
     
     // Load the model/avatar
     await talkingHead.showAvatar({ url: props.modelUrl });
+    console.log('Avatar loaded successfully');
     
-    // Start TalkingHead in stream mode
-    await talkingHead.streamStart({
-      gain: 1.0,
-      lipsyncLang: 'en',
-    });
-    
-    console.log('TalkingHead ready for streaming.');
   } catch (error) {
     console.error('Error initializing TalkingHead:', error);
   }
@@ -97,7 +277,7 @@ onUnmounted(() => {
   if (talkingHead) {
     try {
       // Stop any ongoing speech
-      if (talkingHead.isSpeaking) {
+      if (talkingHead.isStreaming) {
         talkingHead.streamStop();
       }
       
@@ -108,18 +288,18 @@ onUnmounted(() => {
     }
   }
   
-  if (audioContext) {
-    audioContext.close().catch(e => console.error("Error closing AudioContext:", e));
-  }
-  
+  resetBuffers();
   talkingHead = null;
-  audioContext = null;
 });
 
 // Expose methods for parent component to call
 defineExpose({
   processAudioChunk,
   playAudioChunk,
+  processViseme,
+  processWordBoundary,
+  processFinalViseme,
+  startStreaming,
   reset
 });
 </script>

@@ -56,64 +56,82 @@
     const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion);
     speechConfig.speechSynthesisVoiceName = voiceName;
   
-    // Crucially, configure for streaming output (ArrayBuffer)
-    // Note: The format might depend slightly on SDK version / browser capabilities
-    // You might need to experiment with formats if PCM doesn't work as expected.
-    // Common format is Riff16Khz16BitMonoPcm directly compatible with Web Audio.
-    speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Riff16Khz16BitMonoPcm;
+    // Use Raw48Khz16BitMonoPcm for best audio quality
+    speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Raw48Khz16BitMonoPcm;
   
-    // Create synthesizer with *null* for audio config to get stream directly
-    const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null); // Pass null for AudioConfig to handle stream manually
+    // Create synthesizer with null AudioConfig to handle stream manually
+    const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
   
-    synthesizer.audioAvailable = (sender, event) => {
-      // event.audioData contains the ArrayBuffer chunk
-      // console.log(`Audio chunk received: ${event.audioData.byteLength} bytes`);
-      if (viewerRef.value) {
-        // IMPORTANT: Send a *copy* of the ArrayBuffer to avoid issues if the SDK reuses the buffer
-        const audioDataCopy = event.audioData.slice(0);
-        viewerRef.value.processAudioChunk(audioDataCopy); // For animation analysis
-        viewerRef.value.playAudioChunk(audioDataCopy);      // For playback
+    // Audio chunk handling
+    synthesizer.synthesizing = (sender, event) => {
+      if (viewerRef.value && event.result && event.result.audioData) {
+        // Send audio chunk to TalkingHead (library will handle playback)
+        viewerRef.value.playAudioChunk(event.result.audioData);
       }
     };
   
+    // Synthesis started
     synthesizer.synthesisStarted = () => {
-      // console.log("Synthesis started.");
       status.value = "Synthesis started...";
       isSpeaking.value = true;
       error.value = ''; // Clear previous errors
+      
       if (viewerRef.value) {
-          viewerRef.value.reset(); // Reset viewer state before starting new speech
+        // Start streaming mode before sending audio
+        viewerRef.value.startStreaming();
       }
     };
   
-    synthesizer.synthesisCompleted = (sender, event) => {
-      // console.log(`Synthesis completed. Result ID: ${event.result.resultId}`);
-      status.value = `Speech finished.`;
-      isSpeaking.value = false;
-       // The viewer's playback queue will handle the end of audio naturally
-    };
-  
-     synthesizer.synthesisCanceled = (sender, event) => {
-        const cancellation = SpeechSDK.CancellationDetails.fromResult(event.result);
-        console.error(`Synthesis CANCELED: Reason=${cancellation.reason}`);
-        let errorMsg = `Speech synthesis canceled. Reason: ${SpeechSDK.CancellationReason[cancellation.reason]}`;
-        if (cancellation.reason === SpeechSDK.CancellationReason.Error) {
-            console.error(`CANCELED: ErrorCode=${cancellation.ErrorCode}`);
-            console.error(`CANCELED: ErrorDetails=[${cancellation.errorDetails}]`);
-            errorMsg += ` Details: ${cancellation.errorDetails}`;
-        }
-        error.value = errorMsg;
-        status.value = 'Speech failed.';
-        isSpeaking.value = false;
-        if (viewerRef.value) {
-            viewerRef.value.reset(); // Reset viewer on error
-        }
-    };
-  
+    // Viseme data handling for lip sync
     synthesizer.visemeReceived = (sender, event) => {
-       // You could potentially use viseme data IF TalkingHead supports it directly
-       // console.log(`Viseme received: ID=${event.visemeId}, Offset=${event.audioOffset / 10000}ms`);
-       // For this example, we rely on TalkingHead's audio analysis
+      if (viewerRef.value) {
+        viewerRef.value.processViseme(event.visemeId, event.audioOffset);
+      }
+    };
+    
+    // Word boundary handling (for subtitles if needed)
+    synthesizer.wordBoundary = (sender, event) => {
+      if (viewerRef.value) {
+        viewerRef.value.processWordBoundary(
+          event.text,
+          event.audioOffset,
+          event.duration,
+          event.boundaryType
+        );
+      }
+    };
+  
+    // Synthesis completed
+    synthesizer.synthesisCompleted = (sender, event) => {
+      status.value = `Speech finished.`;
+      
+      if (viewerRef.value) {
+        // Process any final visemes and notify end of stream
+        viewerRef.value.processFinalViseme();
+      }
+      
+      isSpeaking.value = false;
+    };
+  
+    // Synthesis canceled/error
+    synthesizer.synthesisCanceled = (sender, event) => {
+      const cancellation = SpeechSDK.CancellationDetails.fromResult(event.result);
+      console.error(`Synthesis CANCELED: Reason=${cancellation.reason}`);
+      
+      let errorMsg = `Speech synthesis canceled. Reason: ${SpeechSDK.CancellationReason[cancellation.reason]}`;
+      if (cancellation.reason === SpeechSDK.CancellationReason.Error) {
+          console.error(`CANCELED: ErrorCode=${cancellation.ErrorCode}`);
+          console.error(`CANCELED: ErrorDetails=[${cancellation.errorDetails}]`);
+          errorMsg += ` Details: ${cancellation.errorDetails}`;
+      }
+      
+      error.value = errorMsg;
+      status.value = 'Speech failed.';
+      isSpeaking.value = false;
+      
+      if (viewerRef.value) {
+          viewerRef.value.reset();
+      }
     };
   
     return synthesizer;
@@ -130,15 +148,13 @@
     }
     if (isSpeaking.value) {
         console.warn("Already speaking, request ignored.");
-        return; // Avoid concurrent requests if desired
+        return; // Avoid concurrent requests
     }
   
-    // Ensure synthesizer is ready (create if first time or recreate if needed)
-    // You might want logic to close the previous one if recreating
-    // if (speechSynthesizer) {
-    //     speechSynthesizer.close(); // Clean up old one? Depends on SDK behavior
-    // }
-    speechSynthesizer = initializeSpeechSynthesizer();
+    // Initialize or reuse synthesizer
+    if (!speechSynthesizer) {
+        speechSynthesizer = initializeSpeechSynthesizer();
+    }
   
     if (!speechSynthesizer) {
         error.value = "Failed to initialize speech synthesizer.";
@@ -147,41 +163,45 @@
   
     status.value = "Sending request to Azure...";
     error.value = ''; // Clear previous errors
-  
-    // Start the synthesis
-    speechSynthesizer.speakTextAsync(
-        textToSpeak,
+    
+    // Create SSML for Azure TTS with viseme information
+    const ssml = `
+      <speak version="1.0" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="en-US">
+        <voice name="${voiceName}">
+          <mstts:viseme type="FacialExpression" />
+          ${textToSpeak.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+        </voice>
+      </speak>`;
+    
+    // Start the synthesis with SSML
+    speechSynthesizer.speakSsmlAsync(
+        ssml,
         result => {
-            // Note: success/failure is handled by synthesisCompleted/synthesisCanceled events
             if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-               // console.log("speakTextAsync completed successfully signal.");
+                // Success is handled by synthesis events
             } else {
                 console.error(`speakTextAsync failed: Reason=${result.reason}, Details=${result.errorDetails}`);
-                // Error is likely already set by the synthesisCanceled event, but set fallback:
-                if (!error.value) {
-                    error.value = `Speech synthesis failed: ${result.errorDetails || SpeechSDK.ResultReason[result.reason]}`;
-                    isSpeaking.value = false;
-                     if (viewerRef.value) {
-                        viewerRef.value.reset(); // Reset viewer on error
-                    }
+                error.value = `Speech synthesis failed: ${result.errorDetails || SpeechSDK.ResultReason[result.reason]}`;
+                isSpeaking.value = false;
+                
+                if (viewerRef.value) {
+                    viewerRef.value.reset();
                 }
             }
-            // Optional: Close synthesizer here if you want one instance per request
-            // speechSynthesizer.close();
-            // speechSynthesizer = null;
-            // Or keep it alive for potential reuse (check SDK docs for best practice)
         },
         err => {
-            console.error('speakTextAsync error callback:', err);
+            console.error('speakSsmlAsync error callback:', err);
             error.value = `Failed to start speech synthesis: ${err}`;
             status.value = 'Speech failed.';
             isSpeaking.value = false;
+            
             if (speechSynthesizer) {
-                speechSynthesizer.close(); // Clean up on error
+                speechSynthesizer.close();
                 speechSynthesizer = null;
             }
+            
             if (viewerRef.value) {
-                viewerRef.value.reset(); // Reset viewer on error
+                viewerRef.value.reset();
             }
         }
     );
