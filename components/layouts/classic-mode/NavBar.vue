@@ -26,6 +26,7 @@ watch(() => globalStore.datkMode, (newVal) => {
 
 <template>
   <v-navigation-drawer
+    app
     v-model="globalStore.sideNavBar"
     :width="themeSidebarWidth"
     :permanent="smallDisplay ? false : true"
