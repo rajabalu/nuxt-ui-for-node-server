@@ -12,7 +12,11 @@
       <div class="message-content">
         <v-card
           :color="isUser ? 'primary' : ''"
-          :class="['message-card', { 'user-card': isUser, 'system-card': !isUser }]"
+          :class="['message-card', { 
+            'user-card': isUser, 
+            'system-card': !isUser,
+            'message-sending': status === 'sending'
+          }]" 
         >
           <v-card-text :class="{'text-white': isUser}">
             <div v-if="isUser">{{ content }}</div>
@@ -34,12 +38,22 @@
                 {{ formatFileSize(file.size) }}
               </div>
             </div>
+            
+            <!-- Sending indicator -->
+            <div v-if="status === 'sending'" class="sending-indicator">
+              <div class="sending-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
           </v-card-text>
         </v-card>
         
         <!-- Timestamp -->
         <div class="message-meta">
-          <span class="message-time">{{ formattedTime }}</span>
+          <span v-if="status === 'sending'" class="status-indicator">Sending...</span>
+          <span v-else class="message-time">{{ formattedTime }}</span>
         </div>
       </div>
     </div>
@@ -336,6 +350,59 @@ const openFile = () => {
   
   @media (max-width: 600px) {
     font-size: 0.9em;
+  }
+}
+
+.message-sending {
+  opacity: 0.8;
+}
+
+.sending-indicator {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.sending-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  
+  span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+    opacity: 0.7;
+    animation: dot-pulse 1.4s infinite ease-in-out;
+    
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    &:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+  }
+}
+
+.status-indicator {
+  font-style: italic;
+  font-size: 12px;
+  
+  @media (max-width: 600px) {
+    font-size: 10px;
+  }
+}
+
+@keyframes dot-pulse {
+  0%, 80%, 100% { 
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% { 
+    transform: scale(1);
+    opacity: 1;
   }
 }
 </style>

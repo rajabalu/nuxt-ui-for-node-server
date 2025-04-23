@@ -123,14 +123,41 @@ const sortedMessages = computed(() => {
 const handleMessageSent = async (responseData) => {
   // Process and display user message
   if (responseData.userMessage && responseData.userMessage.content?.trim()) {
-    const userMessage = mapApiMessageToUiFormat(responseData.userMessage);
+    const userMessage = responseData.userMessage.id ? 
+      responseData.userMessage : // Use as-is if it already has an ID (temporary message)
+      mapApiMessageToUiFormat(responseData.userMessage); // Format API message
     
     if (userMessage) {
-      // Check if this message is already in our list before adding
-      const exists = messages.value.some(m => m.id === userMessage.id);
-      if (!exists) {
-        messages.value.push(userMessage);
+      // If this is a temporary message, just add it
+      if (userMessage.status === 'sending') {
+        messages.value = [...messages.value, userMessage];
+      } else {
+        // For server messages, check if we need to replace a temporary message
+        const tempIndex = messages.value.findIndex(m => 
+          m.status === 'sending' && 
+          m.isUser && 
+          m.content === userMessage.content
+        );
+        
+        if (tempIndex >= 0) {
+          // Replace temporary message with server version
+          const updatedMessages = [...messages.value];
+          updatedMessages[tempIndex] = userMessage;
+          messages.value = updatedMessages;
+        } else {
+          // Otherwise add as new message if not already present
+          const exists = messages.value.some(m => m.id === userMessage.id);
+          if (!exists) {
+            messages.value = [...messages.value, userMessage];
+          }
+        }
       }
+      
+      // Force invalidation of the sortedMessages computed property
+      sortedMessagesCache.value = {
+        messages: messages.value,
+        sorted: null // Force recalculation
+      };
     }
   }
   
@@ -142,7 +169,14 @@ const handleMessageSent = async (responseData) => {
       // Check if this message is already in our list before adding
       const exists = messages.value.some(m => m.id === aiMessage.id);
       if (!exists) {
-        messages.value.push(aiMessage);
+        // Use a reactive update to ensure Vue detects the change
+        messages.value = [...messages.value, aiMessage];
+        
+        // Force invalidation of the sortedMessages computed property
+        sortedMessagesCache.value = {
+          messages: messages.value,
+          sorted: null // Force recalculation
+        };
         
         // Emit the new AI message for external components (like talking head)
         emit('new-ai-message', aiMessage);
@@ -150,7 +184,7 @@ const handleMessageSent = async (responseData) => {
     }
   }
   
-  // Scroll to bottom after adding messages
+  // Force immediate UI update and then scroll to bottom
   await nextTick();
   scrollToBottom();
 };

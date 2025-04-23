@@ -244,6 +244,19 @@ const sendMessage = async () => {
       messageData.file = { id: fileId };
     }
     
+    // Create temporary user message to display immediately
+    const tempUserMessage = {
+      id: Date.now().toString(), // Temporary ID
+      content: content,
+      timestamp: new Date(),
+      isUser: true,
+      status: 'sending',
+      file: fileId ? { id: fileId } : null
+    };
+    
+    // Emit the user message immediately so it appears in the UI
+    emit('message-sent', { userMessage: tempUserMessage });
+    
     // Clear input and file
     inputMessage.value = '';
     if (fileId) clearUploadedFile();
@@ -258,7 +271,7 @@ const sendMessage = async () => {
     const response = await Promise.race([responsePromise, timeoutPromise]);
     
     if (response.success && response.data) {
-      // Emit the message data for parent to handle
+      // Update with server response (which will include the official user message and AI response)
       emit('message-sent', response.data);
       
       // Trigger event to refresh strategies list
