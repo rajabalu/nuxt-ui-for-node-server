@@ -6,7 +6,9 @@
 import { ref, onMounted, onUnmounted, defineExpose, defineEmits } from 'vue';
 import { TalkingHead } from '~/libs/talkinghead.mjs';
 import { useAuthStore } from '~/stores/auth'; // Import auth store
+import { useI18n } from 'vue-i18n'; // Import i18n composable
 
+const { t } = useI18n(); // Initialize i18n
 const emit = defineEmits(['speak']);
 
 const props = defineProps({
@@ -462,7 +464,7 @@ onMounted(async () => {
             talkingHead.playGesture("handup", 3, false, 800);
             
             // Create the greeting message with the user's name
-            const greeting = `Hi ${firstName}! How can I help you today?`;
+            const greeting = t('greeting', { name: firstName }); // Use i18n for greeting message
             
             // Emit the greeting event for the parent component to handle speech
             setTimeout(() => {

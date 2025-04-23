@@ -65,7 +65,8 @@
     "rename": "Rename",
     "edit": "Edit",
     "actions": "Actions",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "greeting": "Hi {name}! How can I help you today?"
   },
   "chat": {
     "typeMessage": "Type a message...",
