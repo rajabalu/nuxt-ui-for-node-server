@@ -50,15 +50,35 @@ export const useApi = () => {
         return { success: true };
       }
       
-      if (response.status === 401) { // Handle unauthorized specifically
-          // Optionally trigger logout or token refresh here
-          console.error('API request unauthorized (401)');
-          authStore.logout(); // Example: logout user on 401
-          return { 
-              success: false, 
-              error: 'Unauthorized',
-              status: response.status
-          };
+      if (response.status === 401) {
+        console.error('API request unauthorized (401)');
+        // Don't logout on refresh or logout endpoints
+        if (endpoint.includes('auth/refresh') || endpoint.includes('auth/logout')) {
+          return { success: false, error: 'Unauthorized', status: response.status };
+        }
+        // Try refreshing tokens and retry once
+        const refreshResult = await authStore.refreshTokens();
+        if (refreshResult.success) {
+          // Retry original request with new token
+          const retryHeaders = { ...headers, 'Authorization': `Bearer ${authStore.token}` };
+          const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+          if (retryResponse.status === 401) {
+            authStore.logout();
+            return { success: false, error: 'Unauthorized', status: retryResponse.status };
+          }
+          if (!retryResponse.ok) {
+            const retryError = await retryResponse.json().catch(() => ({ message: 'Request failed' }));
+            return { success: false, error: retryError.message, status: retryResponse.status };
+          }
+          if (options.method === 'DELETE') {
+            return { success: true };
+          }
+          const retryData = await retryResponse.json();
+          return { success: true, data: retryData };
+        }
+        // Refresh failed -> force logout
+        authStore.logout();
+        return { success: false, error: 'Unauthorized', status: response.status };
       }
       
       if (!response.ok) {
