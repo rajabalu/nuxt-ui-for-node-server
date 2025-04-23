@@ -2,6 +2,12 @@
 import TopBar from "@/components/layouts/classic-mode/TopBar.vue";
 import NavBar from "@/components/layouts/classic-mode/NavBar.vue";
 import Footer from "@/components/layouts/classic-mode/Footer.vue";
+import { useGlobal } from "@/stores/global";
+import { computed } from 'vue';
+
+const globalStore = useGlobal();
+// Track sidebar state for responsive styling
+const sidebarVisible = computed(() => globalStore.sideNavBar);
 </script>
 <template>
   <div class="layout-root">
@@ -11,7 +17,7 @@ import Footer from "@/components/layouts/classic-mode/Footer.vue";
       <!-- Navbar on the left -->
       <NavBar />
       <!-- Main content fills the rest -->
-      <v-main class="app-content-area">
+      <v-main class="app-content-area" :class="{'content-expanded': !sidebarVisible}">
         <slot />
       </v-main>
     </div>
@@ -42,7 +48,7 @@ import Footer from "@/components/layouts/classic-mode/Footer.vue";
   flex-direction: column;
   overflow: auto; /* Changed to auto for scrolling content */
   padding: 16px; /* Add padding to the content area */
-  transition: margin-left 0.3s ease; /* Smooth transition for sidebar opening/closing */
+  transition: margin-left 0.3s ease, margin-right 0.3s ease; /* Smooth transition for sidebar opening/closing */
 }
 
 /* Adjust content area margin based on navbar visibility */
@@ -51,10 +57,20 @@ import Footer from "@/components/layouts/classic-mode/Footer.vue";
     margin-left: 256px; /* Default sidebar width */
   }
   
+  /* When sidebar is hidden, remove the margin */
+  .main-area > .app-content-area.content-expanded {
+    margin-left: 0;
+  }
+  
   /* RTL support */
   [dir="rtl"] .main-area > .app-content-area {
     margin-left: 0;
     margin-right: 256px;
+  }
+  
+  /* RTL support when sidebar is hidden */
+  [dir="rtl"] .main-area > .app-content-area.content-expanded {
+    margin-right: 0;
   }
 }
 </style>
