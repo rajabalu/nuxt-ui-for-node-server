@@ -230,33 +230,44 @@ const handleMenuNavigation = (path) => {
 <template>
   <v-app-bar app fixed :height="themeHeaderHeight" class="app-header" elevation="1">
     <template #prepend>
-      <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-items-center mr-3">
+      <!-- Desktop view - show logo only on the left side if not authenticated -->
+      <div v-if="!authStore.isAuthenticated && !smallDisplay" class="d-flex align-items-center mr-3">
         <NuxtLink :to="homePath" class="d-flex">
           <img
-          :src="
-            themeName === 'light'
-              ? '/images/brand/logo/logo-light.svg'
-              : '/images/brand/logo/logo-dark.svg'
-          "
-          height="40px"
-          class="mobile-logo"
-        />
+            :src="themeName === 'light' ? '/images/brand/logo/logo-light.svg' : '/images/brand/logo/logo-dark.svg'"
+            height="40px"
+            class="desktop-logo"
+          />
         </NuxtLink>
-        <!-- Debug info -->
-        <small class="d-none">Locale: {{ currentLocale }}, Path: {{ homePath }}</small>
       </div>
+
+      <!-- Mobile view - show only hamburger menu on the left side for authenticated users -->
       <icon-btn v-if="authStore.isAuthenticated"
         @click.stop="globalStore.sideBarToggle()"
-        :style="`margin-left:${
-          globalStore.sideNavBar && !smallDisplay ? themeSidebarWidth : '0'
-        }px;`"
+        :style="`margin-left:${globalStore.sideNavBar && !smallDisplay ? themeSidebarWidth : '0'}px;`"
       >
         <v-icon size="25" icon="tabler-menu-2" />
       </icon-btn>
-      <h1 class="text-h4 text-sm-h3 ml-2 ml-sm-4 mb-0 font-weight-medium text-truncate page-title">{{ pageTitle }}</h1>
+
+      <!-- Logo in mobile view (centered) or page title in desktop view -->
+      <div v-if="smallDisplay" class="d-flex align-center ml-2">
+        <NuxtLink :to="homePath" class="d-flex">
+          <img
+            :src="themeName === 'light' ? '/images/brand/logo/logo-light.svg' : '/images/brand/logo/logo-dark.svg'"
+            height="32px"
+            class="mobile-logo"
+          />
+        </NuxtLink>
+      </div>
+      
+      <!-- Page title - hide on mobile -->
+      <h1 v-if="!smallDisplay" class="text-h4 text-sm-h3 ml-2 ml-sm-4 mb-0 font-weight-medium text-truncate page-title">
+        {{ pageTitle }}
+      </h1>
     </template>
 
     <template #append>
+      <!-- Help menu - show on both mobile and desktop -->
       <v-menu
         v-model="menuOpen"
         location="bottom end"
@@ -265,7 +276,7 @@ const handleMenuNavigation = (path) => {
         <template v-slot:activator="{ props }">
           <icon-btn
             v-bind="props"
-            class="mr-2 d-none d-sm-flex"
+            class="mr-2"
           >
             <v-icon size="25" icon="tabler-help" />
           </icon-btn>
@@ -281,26 +292,7 @@ const handleMenuNavigation = (path) => {
           />
         </v-list>
       </v-menu>
-      <!-- Only show on mobile -->
-      <v-menu class="d-flex d-sm-none">
-        <template v-slot:activator="{ props }">
-          <icon-btn
-            v-bind="props"
-            class="mr-2"
-          >
-            <v-icon size="25" icon="tabler-dots-vertical" />
-          </icon-btn>
-        </template>
-        <v-list>
-          <v-list-item
-            v-for="(item, index) in infoMenuItems"
-            :key="index"
-            :prepend-icon="item.icon"
-            :title="item.title"
-            @click="handleMenuNavigation(item.to)"
-          />
-        </v-list>
-      </v-menu>
+      
       <Notification v-if="authStore.isAuthenticated" />
       <UserProfile v-if="authStore.isAuthenticated" />
     </template>
@@ -332,9 +324,12 @@ const handleMenuNavigation = (path) => {
 }
 
 .mobile-logo {
-  @media (max-width: 600px) {
-    height: 32px !important;
-  }
+  height: 32px !important;
+  margin-right: 0;
+}
+
+.desktop-logo {
+  height: 40px;
 }
 
 .page-title {
@@ -346,6 +341,16 @@ const handleMenuNavigation = (path) => {
   
   @media (min-width: 960px) {
     max-width: 600px;
+  }
+}
+
+/* Center the logo in mobile view */
+@media (max-width: 600px) {
+  .app-header {
+    .mobile-logo {
+      margin-right: auto;
+      margin-left: auto;
+    }
   }
 }
 </style>
