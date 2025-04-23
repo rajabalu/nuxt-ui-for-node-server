@@ -74,10 +74,17 @@ export const useAuthStore = defineStore('auth', {
         });
         
         if (response.success) {
-          // Update tokens but keep the current user data
           this.token = response.data.token;
           this.refreshToken = response.data.refreshToken;
           this.tokenExpires = response.data.tokenExpires;
+          // Persist refreshed tokens for future sessions
+          if (process.client) {
+            localStorage.setItem('auth', JSON.stringify({
+              token: this.token,
+              refreshToken: this.refreshToken,
+              tokenExpires: this.tokenExpires
+            }));
+          }
           return { success: true };
         } else {
           // If refresh failed, force logout
@@ -281,10 +288,9 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Initialize auth state from localStorage if available
-    initAuth() {
+    async initAuth() {
       if (!process.client) return;
-      
+
       const storedAuth = localStorage.getItem('auth');
       if (storedAuth) {
         try {
@@ -293,15 +299,16 @@ export const useAuthStore = defineStore('auth', {
           this.refreshToken = authData.refreshToken;
           this.tokenExpires = authData.tokenExpires;
           this.isAuthenticated = true;
-          
-          // Fetch current user to validate the session
-          this.fetchCurrentUser().then(result => {
-            if (result.success) {
-              // Also sync preferences after session is validated
-              this.syncUserPreferences();
-            }
-          });
+
+          // Validate session by fetching current user (refresh tokens if needed)
+          const result = await this.fetchCurrentUser();
+          if (result.success) {
+            await this.syncUserPreferences();
+          } else {
+            this.clearAuthData();
+          }
         } catch (error) {
+          console.error('[authStore] initAuth error parsing stored auth', error);
           this.clearAuthData();
         }
       }

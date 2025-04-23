@@ -2,43 +2,11 @@ import { useAuthStore } from '~/stores/auth';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
 
 export default defineNuxtPlugin((nuxtApp) => {
-  // Add auth interceptor for API requests
-  nuxtApp.hook('app:created', () => {
-    const authStore = useAuthStore();
-    
-    // Initialize auth state from localStorage
-    if (process.client) {
-      // Initialize auth state once DOM is ready
-      setTimeout(() => {
-        authStore.initAuth();
-        
-        // Check current route and redirect if necessary
-        const route = useRoute();
-        
-        // Define public routes that don't need authentication
-        const publicRoutes = [
-          '/sign-in', 
-          '/sign-up', 
-          '/forget-password', 
-          '/reset-password',
-          '/registration-success',
-          '/unauthorized'
-        ];
-        
-        // Check if current route is protected and user is not authenticated
-        const isPublicRoute = publicRoutes.some(path => 
-          route.path === path || route.path.startsWith(`${path}/`)
-        );
-        
-        if (!isPublicRoute && !authStore.isAuthenticated) {
-          // Get current locale for localized redirects
-          const locale = nuxtApp.$i18n?.locale?.value || 'en';
-          const signInPath = getLocalizedPath('/sign-in', locale);
-          navigateTo(signInPath);
-        }
-      }, 0);
-    }
-  });
+  // Initialize auth state from localStorage before routing
+  const authStore = useAuthStore();
+  if (process.client) {
+    authStore.initAuth();
+  }
   
   // Wait until api plugin has registered the API
   const api = nuxtApp.$api;

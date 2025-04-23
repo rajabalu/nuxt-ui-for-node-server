@@ -422,7 +422,7 @@ onMounted(async () => {
         
         // First make the avatar smile using the emoji
         // This will trigger the smile facial expression
-        talkingHead.speakEmoji("😊"); // Use the smile with eyes emoji for a friendly expression
+        //talkingHead.speakEmoji("😊"); // Use the smile with eyes emoji for a friendly expression
         
         // Small delay before waving
         setTimeout(() => {
