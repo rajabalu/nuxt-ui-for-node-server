@@ -128,6 +128,10 @@ const openFile = () => {
 .message-wrapper {
   display: flex;
   max-width: 100%;
+
+  @media (max-width: 600px) {
+    max-width: calc(100% - 8px); // Add some space on mobile
+  }
 }
 
 .message-avatar {
@@ -135,19 +139,35 @@ const openFile = () => {
   height: 40px;
   flex-shrink: 0;
   margin-right: 12px;
+  
+  @media (max-width: 600px) {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+  }
 }
 
 .message-content {
   display: flex;
   flex-direction: column;
   max-width: calc(100% - 64px);
+  
+  @media (max-width: 600px) {
+    max-width: calc(100% - 48px); // Adjust for smaller avatar
+  }
 }
 
 .message-card {
   border-radius: 18px;
+  padding: 12px 16px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   overflow: hidden;
   max-width: 100%;
+  
+  @media (max-width: 600px) {
+    padding: 10px 14px;
+    border-radius: 16px;
+  }
 }
 
 .user-card {
@@ -167,6 +187,12 @@ const openFile = () => {
   padding: 0 8px;
   font-size: 12px;
   color: rgba(var(--v-theme-on-surface), 0.6);
+  
+  @media (max-width: 600px) {
+    font-size: 10px;
+    margin-top: 2px;
+    padding: 0 4px;
+  }
 }
 
 .user-message {
@@ -176,6 +202,15 @@ const openFile = () => {
   
   .message-content {
     align-items: flex-end;
+  }
+  
+  .message-avatar {
+    margin-right: 0;
+    margin-left: 12px;
+    
+    @media (max-width: 600px) {
+      margin-left: 8px;
+    }
   }
 }
 
@@ -206,6 +241,8 @@ const openFile = () => {
       padding: 0.2em 0.4em;
       border-radius: 3px;
       font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     pre {
@@ -213,6 +250,13 @@ const openFile = () => {
       padding: 0.8em;
       border-radius: 4px;
       overflow-x: auto;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+      
+      @media (max-width: 600px) {
+        padding: 0.6em;
+        font-size: 0.9em;
+      }
       
       code {
         background: none;
@@ -238,6 +282,10 @@ const openFile = () => {
     ul, ol {
       padding-left: 1.2em;
       margin: 0.5em 0;
+      
+      @media (max-width: 600px) {
+        padding-left: 1em;
+      }
     }
 
     blockquote {
@@ -285,5 +333,9 @@ const openFile = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  
+  @media (max-width: 600px) {
+    font-size: 0.9em;
+  }
 }
 </style>

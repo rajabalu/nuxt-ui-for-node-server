@@ -50,7 +50,7 @@ const handleNavigation = (path) => {
 <template>
   <v-footer app class="footer-content d-flex flex-column">
     <div class="d-flex justify-space-between align-center w-100 py-2 px-4">
-      <div class="text-caption">
+      <div class="text-caption footer-text">
         &copy; {{ currentYear }} {{ t('footer.copyright') }}
       </div>
       <div class="d-flex align-center">
@@ -73,9 +73,36 @@ const handleNavigation = (path) => {
 <style scoped>
 .footer-content {
   border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  padding: 0 16px;
 }
 
 .footer-link {
   min-width: auto;
+  
+  @media (max-width: 600px) {
+    margin: 0 !important;
+    padding: 4px !important;
+  }
 }
-</style> 
+
+.footer-text {
+  @media (max-width: 600px) {
+    font-size: 0.8rem;
+  }
+}
+
+/* Adjust spacing on mobile */
+@media (max-width: 600px) {
+  .footer-content {
+    padding: 0 8px;
+  }
+  
+  .v-btn.v-btn--density-default {
+    --v-btn-height: 32px;
+  }
+  
+  .v-icon {
+    font-size: 1.2rem !important;
+  }
+}
+</style>

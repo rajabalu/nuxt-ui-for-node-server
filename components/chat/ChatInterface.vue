@@ -194,6 +194,10 @@ watchEffect(() => {
   scroll-behavior: smooth;
   padding: 16px 16px 0 16px;
   
+  @media (max-width: 600px) {
+    padding: 12px 8px 0 8px;
+  }
+  
   // Scrollbar styling
   &::-webkit-scrollbar {
     width: 6px;
@@ -206,6 +210,25 @@ watchEffect(() => {
   &::-webkit-scrollbar-thumb {
     background: rgba(var(--v-theme-on-surface), 0.3);
     border-radius: 4px;
+  }
+  
+  // Make scrollbars smaller on mobile
+  @media (max-width: 600px) {
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+  }
+}
+
+// Mobile optimizations for buttons
+@media (max-width: 600px) {
+  :deep(.v-btn--size-small) {
+    padding: 0 8px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  :deep(.v-icon) {
+    font-size: 1.2rem !important;
   }
 }
 </style>

@@ -3,11 +3,14 @@ import TopBar from "@/components/layouts/classic-mode/TopBar.vue";
 import NavBar from "@/components/layouts/classic-mode/NavBar.vue";
 import Footer from "@/components/layouts/classic-mode/Footer.vue";
 import { useGlobal } from "@/stores/global";
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
+import { useDisplay } from 'vuetify';
 
 const globalStore = useGlobal();
+const { mobile } = useDisplay();
 // Track sidebar state for responsive styling
 const sidebarVisible = computed(() => globalStore.sideNavBar);
+const isMobile = computed(() => mobile.value);
 </script>
 <template>
   <div class="layout-root">
@@ -17,7 +20,7 @@ const sidebarVisible = computed(() => globalStore.sideNavBar);
       <!-- Navbar on the left -->
       <NavBar />
       <!-- Main content fills the rest -->
-      <v-main class="app-content-area" :class="{'content-expanded': !sidebarVisible}">
+      <v-main class="app-content-area" :class="{'content-expanded': !sidebarVisible, 'mobile-content': isMobile}">
         <slot />
       </v-main>
     </div>
@@ -51,6 +54,11 @@ const sidebarVisible = computed(() => globalStore.sideNavBar);
   transition: margin-left 0.3s ease, margin-right 0.3s ease; /* Smooth transition for sidebar opening/closing */
 }
 
+/* Mobile styles */
+.mobile-content {
+  padding: 12px 8px !important;
+}
+
 /* Adjust content area margin based on navbar visibility */
 @media (min-width: 960px) {
   .main-area > .app-content-area {
@@ -71,6 +79,13 @@ const sidebarVisible = computed(() => globalStore.sideNavBar);
   /* RTL support when sidebar is hidden */
   [dir="rtl"] .main-area > .app-content-area.content-expanded {
     margin-right: 0;
+  }
+}
+
+/* Small mobile screen adjustments */
+@media (max-width: 600px) {
+  .main-area {
+    margin-top: 56px; /* Smaller top margin on very small screens */
   }
 }
 </style>

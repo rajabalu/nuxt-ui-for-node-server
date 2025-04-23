@@ -488,5 +488,35 @@ defineExpose({
   background-image: url('../../public/images/background/DarkBackground.png'); /* Optional background image */
   background-size: cover; /* Cover the entire container */
   background-position: center; /* Center the background image */
+  
+  /* Adjust for smaller screens */
+  @media (max-width: 600px) {
+    min-height: 300px;
+  }
+  
+  /* Create responsive behavior */
+  @media (max-width: 480px) {
+    min-height: 250px;
+  }
+}
+
+/* Add loading overlay with responsive styling */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  z-index: 10;
+  
+  @media (max-width: 600px) {
+    font-size: 1rem;
+  }
 }
 </style>

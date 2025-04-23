@@ -1,6 +1,6 @@
 <script setup>
 import Navigation from "@/components/layouts/navigation/Index.vue";
-import { computed, watch, onMounted } from 'vue';
+import { computed, watch, onMounted, ref } from 'vue';
 import { useGlobal } from "@/stores/global";
 import { themeConfig } from '@/composables/theme';
 import { getLocalizedPath } from '@/utils/i18n-helpers';
@@ -19,6 +19,32 @@ const themeName = computed(() => {
   return currentTheme;
 });
 
+// Handle swipe gestures for mobile to show/hide navbar
+const touchStartX = ref(0);
+const touchEndX = ref(0);
+
+const handleTouchStart = (e) => {
+  touchStartX.value = e.changedTouches[0].screenX;
+};
+
+const handleTouchEnd = (e) => {
+  touchEndX.value = e.changedTouches[0].screenX;
+  handleSwipe();
+};
+
+const handleSwipe = () => {
+  if (smallDisplay.value) {
+    const swipeDistance = touchEndX.value - touchStartX.value;
+    // Right swipe when drawer is closed
+    if (swipeDistance > 100 && !globalStore.sideNavBar) {
+      globalStore.sideBarToggle(true);
+    }
+    // Left swipe when drawer is open
+    else if (swipeDistance < -100 && globalStore.sideNavBar) {
+      globalStore.sideBarToggle(false);
+    }
+  }
+};
 
 watch(() => globalStore.datkMode, (newVal) => {
 }, { immediate: true });
@@ -32,8 +58,12 @@ watch(() => globalStore.datkMode, (newVal) => {
     :permanent="smallDisplay ? false : true"
     :class="{ 'sidebar-visibile': !smallDisplay && globalStore.sideNavBar }"
     :position="locale === 'ar' ? 'end' : 'start'"
+    temporary
+    :mobile-breakpoint="960"
+    @touchstart="handleTouchStart"
+    @touchend="handleTouchEnd"
   >
-    <div class="d-none d-md-flex app-nav-logo-wrapper aligin-center">
+    <div class="d-none d-md-flex app-nav-logo-wrapper align-center">
       <NuxtLink :to="homePath" class="d-flex">
         <img
           :src="
@@ -57,5 +87,13 @@ watch(() => globalStore.datkMode, (newVal) => {
   height: variable.$dash-ui-header-height;
   padding: map_get(variable.$list-item, padding);
   align-items: center;
+}
+
+/* Mobile enhancement for sidebar */
+@media (max-width: 600px) {
+  .v-navigation-drawer {
+    width: 100% !important; /* Full width on very small screens */
+    max-width: 280px !important;
+  }
 }
 </style>

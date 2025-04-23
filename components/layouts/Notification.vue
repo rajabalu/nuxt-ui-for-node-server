@@ -277,7 +277,11 @@ const handleLoadMore = () => {
 
 <style scoped lang="scss">
 .notification-card {
-  // Let global RTL styles handle most of the styling
+  max-width: 320px;
+
+  @media (max-width: 600px) {
+    max-width: 280px;
+  }
 }
 
 .notification-item {
@@ -285,9 +289,63 @@ const handleLoadMore = () => {
     background-color: rgba(var(--v-theme-on-surface), 0.04);
   }
   
-  // Additional RTL-specific styles can be added here if needed
-  [dir="rtl"] & {
-    // RTL-specific notification item styles if needed
+  &-content {
+    @media (max-width: 600px) {
+      max-width: 200px; /* More constrained width on mobile */
+    }
+  }
+  
+  &-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  &-message {
+    font-size: 0.875rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    
+    @media (max-width: 600px) {
+      font-size: 0.8rem;
+    }
+  }
+  
+  &-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    
+    @media (max-width: 600px) {
+      font-size: 0.7rem;
+    }
+  }
+}
+
+.notification-badge {
+  @media (max-width: 600px) {
+    transform: scale(0.9);
+  }
+}
+
+.notification-actions {
+  @media (max-width: 600px) {
+    padding: 2px 0 !important;
+    
+    .v-icon {
+      font-size: 1rem;
+    }
+  }
+}
+
+// RTL-specific styles
+[dir="rtl"] .notification-item {
+  // RTL-specific notification item styles
+  .notification-item-actions {
+    margin-left: 0;
+    margin-right: auto;
   }
 }
 </style>

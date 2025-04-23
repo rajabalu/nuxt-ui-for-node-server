@@ -228,9 +228,9 @@ const handleMenuNavigation = (path) => {
 </script>
 
 <template>
-  <v-app-bar app fixed :height="themeHeaderHeight" class="app-header">
+  <v-app-bar app fixed :height="themeHeaderHeight" class="app-header" elevation="1">
     <template #prepend>
-      <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-item-center mr-3">
+      <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-items-center mr-3">
         <NuxtLink :to="homePath" class="d-flex">
           <img
           :src="
@@ -238,14 +238,14 @@ const handleMenuNavigation = (path) => {
               ? '/images/brand/logo/logo-light.svg'
               : '/images/brand/logo/logo-dark.svg'
           "
-          height="60px"
+          height="40px"
+          class="mobile-logo"
         />
         </NuxtLink>
         <!-- Debug info -->
         <small class="d-none">Locale: {{ currentLocale }}, Path: {{ homePath }}</small>
       </div>
       <icon-btn v-if="authStore.isAuthenticated"
-        class="d-none d-sm-flex"
         @click.stop="globalStore.sideBarToggle()"
         :style="`margin-left:${
           globalStore.sideNavBar && !smallDisplay ? themeSidebarWidth : '0'
@@ -253,7 +253,7 @@ const handleMenuNavigation = (path) => {
       >
         <v-icon size="25" icon="tabler-menu-2" />
       </icon-btn>
-      <h1 class="text-h3 ml-4 mb-0 font-weight-medium">{{ pageTitle }}</h1>
+      <h1 class="text-h4 text-sm-h3 ml-2 ml-sm-4 mb-0 font-weight-medium text-truncate page-title">{{ pageTitle }}</h1>
     </template>
 
     <template #append>
@@ -265,12 +265,32 @@ const handleMenuNavigation = (path) => {
         <template v-slot:activator="{ props }">
           <icon-btn
             v-bind="props"
-            class="mr-2"
+            class="mr-2 d-none d-sm-flex"
           >
             <v-icon size="25" icon="tabler-help" />
           </icon-btn>
         </template>
 
+        <v-list>
+          <v-list-item
+            v-for="(item, index) in infoMenuItems"
+            :key="index"
+            :prepend-icon="item.icon"
+            :title="item.title"
+            @click="handleMenuNavigation(item.to)"
+          />
+        </v-list>
+      </v-menu>
+      <!-- Only show on mobile -->
+      <v-menu class="d-flex d-sm-none">
+        <template v-slot:activator="{ props }">
+          <icon-btn
+            v-bind="props"
+            class="mr-2"
+          >
+            <v-icon size="25" icon="tabler-dots-vertical" />
+          </icon-btn>
+        </template>
         <v-list>
           <v-list-item
             v-for="(item, index) in infoMenuItems"
@@ -305,3 +325,27 @@ const handleMenuNavigation = (path) => {
     </v-snackbar>
   </v-app-bar>
 </template>
+
+<style lang="scss">
+.app-header {
+  z-index: 1000;
+}
+
+.mobile-logo {
+  @media (max-width: 600px) {
+    height: 32px !important;
+  }
+}
+
+.page-title {
+  max-width: 220px;
+  
+  @media (min-width: 600px) {
+    max-width: 400px;
+  }
+  
+  @media (min-width: 960px) {
+    max-width: 600px;
+  }
+}
+</style>

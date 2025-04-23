@@ -300,11 +300,22 @@ const onEnterPress = (event) => {
   flex-direction: column;
   justify-content: flex-end;
 
+  // Adjust padding on small screens
+  @media (max-width: 600px) {
+    padding: 8px;
+  }
+
   .chat-input-card {
     background: rgba(var(--v-theme-on-surface), 0.05);
     border-radius: 28px;
     padding: 4px 12px;
     position: relative;
+
+    // Make input area more compact on mobile
+    @media (max-width: 600px) {
+      border-radius: 24px;
+      padding: 2px 8px;
+    }
   }
 }
 
@@ -391,6 +402,17 @@ const onEnterPress = (event) => {
   100% {
     transform: scale(0.8);
     opacity: 1;
+  }
+}
+
+// Mobile optimizations for action buttons
+@media (max-width: 600px) {
+  .v-btn.icon {
+    margin: 0 2px !important;
+  }
+  
+  .chat-actions {
+    gap: 4px !important;
   }
 }
 </style>

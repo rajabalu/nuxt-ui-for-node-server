@@ -105,3 +105,34 @@ onMounted(async () => {
     </v-list>
   </v-menu>
 </template>
+
+<style>
+.v-avatar {
+  @media (max-width: 600px) {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+.v-badge {
+  @media (max-width: 600px) {
+    transform: scale(0.9);
+  }
+}
+
+// Mobile optimizations for user profile menu
+@media (max-width: 600px) {
+  :deep(.v-list-item) {
+    min-height: 40px !important;
+    padding: 0 12px !important;
+  }
+  
+  :deep(.v-list-item__prepend) {
+    margin-right: 8px !important;
+  }
+  
+  :deep(.v-list-item-title) {
+    font-size: 0.9rem !important;
+  }
+}
+</style>
