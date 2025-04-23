@@ -228,7 +228,7 @@ const handleMenuNavigation = (path) => {
 </script>
 
 <template>
-  <v-app-bar :height="themeHeaderHeight" class="app-header" fixed>
+  <v-app-bar app fixed :height="themeHeaderHeight" class="app-header">
     <template #prepend>
       <div v-if="!authStore.isAuthenticated || smallDisplay" class="d-flex align-item-center mr-3">
         <NuxtLink :to="homePath" class="d-flex">
