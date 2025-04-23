@@ -9,7 +9,7 @@
       <!-- Scrollable text pane -->
       <Pane min-size="20" size="20">
         <div class="hello-pane">
-          <p>Hello world</p>
+          <ChatInput />
         </div>
       </Pane>
     </Splitpanes>
@@ -32,10 +32,22 @@
 }
 .hello-pane {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   height: 100%;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
 }
+.hello-pane > * {
+  flex: 1 1 auto;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
 </style>
 
 <style>
@@ -48,7 +60,7 @@ body {
 
 <script setup>
 import AzureTalkingHead  from '~/components/chat/AzureTalkingHead.vue';
-import ChatMessage from '~/components/chat/ChatMessage.vue';
+import ChatInput from '~/components/chat/ChatInput.vue';
 import 'splitpanes/dist/splitpanes.css'
 import { Splitpanes, Pane } from 'splitpanes'
 

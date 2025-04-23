@@ -293,6 +293,12 @@ const onEnterPress = (event) => {
   border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   padding: 16px;
   background: rgb(var(--v-theme-surface));
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 
   .chat-input-card {
     background: rgba(var(--v-theme-on-surface), 0.05);
