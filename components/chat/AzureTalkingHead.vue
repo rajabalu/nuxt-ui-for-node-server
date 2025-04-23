@@ -4,7 +4,7 @@
       <!-- Use ClientOnly if TalkingHeadViewer causes SSR issues, -->
       <!-- but onMounted should generally handle client-side libs -->
       <ClientOnly>
-        <TalkingHeadViewer ref="viewerRef" :model-url="modelPath" />
+        <TalkingHeadViewer ref="viewerRef" :model-url="modelPath" @speak="handleSpeakRequest" />
       </ClientOnly>
   
       <AzureSpeechControls
