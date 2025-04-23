@@ -57,6 +57,9 @@ const props = defineProps({
   }
 });
 
+// Define emitted events
+const emit = defineEmits(['new-ai-message', 'conversation-created']);
+
 // Router for navigation
 const router = useRouter();
 
@@ -140,6 +143,9 @@ const handleMessageSent = async (responseData) => {
       const exists = messages.value.some(m => m.id === aiMessage.id);
       if (!exists) {
         messages.value.push(aiMessage);
+        
+        // Emit the new AI message for external components (like talking head)
+        emit('new-ai-message', aiMessage);
       }
     }
   }
