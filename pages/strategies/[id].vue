@@ -13,63 +13,29 @@
       </div>
       
       <div v-else>
-        <!-- Strategy header with title and controls -->
-        <div class="d-flex align-center px-4 py-2 strategy-header">
-          <h2 class="text-h5 text-md-h4 text-truncate">{{ strategyTitle }}</h2>
-          <v-spacer></v-spacer>
-          
-          <!-- Talking head controls -->
-          <v-tooltip location="bottom" text="Toggle AI voice">
-            <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" icon variant="text" size="small" @click="toggleVoice">
-                <v-icon>{{ voiceEnabled ? 'mdi-volume-high' : 'mdi-volume-off' }}</v-icon>
-              </v-btn>
-            </template>
-          </v-tooltip>
-          
-          <v-tooltip location="bottom" text="Strategy settings">
-            <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" icon variant="text" size="small" @click="showSettings = !showSettings">
-                <v-icon>mdi-cog</v-icon>
-              </v-btn>
-            </template>
-          </v-tooltip>
-        </div>
-
-        <!-- Settings panel (collapsed by default) -->
-        <v-expand-transition>
-          <div v-if="showSettings" class="pa-4 settings-panel">
-            <v-row>
-              <v-col cols="12" sm="6">
-                <v-switch v-model="voiceEnabled" label="AI Voice Enabled" color="primary"></v-switch>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-select
-                  label="Layout Mode"
-                  v-model="layoutMode"
-                  :items="[
-                    { title: 'Auto (Responsive)', value: 'auto' },
-                    { title: 'Side by Side', value: 'horizontal' },
-                    { title: 'Stacked', value: 'vertical' }
-                  ]"
-                  variant="outlined"
-                  density="comfortable"
-                ></v-select>
-              </v-col>
-            </v-row>
-          </div>
-        </v-expand-transition>
-        
         <Splitpanes 
           class="strategy-container" 
-          :horizontal="isSplitHorizontal"
+          :horizontal="isMobile"
         >
           <Pane 
-            :size="isSplitHorizontal ? 40 : 25" 
-            :min-size="isSplitHorizontal ? 30 : 25" 
-            :max-size="isSplitHorizontal ? 60 : 50"
+            :size="isMobile ? 40 : 25" 
+            :min-size="isMobile ? 30 : 25" 
+            :max-size="isMobile ? 60 : 50"
           >
-            <AzureTalkingHead ref="talkingHeadRef" />
+            <div class="talking-head-wrapper">
+              <AzureTalkingHead ref="talkingHeadRef" />
+              <!-- Voice toggle button at the bottom right of the talking head -->
+              <v-btn 
+                class="voice-toggle-btn" 
+                icon 
+                variant="tonal" 
+                size="small" 
+                @click="toggleVoice"
+                :color="voiceEnabled ? 'primary' : 'grey'"
+              >
+                <v-icon>{{ voiceEnabled ? 'mdi-volume-high' : 'mdi-volume-off' }}</v-icon>
+              </v-btn>
+            </div>
           </Pane>
 
           <Pane>
@@ -97,20 +63,12 @@ const chatStore = useChatStore();
 const conversationId = computed(() => route.params.id);
 const loading = ref(true);
 const error = ref(null);
-const showSettings = ref(false);
 const talkingHeadRef = ref(null);
 const voiceEnabled = ref(true);
 const strategyTitle = ref('Strategy Details');
-const layoutMode = ref('auto');
 
-// Computed properties for layout
+// Computed properties for layout - always use automatic responsive mode
 const isMobile = ref(false);
-const isSplitHorizontal = computed(() => {
-  if (layoutMode.value === 'auto') {
-    return isMobile.value;
-  }
-  return layoutMode.value === 'vertical';
-});
 
 // Check if viewport is mobile
 const checkMobile = () => {
@@ -211,30 +169,32 @@ useHead({ title: 'Strategy Details' });
 
 <style lang="scss" scoped>
 .strategy-container {
-  height: calc(100vh - 130px); /* Adjusted for header and controls */
+  height: calc(100vh - 64px); /* Adjusted for header only */
 }
 
-.strategy-header {
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+.talking-head-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-.settings-panel {
-  background-color: rgba(var(--v-theme-on-surface), 0.05);
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+.voice-toggle-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 10;
+  opacity: 0.8;
+  
+  &:hover {
+    opacity: 1;
+  }
 }
 
 /* Mobile optimization */
 @media (max-width: 600px) {
-  .strategy-container {
-    height: calc(100vh - 120px);
-  }
-  
-  .strategy-header {
-    padding: 8px 12px !important;
-  }
-  
-  :deep(.v-btn--size-small) {
-    margin: 0 2px;
+  .voice-toggle-btn {
+    bottom: 8px;
+    right: 8px;
   }
 }
 </style>
