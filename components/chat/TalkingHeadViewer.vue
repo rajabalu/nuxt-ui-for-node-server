@@ -482,8 +482,7 @@ defineExpose({
 <style scoped>
 .viewer-container {
   width: 100%;
-  height: 100%; /* Set a fixed height */
-  min-height: 300px;
+  min-height: 400px;
   position: relative; /* Needed for potential overlays */
   overflow: hidden; /* Ensure canvas doesn't overflow */
   background-image: url('../../public/images/background/DarkBackground.png'); /* Optional background image */

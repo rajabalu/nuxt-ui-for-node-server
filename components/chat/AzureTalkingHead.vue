@@ -1,30 +1,36 @@
 <template>
-    <div>
-  
-      <!-- Use ClientOnly if TalkingHeadViewer causes SSR issues, -->
-      <!-- but onMounted should generally handle client-side libs -->
-      <ClientOnly>
-        <TalkingHeadViewer ref="viewerRef" :model-url="modelPath" @speak="handleSpeakRequest" />
-      </ClientOnly>
-  
-      <AzureSpeechControls
-        :is-speaking="isSpeaking"
-        :status="status"
-        :error="error"
-        @speak="handleSpeakRequest"
-      />
-  
-      <div v-if="!azureCredentialsAvailable" class="error-message credentials-error">
-        Azure Speech Key or Region not configured. Please check environment variables.
-      </div>
+  <div class="talking-head-root">
+    <ClientOnly>
+      <TalkingHeadViewer ref="viewerRef" :model-url="modelPath" @speak="handleSpeakRequest" class="viewer-responsive" />
+    </ClientOnly>
+    <div v-if="!azureCredentialsAvailable" class="error-message credentials-error">
+      Azure Speech Key or Region not configured. Please check environment variables.
     </div>
-  </template>
+  </div>
+</template>
+
+<style scoped>
+.talking-head-root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.viewer-responsive {
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  object-fit: contain;
+  display: block;
+}
+</style>
   
   <script setup>
   import { ref, onMounted, computed } from 'vue';
   import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
   import TalkingHeadViewer from './TalkingHeadViewer.vue';
-  import AzureSpeechControls from './AzureSpeechControls.vue';
   
   // --- Configuration ---
   const config = useRuntimeConfig();
