@@ -120,7 +120,6 @@ onMounted(async () => {
   }
 }
 
-// Mobile optimizations for user profile menu
 @media (max-width: 600px) {
   :deep(.v-list-item) {
     min-height: 40px !important;

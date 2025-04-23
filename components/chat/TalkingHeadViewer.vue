@@ -26,6 +26,35 @@ let gainNode = null;
 // Debug flag - set to true to enable detailed logging
 const DEBUG = true;
 
+// Local storage key for daily greeting
+const DAILY_GREETING_KEY = 'talkingHead_lastGreetingTimestamp';
+
+// Function to check if we should greet the user today
+const shouldGreetUser = () => {
+  try {
+    const lastGreetingTimestamp = localStorage.getItem(DAILY_GREETING_KEY);
+    if (!lastGreetingTimestamp) return true;
+    
+    const now = new Date();
+    const lastGreetingDate = new Date(parseInt(lastGreetingTimestamp, 10));
+    
+    // Check if the last greeting was on a different day
+    return now.toDateString() !== lastGreetingDate.toDateString();
+  } catch (error) {
+    console.error('Error checking greeting status:', error);
+    return true; // Default to greeting on error
+  }
+};
+
+// Function to update the greeting timestamp
+const updateGreetingTimestamp = () => {
+  try {
+    localStorage.setItem(DAILY_GREETING_KEY, Date.now().toString());
+  } catch (error) {
+    console.error('Error saving greeting timestamp:', error);
+  }
+};
+
 // --- Helper functions ---
 const log = (message, ...args) => {
   if (DEBUG) {
@@ -420,25 +449,30 @@ onMounted(async () => {
         const authStore = useAuthStore();
         const firstName = authStore.user?.firstName || 'there';
         
-        // First make the avatar smile using the emoji
-        // This will trigger the smile facial expression
-        //talkingHead.speakEmoji("😊"); // Use the smile with eyes emoji for a friendly expression
-        
-        // Small delay before waving
-        setTimeout(() => {
-          // Make the avatar wave by playing the handup gesture
-          // Duration 3 seconds, no mirroring, 800ms transition time
-          talkingHead.playGesture("handup", 3, false, 800);
+        // Check if we should greet the user today
+        if (shouldGreetUser()) {
+          // First make the avatar smile using the emoji
+          // This will trigger the smile facial expression
+          //talkingHead.speakEmoji("😊"); // Use the smile with eyes emoji for a friendly expression
           
-          // Create the greeting message with the user's name
-          const greeting = `Hi ${firstName}!`;
-          
-          // Emit the greeting event for the parent component to handle speech
+          // Small delay before waving
           setTimeout(() => {
-            // Emit 'speak' event following the same pattern as AzureSpeechControls
-            emit('speak', greeting);
-          }, 500);
-        }, 800); // Wait a moment after smile before waving
+            // Make the avatar wave by playing the handup gesture
+            // Duration 3 seconds, no mirroring, 800ms transition time
+            talkingHead.playGesture("handup", 3, false, 800);
+            
+            // Create the greeting message with the user's name
+            const greeting = `Hi ${firstName}! How can I help you today?`;
+            
+            // Emit the greeting event for the parent component to handle speech
+            setTimeout(() => {
+              // Emit 'speak' event following the same pattern as AzureSpeechControls
+              emit('speak', greeting);
+              // Update the greeting timestamp
+              updateGreetingTimestamp();
+            }, 500);
+          }, 800); // Wait a moment after smile before waving
+        }
       }
     }, 1000); // Wait 1 second after avatar loads before starting animation sequence
     
