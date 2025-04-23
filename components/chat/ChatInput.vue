@@ -246,7 +246,7 @@ const sendMessage = async () => {
     
     // Create temporary user message to display immediately
     const tempUserMessage = {
-      id: Date.now().toString(), // Temporary ID
+      id: `temp-${Date.now()}`, // Temporary ID
       content: content,
       timestamp: new Date(),
       isUser: true,
@@ -254,12 +254,18 @@ const sendMessage = async () => {
       file: fileId ? { id: fileId } : null
     };
     
-    // Emit the user message immediately so it appears in the UI
-    emit('message-sent', { userMessage: tempUserMessage });
+    // Add temporary message to chat store immediately for instant feedback
+    if (!chatStore.messages.some(m => m.content === tempUserMessage.content && 
+        new Date(m.timestamp).getTime() > Date.now() - 1000)) {
+      chatStore.messages.push(tempUserMessage);
+    }
     
-    // Clear input and file
+    // Clear input and file immediately
     inputMessage.value = '';
     if (fileId) clearUploadedFile();
+    
+    // Emit that a message is being sent (for parent components)
+    emit('message-sent', { userMessage: tempUserMessage });
     
     // Handle timeouts
     const timeoutPromise = new Promise((_, reject) => 
@@ -271,7 +277,34 @@ const sendMessage = async () => {
     const response = await Promise.race([responsePromise, timeoutPromise]);
     
     if (response.success && response.data) {
-      // Update with server response (which will include the official user message and AI response)
+      // Remove temporary message
+      chatStore.messages = chatStore.messages.filter(m => m.id !== tempUserMessage.id);
+      
+      // Process user message from server response
+      if (response.data.userMessage) {
+        const userMessage = mapApiMessageToUiFormat(response.data.userMessage);
+        if (userMessage) {
+          // Check if this message is already in our list before adding
+          const userExists = chatStore.messages.some(m => m.id === userMessage.id);
+          if (!userExists) {
+            chatStore.messages.push(userMessage);
+          }
+        }
+      }
+      
+      // Process AI response 
+      if (response.data.aiResponse) {
+        const aiMessage = mapApiMessageToUiFormat(response.data.aiResponse);
+        if (aiMessage) {
+          // Check if this message is already in our list before adding
+          const aiExists = chatStore.messages.some(m => m.id === aiMessage.id);
+          if (!aiExists) {
+            chatStore.messages.push(aiMessage);
+          }
+        }
+      }
+      
+      // Emit complete response data for parent components
       emit('message-sent', response.data);
       
       // Trigger event to refresh strategies list
@@ -287,6 +320,7 @@ const sendMessage = async () => {
       notification.error('Your request is taking longer than expected. The response may appear shortly.');
     } else {
       notification.error('An error occurred while sending your message');
+      console.error('Message sending error:', error);
     }
   } finally {
     chatStore.isSendingMessage = false;

@@ -47,7 +47,6 @@ import ChatMessage from '~/components/chat/ChatMessage.vue';
 import ChatInput from '~/components/chat/ChatInput.vue';
 import { useMessages } from '~/composables/chat';
 import { useChatStore } from '~/stores/chat';
-import { mapApiMessageToUiFormat } from '~/utils/chat';
 
 // Accept conversation ID as a prop
 const props = defineProps({
@@ -88,100 +87,25 @@ const {
   scrollAnchorRef
 });
 
-// Memoized sorted messages to optimize performance
-const sortedMessagesCache = ref({
-  messages: [],
-  sorted: []
-});
-
 // Sort messages by timestamp
 const sortedMessages = computed(() => {
   // If no messages, return empty array
   if (!messages.value || messages.value.length === 0) return [];
   
-  // Check if our messages array reference has changed
-  if (sortedMessagesCache.value.messages !== messages.value) {
-    // Filter out messages with undefined content and then sort
-    const filtered = messages.value.filter(msg => msg.content !== undefined);
-    const sorted = [...filtered].sort((a, b) => {
-      const timeA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
-      const timeB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
-      return timeA - timeB; // Ascending order (oldest to newest)
-    });
-    
-    // Update cache
-    sortedMessagesCache.value = {
-      messages: messages.value,
-      sorted
-    };
-  }
-  
-  return sortedMessagesCache.value.sorted;
+  // Filter out messages with undefined content and then sort
+  const filtered = messages.value.filter(msg => msg.content !== undefined);
+  return [...filtered].sort((a, b) => {
+    const timeA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
+    const timeB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
+    return timeA - timeB; // Ascending order (oldest to newest)
+  });
 });
 
 // Handle message sent event from ChatInput component
 const handleMessageSent = async (responseData) => {
-  // Process and display user message
-  if (responseData.userMessage && responseData.userMessage.content?.trim()) {
-    const userMessage = responseData.userMessage.id ? 
-      responseData.userMessage : // Use as-is if it already has an ID (temporary message)
-      mapApiMessageToUiFormat(responseData.userMessage); // Format API message
-    
-    if (userMessage) {
-      // If this is a temporary message, just add it
-      if (userMessage.status === 'sending') {
-        messages.value = [...messages.value, userMessage];
-      } else {
-        // For server messages, check if we need to replace a temporary message
-        const tempIndex = messages.value.findIndex(m => 
-          m.status === 'sending' && 
-          m.isUser && 
-          m.content === userMessage.content
-        );
-        
-        if (tempIndex >= 0) {
-          // Replace temporary message with server version
-          const updatedMessages = [...messages.value];
-          updatedMessages[tempIndex] = userMessage;
-          messages.value = updatedMessages;
-        } else {
-          // Otherwise add as new message if not already present
-          const exists = messages.value.some(m => m.id === userMessage.id);
-          if (!exists) {
-            messages.value = [...messages.value, userMessage];
-          }
-        }
-      }
-      
-      // Force invalidation of the sortedMessages computed property
-      sortedMessagesCache.value = {
-        messages: messages.value,
-        sorted: null // Force recalculation
-      };
-    }
-  }
-  
-  // Process and display AI response if available
+  // Emit the new AI message for external components (like talking head) if available
   if (responseData.aiResponse && responseData.aiResponse.content?.trim()) {
-    const aiMessage = mapApiMessageToUiFormat(responseData.aiResponse);
-    
-    if (aiMessage) {
-      // Check if this message is already in our list before adding
-      const exists = messages.value.some(m => m.id === aiMessage.id);
-      if (!exists) {
-        // Use a reactive update to ensure Vue detects the change
-        messages.value = [...messages.value, aiMessage];
-        
-        // Force invalidation of the sortedMessages computed property
-        sortedMessagesCache.value = {
-          messages: messages.value,
-          sorted: null // Force recalculation
-        };
-        
-        // Emit the new AI message for external components (like talking head)
-        emit('new-ai-message', aiMessage);
-      }
-    }
+    emit('new-ai-message', responseData.aiResponse);
   }
   
   // Force immediate UI update and then scroll to bottom
@@ -209,16 +133,6 @@ watchEffect(async () => {
     // Ensure we scroll to the bottom after loading
     await nextTick();
     scrollToBottom();
-  }
-});
-
-// Watch for new messages and scroll to bottom
-watchEffect(() => {
-  if (messages.value && messages.value.length > 0) {
-    // Small delay to ensure DOM is updated
-    setTimeout(() => {
-      scrollToBottom();
-    }, 100);
   }
 });
 </script>
