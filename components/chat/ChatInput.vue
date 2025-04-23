@@ -341,11 +341,8 @@ const onEnterPress = (event) => {
   padding: 16px;
   background: rgb(var(--v-theme-surface));
   width: 100%;
-  height: 100%;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  position: relative;
 
   // Adjust padding on small screens
   @media (max-width: 600px) {

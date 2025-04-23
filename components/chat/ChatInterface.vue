@@ -4,7 +4,7 @@
     <v-progress-linear v-if="isLoadingMessages" indeterminate></v-progress-linear>
 
     <!-- Chat Messages Area -->
-    <div ref="chatHistoryRef" class="chat-history flex-grow-1">
+    <div ref="chatHistoryRef" class="chat-history">
       <!-- Loading More Messages Indicator -->
       <div v-if="isLoadingMoreMessages" class="text-center pa-2">
         <v-progress-circular indeterminate size="24" width="2" color="primary"></v-progress-circular>
@@ -32,11 +32,13 @@
     </div>
 
     <!-- Chat Input Component -->
-    <ChatInput 
-      :conversation-id="conversationId"
-      @message-sent="handleMessageSent"
-      @conversation-created="handleConversationCreated"
-    />
+    <div class="chat-input-wrapper">
+      <ChatInput 
+        :conversation-id="conversationId"
+        @message-sent="handleMessageSent"
+        @conversation-created="handleConversationCreated"
+      />
+    </div>
   </div>
 </template>
 
@@ -140,10 +142,13 @@ watchEffect(async () => {
 <style lang="scss" scoped>
 .chat-interface {
   height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
 .chat-history {
+  flex: 1;
   overflow-y: auto;
   scroll-behavior: smooth;
   padding: 16px 16px 0 16px;
@@ -172,6 +177,10 @@ watchEffect(async () => {
       width: 4px;
     }
   }
+}
+
+.chat-input-wrapper {
+  flex-shrink: 0;
 }
 
 // Mobile optimizations for buttons

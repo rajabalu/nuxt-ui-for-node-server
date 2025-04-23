@@ -169,7 +169,7 @@ useHead({ title: 'Strategy Details' });
 
 <style lang="scss" scoped>
 .strategy-container {
-  height: calc(100vh - 64px); /* Adjusted for header only */
+  height: calc(100vh - 90px); /* Adjusted for header only */
 }
 
 .talking-head-wrapper {
