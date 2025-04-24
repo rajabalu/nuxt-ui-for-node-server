@@ -14,6 +14,19 @@ export default defineNuxtPlugin({
     if (typeof window === 'undefined') return;
     
     try {
+      // Fix for "autoCorrectionCache" error in content.js
+      // Create a safety guard for libraries that might be expecting this property
+      if (typeof window !== 'undefined') {
+        window.__safetyInitObject = window.__safetyInitObject || {};
+        window.__safetyInitObject.autoCorrectionCache = window.__safetyInitObject.autoCorrectionCache || {};
+        
+        // Create a global safety proxy to catch these errors
+        window.setInitializationProgress = window.setInitializationProgress || function() {
+          console.debug('[Safety Guard] Caught potential initialization error');
+          return true;
+        };
+      }
+      
       // Verify localStorage availability
       try {
         localStorage.setItem('localStorage_test', 'test');
@@ -115,4 +128,4 @@ export default defineNuxtPlugin({
       console.error('[app-initializer] Error during application initialization:', error);
     }
   }
-}); 
+});
