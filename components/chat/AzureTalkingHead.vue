@@ -57,16 +57,8 @@ const currentVoice = computed(() => {
 
 let speechSynthesizer = null; // Keep synthesizer instance reusable if needed
 
-// Watch for voice changes to reinitialize the synthesizer if needed
-watch(currentVoice, () => {
-  // Force recreate the synthesizer when voice changes
-  if (speechSynthesizer) {
-    speechSynthesizer.close();
-    speechSynthesizer = null;
-  }
-}, { immediate: false });
-
 // --- Methods ---
+// Define initializeSpeechSynthesizer function before the watcher
 const initializeSpeechSynthesizer = () => {
   if (!azureCredentialsAvailable.value) {
       error.value = "Azure credentials are not configured.";
@@ -180,6 +172,22 @@ const initializeSpeechSynthesizer = () => {
 
   return synthesizer;
 };
+
+// Watch for voice changes to reinitialize the synthesizer if needed
+watch(currentVoice, (newVoice, oldVoice) => {
+  if (newVoice !== oldVoice) {
+    console.log(`Voice changed from ${oldVoice} to ${newVoice}. Recreating speech synthesizer.`);
+    
+    // Force recreate the synthesizer when voice changes
+    if (speechSynthesizer) {
+      speechSynthesizer.close();
+      speechSynthesizer = null;
+    }
+    
+    // Immediately recreate the synthesizer with the new voice
+    speechSynthesizer = initializeSpeechSynthesizer();
+  }
+}, { immediate: true });
 
 const handleSpeakRequest = async (textToSpeak) => {
   if (!azureCredentialsAvailable.value) {
