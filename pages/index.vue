@@ -8,7 +8,7 @@
       </Pane>
       <!-- Scrollable text pane - larger on mobile -->
       <Pane :min-size="20" :size="20">
-        <ChatInput />
+        <ChatInput @conversation-created="handleConversationCreated" />
       </Pane>
     </Splitpanes>
   </div>
@@ -21,7 +21,9 @@ import 'splitpanes/dist/splitpanes.css'
 import { Splitpanes, Pane } from 'splitpanes'
 import { useDisplay } from 'vuetify';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const { mobile } = useDisplay();
 const isMobile = computed(() => mobile.value);
 
@@ -30,6 +32,14 @@ definePageMeta({
 });
 
 useHead({ title: 'Welcome!' });
+
+// Handle strategy creation and navigate to strategy page
+const handleConversationCreated = (conversationId) => {
+  if (conversationId) {
+    // Navigate to the strategy page with the specific ID
+    router.push(`/strategies/${conversationId}`);
+  }
+};
 </script>
 
 <style>
