@@ -1,7 +1,7 @@
 <template>
   <div class="talking-head-root">
     <ClientOnly>
-      <TalkingHeadViewer ref="viewerRef" :model-url="modelPath" @speak="handleSpeakRequest" class="viewer-responsive" />
+      <TalkingHeadViewer ref="viewerRef" @speak="handleSpeakRequest" class="viewer-responsive" />
     </ClientOnly>
     <div v-if="!azureCredentialsAvailable" class="error-message credentials-error">
       Azure Speech Key or Region not configured. Please check environment variables.
@@ -36,7 +36,6 @@ import TalkingHeadViewer from './TalkingHeadViewer.vue';
 const config = useRuntimeConfig();
 const azureSpeechKey = config.public.AZURE_KEY;
 const azureSpeechRegion = config.public.AZURE_LOCATION;
-const modelPath = '/models/Leo.glb'; // Updated path to existing model in public/models folder
 const voiceName = "en-AU-WilliamNeural"; // Choose desired Azure voice
 
 // --- Component Refs ---
@@ -60,7 +59,7 @@ const initializeSpeechSynthesizer = () => {
 
   const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion);
   speechConfig.speechSynthesisVoiceName = voiceName;
-
+  
   // Set output format to MP3 for better compatibility
   speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
 

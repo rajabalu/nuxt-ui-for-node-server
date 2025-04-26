@@ -37,12 +37,6 @@ export const useGlobal = defineStore({
         name: 'Aria',
         thumbnail: '/images/avatar/Aria.png',
         modelPath: '/models/Aria.glb'
-      },
-      {
-        id: 5,
-        name: 'Dennis',
-        thumbnail: '/images/avatar/Dennis.png',
-        modelPath: '/models/dennis.glb'
       }
     ]
   }),

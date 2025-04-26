@@ -3,19 +3,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, defineExpose, defineEmits } from 'vue';
+import { ref, onMounted, onUnmounted, defineExpose, defineEmits, computed } from 'vue';
 import { TalkingHead } from '~/libs/talkinghead.mjs';
 import { useAuthStore } from '~/stores/auth'; // Import auth store
 import { useI18n } from 'vue-i18n'; // Import i18n composable
+import { useGlobal } from '~/stores/global'; // Import global store for avatars
+import { useUserPreferences } from '~/stores/userPreferences'; // Import user preferences
 
 const { t } = useI18n(); // Initialize i18n
 const emit = defineEmits(['speak']);
+const globalStore = useGlobal();
+const userPreferencesStore = useUserPreferences();
+
+// Get the avatar model URL based on user preferences
+const avatarModelUrl = computed(() => {
+  // Get avatar ID from user preferences, default to the one in global store if not found
+  const avatarId = userPreferencesStore.getAdditionalSetting('avatarId', globalStore.selectedAvatarId);
+  // Find the selected avatar from global store
+  const selectedAvatar = globalStore.AVAILABLE_AVATARS.find(avatar => avatar.id === avatarId);
+  // Return the model path if avatar exists, otherwise default to Leo
+  return selectedAvatar?.modelPath || '/models/Leo.glb';
+});
 
 const props = defineProps({
   modelUrl: {
     type: String,
-    required: true,
-    default: '/models/Leo.glb'
+    required: false,
+    default: null // No longer a required prop since we'll use computed property
   }
 });
 
@@ -36,10 +50,10 @@ const shouldGreetUser = () => {
   try {
     const lastGreetingTimestamp = localStorage.getItem(DAILY_GREETING_KEY);
     if (!lastGreetingTimestamp) return true;
-    
+
     const now = new Date();
     const lastGreetingDate = new Date(parseInt(lastGreetingTimestamp, 10));
-    
+
     // Check if the last greeting was on a different day
     return now.toDateString() !== lastGreetingDate.toDateString();
   } catch (error) {
@@ -126,7 +140,7 @@ const ensureAudioContextReady = async () => {
     console.error("TalkingHead not initialized");
     return false;
   }
-  
+
   try {
     if (talkingHead.audioCtx && talkingHead.audioCtx.state === "suspended") {
       await talkingHead.audioCtx.resume();
@@ -142,7 +156,7 @@ const ensureAudioContextReady = async () => {
 // Method to ensure audio context is resumed - this needs to be called on user interaction
 const resumeAudioContext = async () => {
   if (!talkingHead) return false;
-  
+
   try {
     // Access and resume the audio context from the TalkingHead instance
     if (talkingHead.audioCtx && talkingHead.audioCtx.state === "suspended") {
@@ -159,20 +173,20 @@ const resumeAudioContext = async () => {
 // Method for handling viseme data (called by parent component)
 const processViseme = (visemeId, audioOffset) => {
   if (!talkingHead || !talkingHead.isStreaming) return;
-  
+
   const vtime = audioOffset / 10000; // Convert to milliseconds
   const viseme = visemeMap[visemeId];
-  
+
   // Process viseme data exactly as in example
   if (prevViseme) {
     let vduration = vtime - prevViseme.vtime;
     if (vduration < 40) vduration = 40; // Minimum duration
-    
+
     visemeBuffer.visemes.push(prevViseme.viseme);
     visemeBuffer.vtimes.push(prevViseme.vtime);
     visemeBuffer.vdurations.push(vduration);
   }
-  
+
   prevViseme = { viseme, vtime };
 };
 
@@ -184,35 +198,35 @@ const processFinalViseme = () => {
     visemeBuffer.visemes.push(prevViseme.viseme);
     visemeBuffer.vtimes.push(prevViseme.vtime);
     visemeBuffer.vdurations.push(finalDuration);
-    
+
     // Clear the last viseme
     prevViseme = null;
   }
-  
+
   // Send any remaining data
   let finalData = {};
-  
+
   // Mirror example file logic for final data
   if (visemeBuffer.visemes.length) {
     finalData.visemes = visemeBuffer.visemes.splice(0, visemeBuffer.visemes.length);
     finalData.vtimes = visemeBuffer.vtimes.splice(0, visemeBuffer.vtimes.length);
     finalData.vdurations = visemeBuffer.vdurations.splice(0, visemeBuffer.vdurations.length);
   }
-  
+
   // Stream words always for subtitles
   finalData.words = wordBuffer.words.splice(0, wordBuffer.words.length);
   finalData.wtimes = wordBuffer.wtimes.splice(0, wordBuffer.wtimes.length);
   finalData.wdurations = wordBuffer.wdurations.splice(0, wordBuffer.wdurations.length);
-  
+
   if (finalData.visemes || finalData.words) {
     // If we have any visemes or words left, stream them
     finalData.audio = null;
     talkingHead.streamAudio(finalData);
   }
-  
+
   // Notify the end of streaming
   talkingHead.streamNotifyEnd();
-  
+
   // Reset buffers
   resetBuffers();
 };
@@ -221,7 +235,7 @@ const processFinalViseme = () => {
 const processWordBoundary = (text, audioOffset, duration, boundaryType) => {
   const time = audioOffset / 10000;
   const durationMs = duration / 10000;
-  
+
   // Match exactly the example file logic
   if (boundaryType === "PunctuationBoundary" && wordBuffer.words.length) {
     // Append punctuation to previous word
@@ -247,50 +261,50 @@ const playAccumulatedAudioChunks = async () => {
   if (isPlayingAccumulatedAudio.value) {
     return;
   }
-  
+
   try {
     isPlayingAccumulatedAudio.value = true;
-    
+
     // Create a new audio context for the continuous playback
     if (!window.__continuousAudioContext) {
       window.__continuousAudioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
-    
+
     if (window.__continuousAudioContext.state === "suspended") {
       await window.__continuousAudioContext.resume();
     }
-    
+
     // Calculate total size
     const totalSize = audioChunks.value.reduce((total, chunk) => total + chunk.byteLength, 0);
-    
+
     // Combine all chunks into one buffer
     const combinedBuffer = new Uint8Array(totalSize);
     let offset = 0;
-    
+
     audioChunks.value.forEach(chunk => {
       const chunkView = new Uint8Array(chunk);
       combinedBuffer.set(chunkView, offset);
       offset += chunk.byteLength;
     });
-    
+
     // Decode and play the combined buffer
     window.__continuousAudioContext.decodeAudioData(
       combinedBuffer.buffer,
       (decodedBuffer) => {
         const source = window.__continuousAudioContext.createBufferSource();
         source.buffer = decodedBuffer;
-        
+
         // Add gain control
         const gainNode = window.__continuousAudioContext.createGain();
         gainNode.gain.value = 1.0; // Full volume
-        
+
         // Connect the nodes
         source.connect(gainNode);
         gainNode.connect(window.__continuousAudioContext.destination);
-        
+
         // Start playback
         source.start(0);
-        
+
         // Handle playback completion
         source.onended = () => {
           isPlayingAccumulatedAudio.value = false;
@@ -312,12 +326,12 @@ const playAudioChunk = (audioData) => {
   if (!talkingHead || !talkingHead.isStreaming) {
     return;
   }
-  
+
   try {
     if (!audioData || audioData.byteLength === 0) {
       return;
     }
-    
+
     // Process lip sync data but don't send audio to TalkingHead
     switch (lipsyncType) {
       case "blendshapes":
@@ -342,7 +356,7 @@ const playAudioChunk = (audioData) => {
       default:
         console.error(`Unknown animation mode: ${lipsyncType}`);
     }
-    
+
     // Collect audio chunks for accumulated playback at the end
     audioChunks.value.push(audioData);
   } catch (error) {
@@ -369,11 +383,11 @@ const startStreaming = async () => {
   if (!talkingHead) {
     return false;
   }
-  
+
   try {
     // Reset buffers for new speech
     resetBuffers();
-    
+
     talkingHead.streamStart(
       { 
         sampleRate: 48000, // 48kHz sample rate for Azure Raw48Khz16BitMonoPcm
@@ -394,7 +408,7 @@ const startStreaming = async () => {
         // Could display subtitles here if needed
       }
     );
-    
+
     return true;
   } catch (error) {
     return false;
@@ -423,22 +437,22 @@ onMounted(async () => {
       lookAtCamera: true,           // Ensure the avatar focuses on the camera/user
       lightDirectIntensity: 35      // Brighter lighting for more vibrant appearance
     });
-    
-    // Load the model/avatar with male body type, happy mood, and language settings
+
+    // Load the model/avatar based on user preferences
     await talkingHead.showAvatar({ 
-      url: props.modelUrl,
+      url: avatarModelUrl.value,
       body: 'M',              // Specify male body type
       avatarMood: "happy",    // Set the avatar's mood to happy
       ttsLang: "en-US",       // Set language to English
       lipsyncLang: "en",       // Set lipsync language to English
       lookAtCamera: true // Ensure the avatar focuses on the camera/user
     });
-    
+
     // Set initial head position to look straight at camera
     if (talkingHead.avatar && talkingHead.avatar.lookAt) {
       talkingHead.avatar.lookAt({x: 0, y: 0, z: 1}); // Look straight ahead
     }
-    
+
     // Make the avatar smile, wave and say "Hi" after loading
     setTimeout(async () => {
       if (talkingHead) {
@@ -446,26 +460,26 @@ onMounted(async () => {
         if (talkingHead.audioCtx && talkingHead.audioCtx.state === "suspended") {
           await talkingHead.audioCtx.resume();
         }
-        
+
         // Get user information from auth store
         const authStore = useAuthStore();
         const firstName = authStore.user?.firstName || 'there';
-        
+
         // Check if we should greet the user today
         if (shouldGreetUser()) {
           // First make the avatar smile using the emoji
           // This will trigger the smile facial expression
           //talkingHead.speakEmoji("😊"); // Use the smile with eyes emoji for a friendly expression
-          
+
           // Small delay before waving
           setTimeout(() => {
             // Make the avatar wave by playing the handup gesture
             // Duration 3 seconds, no mirroring, 800ms transition time
             talkingHead.playGesture("handup", 3, false, 800);
-            
+
             // Create the greeting message with the user's name
             const greeting = t('greeting', { name: firstName }); // Use i18n for greeting message
-            
+
             // Emit the greeting event for the parent component to handle speech
             setTimeout(() => {
               // Emit 'speak' event following the same pattern as AzureSpeechControls
@@ -477,7 +491,7 @@ onMounted(async () => {
         }
       }
     }, 1000); // Wait 1 second after avatar loads before starting animation sequence
-    
+
   } catch (error) {
     console.error('Error initializing TalkingHead:', error);
   }
@@ -490,14 +504,14 @@ onUnmounted(() => {
       if (talkingHead.isStreaming) {
         talkingHead.streamStop();
       }
-      
+
       // Stop animation and clean up
       talkingHead.stop();
     } catch (error) {
       console.error("Error cleaning up TalkingHead:", error);
     }
   }
-  
+
   resetBuffers();
   talkingHead = null;
 });
