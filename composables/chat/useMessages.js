@@ -17,6 +17,9 @@ export const useMessages = (options = {}) => {
   const chatStore = useChatStore();
   const notification = useNotification();
   
+  // Flag to track if we're loading more (older) messages via infinite scrolling
+  const isLoadingOlderMessages = ref(false);
+  
   // Computed properties from the store
   const messages = computed(() => {
     // Filter out messages with undefined content
@@ -40,10 +43,13 @@ export const useMessages = (options = {}) => {
     }
     
     try {
+      // Set the loading older messages flag based on the page
+      isLoadingOlderMessages.value = (page > 1);
+      
       const result = await chatStore.fetchMessages(conversationId.value, page);
       
       if (result.success && page === 1) {
-        // Scroll to bottom after initial load
+        // Scroll to bottom after initial load (first page only)
         await nextTick();
         scrollToBottom();
       } else if (!result.success) {
@@ -51,8 +57,12 @@ export const useMessages = (options = {}) => {
         notification.error(result.error || 'Failed to load messages');
       }
       
+      // Reset flag after loading is complete
+      isLoadingOlderMessages.value = false;
       return result;
     } catch (error) {
+      // Reset flag on error
+      isLoadingOlderMessages.value = false;
       notification.error('An error occurred while loading messages');
       return { success: false, error: 'An error occurred while loading messages' };
     }
@@ -63,14 +73,21 @@ export const useMessages = (options = {}) => {
    */
   const loadMoreMessages = async () => {
     try {
+      // Set flag to indicate we're loading older messages
+      isLoadingOlderMessages.value = true;
+      
       const result = await chatStore.loadMoreMessages();
       
       if (!result.success) {
         notification.error(result.error || 'Failed to load more messages');
       }
       
+      // Reset flag after loading is complete
+      isLoadingOlderMessages.value = false;
       return result;
     } catch (error) {
+      // Reset flag on error
+      isLoadingOlderMessages.value = false;
       notification.error('An error occurred while loading more messages');
       return { success: false, error: 'An error occurred while loading more messages' };
     }
@@ -103,9 +120,13 @@ export const useMessages = (options = {}) => {
     }
   };
   
-  // Watch for new messages in the store and scroll to bottom
+  // Watch for new messages in the store and scroll to bottom ONLY for new messages (not for older loaded messages)
   watch(() => messages.value.length, (newLength, oldLength) => {
-    if (newLength > oldLength) {
+    // Only auto-scroll if:
+    // 1. We have more messages than before AND
+    // 2. We're NOT loading older messages via infinite scrolling
+    if (newLength > oldLength && !isLoadingOlderMessages.value) {
+      console.log('[Chat] Auto-scrolling to bottom for new message');
       nextTick(() => {
         scrollToBottom();
       });
@@ -140,4 +161,4 @@ export const useMessages = (options = {}) => {
     scrollToBottom,
     handleScroll
   };
-}; 
+};

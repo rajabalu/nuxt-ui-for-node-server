@@ -32,7 +32,7 @@ export const useChatStore = defineStore('chat', {
     isLoadingMoreMessages: false,
     hasMoreMessages: false,
     currentPage: 1,
-    messagesPerPage: 50,
+    messagesPerPage: 10,
     uploadedFile: null,
     isUploading: false,
     isSendingMessage: false,
@@ -86,6 +86,10 @@ export const useChatStore = defineStore('chat', {
         this.currentPage = page;
         
         const api = useApi();
+        
+        // Log request details for debugging
+        console.log(`[Chat] Fetching messages for conversation ${conversationId}, page ${page}, limit ${this.messagesPerPage}`);
+        
         const response = await api.get(`conversations/${conversationId}/messages`, {
           params: {
             page,
@@ -93,11 +97,16 @@ export const useChatStore = defineStore('chat', {
           }
         });
         
+        // Log response for debugging
+        console.log(`[Chat] Messages response:`, response);
+        
         if (response.success && response.data) {
           // Handle different response structures
           const apiMessages = Array.isArray(response.data) 
             ? response.data 
             : (response.data?.data || []);
+          
+          console.log(`[Chat] Received ${apiMessages.length} messages from API`);
           
           // Use our utility function to map messages
           const mappedMessages = mapApiMessagesToUiFormat(apiMessages);
@@ -109,15 +118,25 @@ export const useChatStore = defineStore('chat', {
             // Add only new messages to avoid duplicates
             const existingIds = new Set(this.messages.map(m => m.id));
             const newMessages = mappedMessages.filter(m => !existingIds.has(m.id));
-            this.messages = [...newMessages, ...this.messages];
+            
+            // Make sure messages are sorted by timestamp (oldest messages first for proper display)
+            // This is important especially when adding older messages from pagination
+            this.messages = [...newMessages, ...this.messages].sort((a, b) => {
+              return new Date(a.timestamp) - new Date(b.timestamp);
+            });
+            
+            console.log(`[Chat] Added ${newMessages.length} new messages from page ${page}`);
           }
           
           // Check if there are more messages to load
-          this.hasMoreMessages = Array.isArray(apiMessages) && apiMessages.length >= this.messagesPerPage;
+          // If the API returns exactly the number we requested, assume there might be more
+          this.hasMoreMessages = apiMessages.length >= this.messagesPerPage;
+          console.log(`[Chat] Has more messages: ${this.hasMoreMessages}`);
           
           return { success: true, data: mappedMessages };
         }
         
+        console.error('[Chat] Failed to load messages:', response.error);
         return { success: false, error: response.error || 'Failed to load messages' };
       } catch (error) {
         console.error('Error loading messages:', error);
@@ -135,8 +154,11 @@ export const useChatStore = defineStore('chat', {
     // Load more messages (pagination)
     async loadMoreMessages() {
       if (this.hasMoreMessages && !this.isLoadingMoreMessages && this.currentConversationId) {
+        console.log(`[Chat] Loading more messages, current page: ${this.currentPage}, next page: ${this.currentPage + 1}`);
         return this.fetchMessages(this.currentConversationId, this.currentPage + 1);
       }
+      
+      console.log(`[Chat] Cannot load more messages. hasMoreMessages: ${this.hasMoreMessages}, isLoading: ${this.isLoadingMoreMessages}, convoId: ${this.currentConversationId}`);
       return { success: false, error: 'No more messages or already loading' };
     },
     
@@ -431,4 +453,4 @@ export const useChatStore = defineStore('chat', {
       }
     }
   }
-}); 
+});

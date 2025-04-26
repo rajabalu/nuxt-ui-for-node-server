@@ -27,7 +27,25 @@ export const useApi = () => {
       }
     }
     
-    const url = `${BASE_URL}${endpoint}`;
+    // Handle query parameters if provided in options
+    let url = `${BASE_URL}${endpoint}`;
+    if (options.params) {
+      const queryParams = new URLSearchParams();
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value);
+        }
+      });
+      
+      const queryString = queryParams.toString();
+      if (queryString) {
+        url = `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
+      }
+      
+      // Remove params from options to avoid confusion
+      const { params, ...restOptions } = options;
+      options = restOptions;
+    }
     
     // Prepare headers
     const headers = {
@@ -191,4 +209,4 @@ export const useApi = () => {
     // Export the base URL for external use if needed
     getBaseUrl: () => BASE_URL
   };
-}; 
+};
