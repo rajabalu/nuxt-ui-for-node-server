@@ -28,7 +28,7 @@
 </style>
   
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import TalkingHeadViewer from './TalkingHeadViewer.vue';
 
@@ -36,7 +36,6 @@ import TalkingHeadViewer from './TalkingHeadViewer.vue';
 const config = useRuntimeConfig();
 const azureSpeechKey = config.public.AZURE_KEY;
 const azureSpeechRegion = config.public.AZURE_LOCATION;
-const voiceName = "en-AU-WilliamNeural"; // Choose desired Azure voice
 
 // --- Component Refs ---
 const viewerRef = ref(null); // Ref to access TalkingHeadViewer methods
@@ -47,7 +46,25 @@ const status = ref('');
 const error = ref('');
 const azureCredentialsAvailable = computed(() => !!azureSpeechKey && !!azureSpeechRegion);
 
+// Get current voice directly from TalkingHeadViewer component
+const currentVoice = computed(() => {
+  // Access the exposed avatarVoice if viewer is initialized
+  if (viewerRef.value) {
+    return viewerRef.value.avatarVoice;
+  }
+  return "en-AU-WilliamNeural"; // Default voice if not available
+});
+
 let speechSynthesizer = null; // Keep synthesizer instance reusable if needed
+
+// Watch for voice changes to reinitialize the synthesizer if needed
+watch(currentVoice, () => {
+  // Force recreate the synthesizer when voice changes
+  if (speechSynthesizer) {
+    speechSynthesizer.close();
+    speechSynthesizer = null;
+  }
+}, { immediate: false });
 
 // --- Methods ---
 const initializeSpeechSynthesizer = () => {
@@ -56,6 +73,10 @@ const initializeSpeechSynthesizer = () => {
       console.error("Azure credentials missing.");
       return null;
   }
+
+  // Always get the latest voice from the computed property
+  const voiceName = currentVoice.value;
+  console.log(`Initializing speech synthesizer with voice: ${voiceName}`);
 
   const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(azureSpeechKey, azureSpeechRegion);
   speechConfig.speechSynthesisVoiceName = voiceName;
@@ -195,7 +216,7 @@ const handleSpeakRequest = async (textToSpeak) => {
   // Create SSML for Azure TTS with viseme information
   const ssml = `
     <speak version="1.0" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="en-US">
-      <voice name="${voiceName}">
+      <voice name="${currentVoice.value}">
         <mstts:viseme type="FacialExpression" />
         ${textToSpeak.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
       </voice>

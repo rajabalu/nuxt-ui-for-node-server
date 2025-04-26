@@ -25,6 +25,16 @@ const avatarModelUrl = computed(() => {
   return selectedAvatar?.modelPath || '/models/Leo.glb';
 });
 
+// Get recommended settings for the current avatar
+const avatarSettings = computed(() => {
+  const avatarId = userPreferencesStore.getAdditionalSetting('avatarId', globalStore.selectedAvatarId);
+  const selectedAvatar = globalStore.AVAILABLE_AVATARS.find(avatar => avatar.id === avatarId);
+  return selectedAvatar?.settings || globalStore.AVAILABLE_AVATARS[1]?.settings || {}; // Default to Leo settings
+});
+
+// Use avatar-specific voice for speech synthesis
+const avatarVoice = computed(() => avatarSettings.value.voice || 'en-AU-WilliamNeural');
+
 const props = defineProps({
   modelUrl: {
     type: String,
@@ -420,37 +430,40 @@ onMounted(async () => {
   if (!viewerContainer.value) return;
 
   try {
-    // Initialize TalkingHead with the container DOM element
+    // Get avatar settings from the computed property
+    const settings = avatarSettings.value;
+    
+    // Initialize TalkingHead with the container DOM element and avatar-specific settings
     talkingHead = new TalkingHead(viewerContainer.value, {
       ttsEndpoint: 'placeholder', // Dummy values to satisfy constructor
       jwtGet: () => 'dummy-token',
-      avatarMood: "happy", // Changed from neutral to happy for more enthusiastic expression
-      ttsRate: 1.1,         // Slightly faster speech rate for more energy
-      ttsPitch: 0.2,        // Higher pitch for more enthusiasm and energy
-      ttsVolume: 0.2,       // Slightly louder for more presence
-      modelMovementFactor: 1.3,  // More movement to appear more dynamic and energetic
-      avatarIdleEyeContact: 0.9,   // More eye contact when idle
-      avatarIdleHeadMove: 0.7,     // More head movement when idle for energetic appearance
-      avatarSpeakingEyeContact: 1.0,  // Maximum eye contact during speech
-      avatarSpeakingHeadMove: 0.8,   // More dynamic head movement while speaking
-      cameraView: "upper",          // Upper body view like in the example
-      lookAtCamera: true,           // Ensure the avatar focuses on the camera/user
-      lightDirectIntensity: 35      // Brighter lighting for more vibrant appearance
+      avatarMood: settings.mood || "neutral", 
+      ttsRate: 1.1,
+      ttsPitch: 0.2,
+      ttsVolume: 0.2,
+      modelMovementFactor: 1.3,
+      avatarIdleEyeContact: settings.avatarIdleEyeContact || 0.7,
+      avatarIdleHeadMove: settings.avatarIdleHeadMove || 0.6,
+      avatarSpeakingEyeContact: settings.avatarSpeakingEyeContact || 0.8,
+      avatarSpeakingHeadMove: settings.avatarSpeakingHeadMove || 0.7,
+      cameraView: settings.cameraView || "upper",
+      lookAtCamera: true,
+      lightDirectIntensity: 35
     });
 
     // Load the model/avatar based on user preferences
     await talkingHead.showAvatar({ 
       url: avatarModelUrl.value,
-      body: 'M',              // Specify male body type
-      avatarMood: "happy",    // Set the avatar's mood to happy
-      ttsLang: "en-US",       // Set language to English
-      lipsyncLang: "en",       // Set lipsync language to English
-      lookAtCamera: true // Ensure the avatar focuses on the camera/user
+      body: settings.body || 'M',           
+      avatarMood: settings.mood || "neutral",
+      ttsLang: "en-US",
+      lipsyncLang: "en",
+      lookAtCamera: true
     });
 
     // Set initial head position to look straight at camera
     if (talkingHead.avatar && talkingHead.avatar.lookAt) {
-      talkingHead.avatar.lookAt({x: 0, y: 0, z: 1}); // Look straight ahead
+      talkingHead.avatar.lookAt({x: 0, y: 0, z: 1});
     }
 
     // Make the avatar smile, wave and say "Hi" after loading
@@ -525,7 +538,8 @@ defineExpose({
   processFinalViseme,
   startStreaming,
   reset,
-  resumeAudioContext
+  resumeAudioContext,
+  avatarVoice // Expose the avatarVoice computed property
 });
 </script>
 
