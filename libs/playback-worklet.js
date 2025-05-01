@@ -1,104 +1,121 @@
 /**
- * Playback worklet for TalkingHead library
- * 
- * This worklet handles audio streaming for the talking head animation.
- * It processes audio data and provides real-time playback capabilities.
- */
-
+* Audio Worklet for playback of streaming audio.
+* This worklet manages the buffering and playback of audio chunks in real-time.
+*/
 class PlaybackProcessor extends AudioWorkletProcessor {
+  
   constructor() {
     super();
     
-    // Audio buffer for streaming
-    this.buffers = [];
-    this.isPlaying = false;
-    this.currentFrame = 0;
-    this.startTime = 0;
-    this.noMoreData = false;
+    // Audio buffer for incoming audio chunks
+    this.buffer = [];
+    this.bufferSize = 0;
     
-    // Listen for messages from the main thread
+    // Playback state
+    this.isPlaying = false;
+    this.position = 0;
+    this.minBufferSize = 2048; // Start playing when we have enough data
+    
+    // Reset state when needed
+    this.pendingReset = false;
+    
+    // Handle messages from the main thread
     this.port.onmessage = (event) => {
-      const data = event.data;
-      
-      if (data.type === 'audio-data') {
-        // Add audio data to buffer
-        this.buffers.push(new Float32Array(data.audio));
-        
-        // Start playing if not already playing
-        if (!this.isPlaying) {
-          this.isPlaying = true;
-          this.startTime = currentTime;
+      if (event.data.type === 'audio-data') {
+        // Add new audio data to the buffer
+        if (event.data.audio && event.data.audio.length > 0) {
+          this.buffer.push(event.data.audio);
+          this.bufferSize += event.data.audio.length;
           
-          // Notify main thread that playback has started
-          this.port.postMessage({ type: 'playback-started' });
+          // Start playback if we have enough data and aren't playing yet
+          if (!this.isPlaying && this.bufferSize >= this.minBufferSize) {
+            this.isPlaying = true;
+            this.port.postMessage({ type: 'playback-started' });
+          }
         }
-      } 
-      else if (data.type === 'no-more-data') {
-        this.noMoreData = true;
+      } else if (event.data.type === 'reset') {
+        // Reset the playback state
+        this.resetPlayback();
       }
     };
   }
   
+  resetPlayback() {
+    // Clear the buffer and reset playback state
+    this.buffer = [];
+    this.bufferSize = 0;
+    this.isPlaying = false;
+    this.position = 0;
+    this.pendingReset = false;
+    console.log("Playback worklet reset");
+  }
+  
   process(inputs, outputs, parameters) {
-    const currentTime = globalThis.currentTime;
-    
-    // Get the output channel
     const output = outputs[0];
-    const outputChannel = output[0];
+    const channel = output[0];
     
-    // If no data to play, just fill with silence and continue
-    if (this.buffers.length === 0) {
-      if (this.noMoreData && !this.isPlaying) {
-        // All data processed and playback stopped
+    // If we're not playing or don't have enough data, output silence
+    if (!this.isPlaying || this.bufferSize < 128) {
+      for (let i = 0; i < channel.length; i++) {
+        channel[i] = 0;
+      }
+      
+      // Check if we should stop playing due to buffer depletion
+      if (this.isPlaying && this.bufferSize === 0) {
+        this.isPlaying = false;
         this.port.postMessage({ type: 'playback-ended' });
-        return false; // Stop processor
       }
-      return true; // Continue processing
+      
+      return true;
     }
     
-    // Get the current buffer
-    const currentBuffer = this.buffers[0];
+    // Process the audio buffer to fill the output
+    let samplesNeeded = channel.length;
+    let outputPosition = 0;
     
-    // Copy frames to output
-    for (let i = 0; i < outputChannel.length; i++) {
-      if (this.currentFrame < currentBuffer.length) {
-        // Copy audio data
-        outputChannel[i] = currentBuffer[this.currentFrame++];
-      } else {
-        // Move to next buffer
-        this.buffers.shift();
-        this.currentFrame = 0;
-        
-        // If no more buffers and no more data coming, mark as ended
-        if (this.buffers.length === 0 && this.noMoreData) {
-          this.isPlaying = false;
-          this.port.postMessage({ type: 'playback-ended' });
-          
-          // Fill rest with silence
-          while (i < outputChannel.length) {
-            outputChannel[i++] = 0;
-          }
-          break;
-        }
-        
-        // If there's another buffer, use it
-        if (this.buffers.length > 0) {
-          outputChannel[i] = this.buffers[0][this.currentFrame++];
-        } else {
-          // Otherwise fill with silence
-          outputChannel[i] = 0;
-        }
+    while (samplesNeeded > 0 && this.buffer.length > 0) {
+      const currentBuffer = this.buffer[0];
+      const availableSamples = currentBuffer.length - this.position;
+      
+      // Calculate how many samples to copy
+      const samplesToCopy = Math.min(availableSamples, samplesNeeded);
+      
+      // Copy samples from the buffer to the output
+      for (let i = 0; i < samplesToCopy; i++) {
+        channel[outputPosition++] = currentBuffer[this.position++];
+      }
+      
+      // Update counters
+      samplesNeeded -= samplesToCopy;
+      
+      // If we've finished with the current buffer chunk, move to the next one
+      if (this.position >= currentBuffer.length) {
+        this.buffer.shift();
+        this.position = 0;
+      }
+      
+      // Update buffer size
+      this.bufferSize -= samplesToCopy;
+    }
+    
+    // If we couldn't fill the entire output, fill the rest with silence
+    while (outputPosition < channel.length) {
+      channel[outputPosition++] = 0;
+    }
+    
+    // Check if we've depleted our buffer and should stop playing
+    if (this.buffer.length === 0) {
+      // If we've run out of data, signal playback ended
+      if (this.isPlaying && this.bufferSize === 0) {
+        this.isPlaying = false;
+        this.port.postMessage({ type: 'playback-ended' });
       }
     }
     
-    // Copy to other channels (if any)
-    for (let ch = 1; ch < output.length; ch++) {
-      output[ch].set(outputChannel);
-    }
-    
-    return true; // Continue processing
+    // Don't terminate the processor
+    return true;
   }
 }
 
-// Register the processor with the name that matches what's expected in talkinghead.mjs
+// Register the processor
 registerProcessor('playback-worklet', PlaybackProcessor);

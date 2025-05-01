@@ -31,11 +31,17 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import TalkingHeadViewer from './TalkingHeadViewer.vue';
+import { useUserPreferences } from '@/stores/userPreferences';
+import { useI18n } from 'vue-i18n';
 
 // --- Configuration ---
 const config = useRuntimeConfig();
 const azureSpeechKey = config.public.AZURE_KEY;
 const azureSpeechRegion = config.public.AZURE_LOCATION;
+
+// --- Access user preferences for language ---
+const userPreferencesStore = useUserPreferences();
+const { locale } = useI18n();
 
 // --- Component Refs ---
 const viewerRef = ref(null); // Ref to access TalkingHeadViewer methods
@@ -48,11 +54,89 @@ const azureCredentialsAvailable = computed(() => !!azureSpeechKey && !!azureSpee
 
 // Get current voice directly from TalkingHeadViewer component
 const currentVoice = computed(() => {
-  // Access the exposed avatarVoice if viewer is initialized
-  if (viewerRef.value) {
-    return viewerRef.value.avatarVoice;
+  // Get the selected language from user preferences, fall back to i18n locale, then to English
+  const selectedLanguage = userPreferencesStore.language || locale.value || 'en';
+  
+  // First, get the avatar-specific voice from the viewer if available
+  if (viewerRef.value && viewerRef.value.avatarVoice) {
+    const avatarVoice = viewerRef.value.avatarVoice;
+    
+    // Extract the current avatar's voice language code
+    const currentVoiceLang = avatarVoice.split('-')[0];
+    
+    // If the avatar's voice matches the selected language, use it directly
+    if (avatarVoice.startsWith(selectedLanguage)) {
+      return avatarVoice;
+    }
+    
+    // If language changed, we need to map to a similar voice in the target language
+    // while preserving voice characteristics (gender, style) if possible
+    
+    // Language-specific voice mapping that preserves avatar character
+    const avatarVoiceMap = {
+      // Leo (William-like voices across languages)
+      'en-AU-WilliamNeural': {
+        'en': 'en-AU-WilliamNeural',
+        'hi': 'hi-IN-MadhurNeural',
+        'ar': 'ar-SA-HamedNeural',
+        'es': 'es-ES-AlvaroNeural',
+        'de': 'de-DE-ConradNeural'
+      },
+      // Nova (Jenny-like voices across languages)
+      'en-US-JennyNeural': {
+        'en': 'en-US-JennyNeural',
+        'hi': 'hi-IN-SwaraNeural',
+        'ar': 'ar-SA-ZariyahNeural',
+        'es': 'es-ES-ElviraNeural',
+        'de': 'de-DE-KatjaNeural'
+      },
+      // Max (Ryan-like voices across languages)
+      'en-GB-RyanNeural': {
+        'en': 'en-GB-RyanNeural',
+        'hi': 'hi-IN-MadhurNeural',
+        'ar': 'ar-SA-HamedNeural',
+        'es': 'es-ES-AlvaroNeural',
+        'de': 'de-DE-ConradNeural'
+      },
+      // Aria (Sonia-like voices across languages)
+      'en-GB-SoniaNeural': {
+        'en': 'en-GB-SoniaNeural',
+        'hi': 'hi-IN-SwaraNeural',
+        'ar': 'ar-SA-ZariyahNeural',
+        'es': 'es-ES-ElviraNeural',
+        'de': 'de-DE-KatjaNeural'
+      }
+    };
+    
+    // If we have a language mapping for this specific avatar voice
+    if (avatarVoiceMap[avatarVoice] && avatarVoiceMap[avatarVoice][selectedLanguage]) {
+      console.log(`Using character-preserving voice mapping for ${avatarVoice} in ${selectedLanguage}`);
+      return avatarVoiceMap[avatarVoice][selectedLanguage];
+    }
+    
+    // Fallback to generic language-based voice mapping
+    const genericLanguageVoiceMap = {
+      'en': 'en-AU-WilliamNeural', // English
+      'hi': 'hi-IN-MadhurNeural',  // Hindi
+      'ar': 'ar-SA-HamedNeural',   // Arabic
+      'es': 'es-ES-AlvaroNeural',  // Spanish
+      'de': 'de-DE-ConradNeural',  // German
+    };
+    
+    console.log(`Using generic voice for language: ${selectedLanguage}`);
+    return genericLanguageVoiceMap[selectedLanguage] || genericLanguageVoiceMap['en'];
   }
-  return "en-AU-WilliamNeural"; // Default voice if not available
+  
+  // Fallback if no viewer reference or avatar voice
+  const genericLanguageVoiceMap = {
+    'en': 'en-AU-WilliamNeural', // English
+    'hi': 'hi-IN-MadhurNeural',  // Hindi
+    'ar': 'ar-SA-HamedNeural',   // Arabic
+    'es': 'es-ES-AlvaroNeural',  // Spanish
+    'de': 'de-DE-ConradNeural',  // German
+  };
+  
+  return genericLanguageVoiceMap[selectedLanguage] || genericLanguageVoiceMap['en'];
 });
 
 let speechSynthesizer = null; // Keep synthesizer instance reusable if needed
@@ -74,7 +158,7 @@ const initializeSpeechSynthesizer = () => {
   speechConfig.speechSynthesisVoiceName = voiceName;
   
   // Set output format to MP3 for better compatibility
-  speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+  speechConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Raw16Khz16BitMonoPcm;
 
   // Create synthesizer with null AudioConfig to handle stream manually
   const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
@@ -91,6 +175,7 @@ const initializeSpeechSynthesizer = () => {
         try {
           // Ensure we're sending a copy of the audio data to avoid any reference issues
           const audioDataCopy = event.result.audioData.slice(0);
+          console.log(`Sending audio chunk: ${audioDataCopy.byteLength} bytes`);
           viewerRef.value.playAudioChunk(audioDataCopy);
         } catch (error) {
           console.error("Error sending audio chunk to viewer:", error);
@@ -108,8 +193,12 @@ const initializeSpeechSynthesizer = () => {
     error.value = ''; // Clear previous errors
     
     if (viewerRef.value) {
-      // Start streaming mode before sending audio
-      viewerRef.value.startStreaming();
+      // Force resume audio context first to handle browser autoplay policy
+      viewerRef.value.resumeAudioContext().then(() => {
+        console.log("Audio context resumed, starting streaming...");
+        // Start streaming mode before sending audio
+        viewerRef.value.startStreaming();
+      });
     }
   };
 
@@ -221,10 +310,14 @@ const handleSpeakRequest = async (textToSpeak) => {
   status.value = "Sending request to Azure...";
   error.value = ''; // Clear previous errors
   
-  // Create SSML for Azure TTS with viseme information
+  // Get the language code from the voice name (e.g., 'en-US' from 'en-US-GuyNeural')
+  const voiceName = currentVoice.value;
+  const languageCode = voiceName.split('-').slice(0, 2).join('-');
+  
+  // Create SSML for Azure TTS with viseme information and correct language
   const ssml = `
-    <speak version="1.0" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="en-US">
-      <voice name="${currentVoice.value}">
+    <speak version="1.0" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="${languageCode}">
+      <voice name="${voiceName}">
         <mstts:viseme type="FacialExpression" />
         ${textToSpeak.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
       </voice>
